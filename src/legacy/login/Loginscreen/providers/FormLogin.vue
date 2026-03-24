@@ -1,0 +1,153 @@
+<template>
+  <div class="login-basic-form">
+    <sl-alert :open="state.showCustomError" variant="danger" class="login-basic-error">
+      <sl-icon slot="icon" name="exclamation-circle-fill"></sl-icon>
+      {{ $t("viur.core.login.error") }}
+    </sl-alert>
+
+    <sl-alert v-if="state.tooltip" open variant="info" class="login-basic-info">
+      <sl-icon slot="icon" name="info-circle-fill"></sl-icon>
+      {{ $t(state.tooltip) }}
+    </sl-alert>
+
+    <vi-form
+      v-if="state.currentUrl"
+      ref="ViFormRef"
+      module="user"
+      action="edit"
+      :autofocus="true"
+      :fetch-url="state.currentUrl"
+      label="placeholder"
+      :layout="DefaultLayout"
+      :allow-enter="true"
+      @keypress-enter="buttonAction"
+    ></vi-form>
+
+    <sl-button
+      v-if="['no', 'loading', 'error'].includes(userStore.state['user.loggedin'])"
+      variant="primary"
+      type="submit"
+      class="login-basic-sumbit-btn"
+      @click="buttonAction"
+    >
+      {{ $t(`viur.core.modules.user.btn.${getActionNameFromUrl(loginState.formByPass)}`) }}
+    </sl-button>
+  </div>
+</template>
+
+<script setup>
+// THIS IST BULLSHIT, CRAP BY DESIGN...
+import { computed, inject, onMounted, reactive, useTemplateRef, watch } from "vue"
+import { useUserStore } from "../../stores/user"
+import ViForm from "../../../forms/ViForm.vue"
+import DefaultLayout from "./Defaults/DefaultLayout.vue"
+import Request from "../../../utils/request"
+
+const ViFormRef = useTemplateRef("ViFormRef")
+const loginState = inject("loginState")
+const userStore = useUserStore()
+
+const props = defineProps({
+  url: {
+    type: String,
+    default: "/vi/user/auth_userpassword/pwrecover",
+  },
+})
+
+const state = reactive({
+  currentUrl: null,
+  showCustomError: false,
+  tooltip: computed(() => {
+    if (!ViFormRef?.value?.state?.structure) return null
+    let params = Object.entries(ViFormRef?.value?.state?.structure)[0]?.[1]?.params?.tooltip
+    if (!params) return null
+    return params
+  }),
+})
+onMounted(() => {
+  if (loginState.formByPass) {
+    state.currentUrl = loginState.formByPass
+  } else {
+    state.currentUrl = props.url
+  }
+})
+
+function calcCurrentUrlOnAction(url, actionName) {
+  let lastSlashIndex = url.lastIndexOf("/")
+  lastSlashIndex = lastSlashIndex > url.indexOf("://") + 2 ? url.slice(0, lastSlashIndex) : url
+  lastSlashIndex += "/" + actionName
+  return lastSlashIndex
+}
+
+function getActionNameFromUrl(url) {
+  try {
+    let splitted = url.split("/")
+    return splitted[splitted.length - 1]
+  } catch (error) {
+    return "send"
+  }
+}
+
+function buttonAction() {
+  state.showCustomError = false
+  loginState.loading = true
+
+  ViFormRef.value
+    .sendData(state.currentUrl)
+    .then(async (resp) => {
+      loginState.loading = false
+      let data = await resp.json()
+
+      if (!ViFormRef.value.state.actionname.endsWith("_success")) {
+        ViFormRef.value.state.skel = data["values"]
+        ViFormRef.value.state.structure = data["structure"]
+        state.currentUrl = calcCurrentUrlOnAction(state.currentUrl, data["action"])
+      } else if (ViFormRef.value.state.actionname.endsWith("_success") && data["next_url"]) {
+        if (data["next_url"].startsWith("https://")) {
+          window.location.href = Request.buildUrl(data["next_url"])
+        } else {
+          if (data.action === "pwrecover_success") {
+            location.reload()
+            return
+          }
+          state.currentUrl = data["next_url"]
+          buttonAction()
+        }
+      } else if (ViFormRef.value.state.actionname === "select_secondfactor_provider") {
+        let providers = {}
+        for (const [k, v] of Object.entries(data["structure"]["provider"]["values"])) {
+          const match = k.match(/f2_(.+?)\/start/)
+          const extracted = match ? match[1] : null
+          providers[extracted] = { target: k, name: v }
+        }
+        loginState.availableSecondfactors = providers
+        loginState.currentaction = ViFormRef.value.state.actionname
+      } else {
+        userStore.updateUser()
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+      state.showCustomError = true
+      loginState.loading = false
+    })
+}
+
+watch(
+  () => ViFormRef?.value?.state?.loading,
+  (newVal, oldVal) => {
+    if (newVal) {
+      loginState.loading = true
+    } else {
+      loginState.loading = false
+    }
+  }
+)
+</script>
+<style>
+.login-basic-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-spacing-medium);
+}
+</style>

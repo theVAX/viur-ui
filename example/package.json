@@ -1,0 +1,34 @@
+{
+  "name": "viur-ui-example",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@ckeditor/ckeditor5-vue": "^7.3.1",
+    "@codemirror/language-data": "^6.5.2",
+    "@viur/shoelace": "^1.0.15-v2.20.1",
+    "@viur/webawesome": "^0.10.0",
+    "@vueuse/core": "^14.2.1",
+    "ckeditor5": "^47.6.1",
+    "codemirror": "^6.0.2",
+    "destr": "^2.0.5",
+    "json-editor-vue": "^0.18.1",
+    "libphonenumber-js": "^1.12.40",
+    "logics-js": "^0.4.1",
+    "pinia": "^2.3.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "viur-ui": "file:..",
+    "vue": "^3.3.0",
+    "vue-draggable-plus": "^0.6.1",
+    "vue-i18n": "^11.0.1",
+    "vue-json-pretty": "^2.6.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}

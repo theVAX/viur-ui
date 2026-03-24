@@ -1,12 +1,12 @@
 <template>
-  <sl-input
+  <wa-input
     class="widget-bone widget-bone-key widget-bone-key-default"
     :class="[`widget-bone-key-${name}`]"
     disabled
     :value="value"
     :data-data-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-  ></sl-input>
+    @change="changeEvent"
+  ></wa-input>
 </template>
 
 <script setup>
@@ -40,7 +40,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 }
 </style>

@@ -1,16 +1,16 @@
 <template>
-  <sl-spinner v-if="state.loading"></sl-spinner>
+  <wa-spinner v-if="state.loading"></wa-spinner>
   <div v-else class="input-wrapper">
-    <sl-select
+    <wa-select
       :value="state.dialCode"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-      @sl-change="handleSelect"
+      @change="handleSelect"
     >
-      <sl-option v-for="country in state.countryInfo" :key="country.currentCode" :value="country.dialCode">
+      <wa-option v-for="country in state.countryInfo" :key="country.currentCode" :value="country.dialCode">
         {{ country.emoji }}
-      </sl-option>
-    </sl-select>
-    <sl-input
+      </wa-option>
+    </wa-select>
+    <wa-input
       ref="phoneBone"
       type="tel"
       :disabled="boneState.readonly"
@@ -19,8 +19,8 @@
         boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
       "
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-      @sl-change="changeEvent"
-    ></sl-input>
+      @change="changeEvent"
+    ></wa-input>
   </div>
 </template>
 
@@ -132,7 +132,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
   &::part(base) {
     border-top-left-radius: 0;
@@ -146,7 +146,7 @@ sl-input {
     }
   }
 }
-sl-select {
+wa-select {
   max-width: 100px;
 
   &&::part(listbox) {
@@ -156,7 +156,7 @@ sl-select {
   }
 }
 
-sl-option {
+wa-option {
 }
 .input-wrapper {
   display: flex;

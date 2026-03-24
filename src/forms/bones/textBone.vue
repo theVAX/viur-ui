@@ -24,7 +24,7 @@
         "
       />
     </template>
-    <sl-textarea
+    <wa-textarea
       v-else
       class="widget-bone widget-bone-text widget-bone-text-default"
       :class="[`widget-bone-text-${name}`]"
@@ -36,7 +36,7 @@
       :placeholder="state.placeholder"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @input="changeEventTextarea"
-    ></sl-textarea>
+    ></wa-textarea>
   </template>
 </template>
 
@@ -72,8 +72,8 @@ import {
   RemoveFormat,
   GeneralHtmlSupport,
 } from "ckeditor5"
-import coreTranslations from "ckeditor5/translations/de.js"
-import "ckeditor5/ckeditor5.css"
+import coreTranslations from "ckeditor5/dist/translations/de.js"
+import "ckeditor5/dist/ckeditor5.css"
 import { ViURUploadAdapterPlugin } from "./uploadAdapter"
 
 defineOptions({
@@ -542,7 +542,7 @@ watch(
     }
 
     .ck-toolbar {
-      height: var(--sl-input-height-medium);
+      height: var(--wa-input-height-medium);
       border-color: var(--vi-border-color);
       background-color: var(--vi-background-color);
     }
@@ -590,7 +590,7 @@ watch(
   }
 }
 
-sl-textarea {
+wa-textarea {
   &::part(base) {
     box-shadow: none !important;
     background-color: transparent;

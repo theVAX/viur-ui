@@ -1,5 +1,5 @@
 <template>
-  <sl-input
+  <wa-input
     ref="numericBone"
     class="widget-bone widget-bone-numeric widget-bone-numeric-default"
     :class="[`widget-bone-numeric-${name}`]"
@@ -14,9 +14,9 @@
     "
     :placeholder="state.placeholder"
     :data-data-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
+    @change="changeEvent"
     @keyup="changeEvent"
-  ></sl-input>
+  ></wa-input>
   <ul class="info">
     <li v-if="state.minAmount !== -9223372036854776000 && state.minAmount">
       {{ $t("bones.numeric.min", { val: state.minAmount }) }}
@@ -93,7 +93,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

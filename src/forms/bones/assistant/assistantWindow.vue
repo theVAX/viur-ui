@@ -1,6 +1,6 @@
 <template>
   <teleport v-if="open" to="body" :disabled="!open">
-    <sl-dialog open :label="action['name'] + ' - ' + name" class="relation-popup" @sl-after-hide="CloseActionEvent">
+    <wa-dialog open :label="action['name'] + ' - ' + name" class="relation-popup" @wa-after-hide="CloseActionEvent">
       <component
         :is="actions[action['arg']]"
         :name="name"
@@ -11,13 +11,11 @@
         @close="CloseAction"
         @next="NextAction"
       ></component>
-    </sl-dialog>
+    </wa-dialog>
   </teleport>
 </template>
 
 <script setup>
-import { reactive, defineComponent, onMounted, inject, computed, watch } from "vue"
-import { Request } from "@viur/vue-utils"
 import translation from "./translation.vue"
 import describeImage from "./describeImage.vue"
 
@@ -74,7 +72,7 @@ function CloseActionEvent() {
     position: absolute;
   }
 
-  &:deep(.bar sl-button[variant="success"]) {
+  &:deep(.bar wa-button[variant="success"]) {
     &::part(base) {
       background-color: transparent;
       border: 1px solid var(--sl-color-success-500);

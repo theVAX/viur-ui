@@ -1,8 +1,8 @@
 <template>
   <div class="value-line">
-    <sl-button :disabled="boneState.readonly" class="drag-button">
-      <sl-icon slot="prefix" name="grip-vertical"></sl-icon>
-    </sl-button>
+    <wa-button :disabled="boneState.readonly" class="drag-button">
+      <wa-icon slot="start" name="grip-vertical"></wa-icon>
+    </wa-button>
     <div class="row-wrapper">
       <div class="value">
         <slot></slot>
@@ -17,16 +17,16 @@
         @change="updateValue"
       ></bone-actions>
     </div>
-    <sl-button
+    <wa-button
       variant="danger"
       :disabled="boneState.readonly"
-      outline
+      appearance="outlined"
       :title="$t('bone.del')"
       class="delete-btn"
       @click="emit('delete')"
     >
-      <sl-icon slot="prefix" name="x-lg"></sl-icon>
-    </sl-button>
+      <wa-icon slot="start" name="x-lg"></wa-icon>
+    </wa-button>
   </div>
 </template>
 
@@ -68,7 +68,7 @@ const updateValue = inject("updateValue")
   flex: 1 1 100%;
   width: 1px;
 
-  & :deep(sl-input) {
+  & :deep(wa-input) {
     &::part(base) {
       border-bottom-left-radius: var(--sl-border-radius-medium);
       border-top-left-radius: var(--sl-border-radius-medium);
@@ -76,13 +76,13 @@ const updateValue = inject("updateValue")
   }
 
   & :deep(.bone-wrapper) {
-    & sl-input::part(base) {
+    & wa-input::part(base) {
       border-bottom-left-radius: 0;
       border-top-left-radius: 0;
     }
   }
 
-  &:deep(sl-alert) {
+  &:deep(wa-alert) {
     &::part(base) {
       margin-top: 0;
     }

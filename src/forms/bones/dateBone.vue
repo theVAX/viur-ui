@@ -1,5 +1,5 @@
 <template>
-  <sl-input
+  <wa-input
     class="widget-bone widget-bone-date widget-bone-date-default"
     :class="[`widget-bone-date-${name}`]"
     :disabled="boneState.readonly"
@@ -12,8 +12,8 @@
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     step="1"
-    @sl-change="changeEvent"
-  ></sl-input>
+    @change="changeEvent"
+  ></wa-input>
 </template>
 
 <script setup>
@@ -81,7 +81,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

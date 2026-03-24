@@ -72,8 +72,8 @@ import {
   RemoveFormat,
   GeneralHtmlSupport,
 } from "ckeditor5"
-import coreTranslations from "ckeditor5/translations/de.js"
-import "ckeditor5/ckeditor5.css"
+import coreTranslations from "ckeditor5/dist/translations/de.js"
+import "ckeditor5/dist/ckeditor5.css"
 import { ViURUploadAdapterPlugin } from "./texteditor/uploadAdapter"
 
 defineOptions({

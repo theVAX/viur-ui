@@ -3,7 +3,7 @@
     <slot></slot>
   </template>
 
-  <sl-details
+  <wa-details
     v-else
     v-show="visible"
     class="viform-category"
@@ -12,7 +12,7 @@
   >
     <div slot="summary" v-html="name"></div>
     <slot></slot>
-  </sl-details>
+  </wa-details>
 </template>
 
 <script setup>
@@ -46,7 +46,7 @@ const props = defineProps({
 </script>
 
 <style scoped>
-sl-details {
+wa-details {
   &::part(prefix) {
     display: none;
   }

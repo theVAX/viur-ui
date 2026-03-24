@@ -1,9 +1,9 @@
 <template>
-  <sl-alert v-if="!state.globalRegistration" open variant="danger">
+  <wa-alert v-if="!state.globalRegistration" open variant="danger">
     In Order to use this Bone register the bone component globally in your main file
-  </sl-alert>
+  </wa-alert>
   <div v-else class="form">
-    <sl-spinner v-if="state.updating" style="position: absolute; top: 20px; left: -10px"></sl-spinner>
+    <wa-spinner v-if="state.updating" style="position: absolute; top: 20px; left: -10px"></wa-spinner>
 
     <vi-form
       ref="skelRef"
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { reactive, defineComponent, onMounted, inject, computed, getCurrentInstance, watch, ref } from "vue"
+import { reactive, defineComponent, onMounted, inject, computed, getCurrentInstance, watch, ref, provide, unref } from "vue"
 import { getBoneWidget } from "./index"
 import ViForm from "../ViForm.vue"
 import { useTimeoutFn } from "@vueuse/core"
@@ -41,6 +41,21 @@ const props = defineProps({
 const skelRef = ref(null)
 const boneState = inject("boneState")
 const mainformState = inject("mainformState")
+const parentBonePath = inject("bonePath", [])
+const bonePath = computed(() => {
+  const path = [...(unref(parentBonePath) ?? []), props.name]
+
+  if (props.lang) {
+    path.push(`lang-${props.lang}`)
+  }
+
+  if (props.index !== null && props.index !== undefined) {
+    path.push(`idx-${props.index}`)
+  }
+
+  return path
+})
+provide("bonePath", bonePath)
 const state = reactive({
   renderer: import.meta.env.VITE_DEFAULT_RENDERER || "json",
   globalRegistration: false,

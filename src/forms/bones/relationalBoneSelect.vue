@@ -4,23 +4,22 @@
     :class="[`widget-bone-relational-${name}`]"
   >
     <div class="single-entry">
-      <sl-select
+      <wa-select
         :disabled="boneState.readonly"
         :value="state.selection?.['dest']['key']"
-        hoist
         max-options-visible="0"
-        clearable
+        with-clear
         :required="
           boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
         "
         :placeholder="state.placeholder"
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-        @sl-change="changeEvent"
+        @change="changeEvent"
       >
-        <sl-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
+        <wa-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
           {{ formatString(state.format, obj) }}
-        </sl-option>
-      </sl-select>
+        </wa-option>
+      </wa-select>
     </div>
     <Wrapper_nested
       v-if="bone['using']"
@@ -36,7 +35,7 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
-import { Request } from "../../legacy/index"
+import { useListFetch } from "../../request/index.js"
 import Wrapper_nested from "./wrapper_nested.vue"
 defineOptions({
   inheritAttrs: false,
@@ -70,28 +69,32 @@ const state = reactive({
   }),
 })
 
-function getList(search) {
-  let params = ""
+async function getList(search) {
+  let params = { limit: 99 }
   if (boneState.bonestructure["type"] === "relational.tree.leaf.file") {
-    params = "skelType=leaf&"
+    params.skelType = "leaf"
   } else if (boneState.bonestructure["type"] === "relational.tree.node.file") {
-    params = "skelType=node&"
+    params.skelType = "node"
   }
 
-  return Request.get(
-    `/${import.meta.env.VITE_DEFAULT_RENDERER || "vi"}/${boneState.bonestructure["module"]}/list?${params}limit=99`
-  ).then(async (resp) => {
-    //?viurTags$lk=${search.toLowerCase()
-    const data = await resp.json()
+  const listFetch = useListFetch(boneState.bonestructure["module"], {
+    immediate: false,
+    params,
+    renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
+  })
 
-    state.skellistdata = {}
-    for (let e of data["skellist"]) {
-      state.skellistdata[e["key"]] = e
-    }
+  await listFetch.execute()
 
-    return data["skellist"]?.map((d) => {
-      return { text: formatString(boneState.bonestructure["format"], { dest: d }), value: d.key, data: d }
-    })
+  //?viurTags$lk=${search.toLowerCase()
+  const data = { skellist: listFetch.data.value }
+
+  state.skellistdata = {}
+  for (let e of data["skellist"]) {
+    state.skellistdata[e["key"]] = e
+  }
+
+  return data["skellist"]?.map((d) => {
+    return { text: formatString(boneState.bonestructure["format"], { dest: d }), value: d.key, data: d }
   })
 }
 
@@ -117,7 +120,7 @@ onMounted(() => {
   display: flex;
   gap: var(--sl-spacing-x-small);
 
-  :deep(sl-combobox) {
+  :deep(wa-combobox) {
     &::part(input__base) {
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
@@ -125,7 +128,7 @@ onMounted(() => {
   }
 }
 
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {
@@ -137,7 +140,7 @@ sl-input {
     background-color: var(--sl-color-neutral-0);
   }
 }
-sl-select {
+wa-select {
   width: 100%;
 
   &::part(combobox) {
@@ -153,7 +156,7 @@ sl-select {
   }
 }
 
-sl-option {
+wa-option {
   &::part(base) {
     transition: background-color ease 0.3s;
   }

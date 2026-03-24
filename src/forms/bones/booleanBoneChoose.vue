@@ -1,5 +1,5 @@
 <template>
-  <sl-radio-group
+  <wa-radio-group
     :value="state.value"
     class="widget-bone widget-bone-boolean widget-bone-boolean-choose"
     :class="[`widget-bone-boolean-${name}`]"
@@ -7,11 +7,11 @@
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
     "
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
+    @change="changeEvent"
   >
-    <sl-radio :value="'true'" :disabled="boneState.readonly">{{ $t("bones.bool.true") }}</sl-radio>
-    <sl-radio :value="'false'" :disabled="boneState.readonly">{{ $t("bones.bool.false") }}</sl-radio>
-  </sl-radio-group>
+    <wa-radio :value="'true'" :disabled="boneState.readonly">{{ $t("bones.bool.true") }}</wa-radio>
+    <wa-radio :value="'false'" :disabled="boneState.readonly">{{ $t("bones.bool.false") }}</wa-radio>
+  </wa-radio-group>
 </template>
 
 <script setup>
@@ -50,14 +50,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-switch {
+wa-switch {
   border: 1px solid var(--sl-color-neutral-300);
   padding: 0.4em 0.1em 0.4em 0.4em;
-  border-top-right-radius: var(--sl-input-border-radius-medium);
-  border-bottom-right-radius: var(--sl-input-border-radius-medium);
-  --height: calc(var(--sl-input-height-medium) - 1em);
-  --width: calc(1.7 * (var(--sl-input-height-medium) - 0.8em));
-  --thumb-size: calc(var(--sl-input-height-medium) - 1em);
+  border-top-right-radius: var(--wa-input-border-radius-medium);
+  border-bottom-right-radius: var(--wa-input-border-radius-medium);
+  --height: calc(var(--wa-input-height-medium) - 1em);
+  --width: calc(1.7 * (var(--wa-input-height-medium) - 0.8em));
+  --thumb-size: calc(var(--wa-input-height-medium) - 1em);
 
   @media (max-width: 900px) {
     border-top-right-radius: 0;

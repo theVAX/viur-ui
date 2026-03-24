@@ -1,37 +1,37 @@
 <template>
-  <sl-input
+  <wa-input
     ref="passwordBone"
     v-model="state.value1"
     class="widget-bone widget-bone-password widget-bone-password-default"
     :class="([`widget-bone-password-${name}`], { 'has-check': !boneState.readonly })"
     :disabled="boneState.readonly"
     type="password"
-    clearable
+    with-clear
     password-toggle="true"
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-    @sl-clear="state.value1 = ''"
+    @change="changeEvent"
+    @wa-clear="state.value1 = ''"
     @keyup="changeEvent"
   >
-    <sl-icon slot="suffix" :name="state.equal && state.value1.length ? 'check' : 'x'"></sl-icon>
-  </sl-input>
-  <sl-input
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+  </wa-input>
+  <wa-input
     v-if="!boneState.readonly"
     v-model="state.value2"
     class="widget-bone widget-bone-boolean widget-bone-boolean-default widget-bone-boolean-repeat password-check"
     :class="[`widget-bone-boolean-${name}`]"
     type="password"
-    clearable
+    with-clear
     password-toggle="true"
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-    @sl-clear="state.value2 = ''"
+    @change="changeEvent"
+    @wa-clear="state.value2 = ''"
     @keyup="changeEvent"
   >
-    <sl-icon slot="suffix" :name="state.equal && state.value1.length ? 'check' : 'x'"></sl-icon>
-  </sl-input>
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+  </wa-input>
 
   <ul class="errors">
     <li v-for="(error, index) in state.passwordInfo" :key="index">
@@ -145,7 +145,7 @@ watch(
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

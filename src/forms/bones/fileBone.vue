@@ -7,23 +7,23 @@
     @drop.prevent="handleDrop"
   >
     <div v-if="state.loading" class="loader">
-      <sl-spinner slot="suffix"></sl-spinner>
+      <wa-spinner slot="end"></wa-spinner>
     </div>
 
     <div v-if="state.droparea" class="droparea">Dateien hier hinziehen</div>
-    <sl-button
+    <wa-button
       v-if="!boneState.readonly && (!value || state.loading)"
       :title="$t('bone.upload')"
-      outline
+      appearance="outlined"
       class="upload-btn"
       @click="uploadinput.click()"
     >
-      <sl-icon name="upload"></sl-icon>
-    </sl-button>
+      <wa-icon name="upload"></wa-icon>
+    </wa-button>
     <input ref="uploadinput" hidden type="file" :multiple="boneState.multiple" @change="handleUpload" />
-    <sl-button v-if="value" :title="$t('bone.download')" @click="downloadFile">
-      <sl-icon slot="prefix" name="download"></sl-icon>
-    </sl-button>
+    <wa-button v-if="value" :title="$t('bone.download')" @click="downloadFile">
+      <wa-icon slot="start" name="download"></wa-icon>
+    </wa-button>
     <div class="box">
       <div
         v-if="value?.['dest']?.['mimetype'].includes('image')"
@@ -31,37 +31,37 @@
         @click="state.previewopen = !state.previewopen"
       >
         <img class="preview-img" :src="createBackgroundImage()" alt="" />
-        <sl-dialog
+        <wa-dialog
           :label="decodeURIComponent(value?.['dest']?.['name'])"
           class="preview-overlay"
           :open="state.previewopen"
         >
           <img :src="createBackgroundImage()" alt="" />
-        </sl-dialog>
+        </wa-dialog>
       </div>
       <div v-else class="preview">
-        <sl-icon v-if="value?.['dest']?.['name']" name="file-earmark"></sl-icon>
+        <wa-icon v-if="value?.['dest']?.['name']" name="file-earmark"></wa-icon>
       </div>
       <div v-if="value?.['dest']?.['name']">
         {{ decodeURIComponent(value?.["dest"]?.["name"]) }}
       </div>
     </div>
-    <sl-button
+    <wa-button
       v-if="!boneState.multiple"
       variant="danger"
-      outline
+      appearance="outlined"
       :title="$t('bone.del')"
       class="delete-btn"
       @click="$emit('change', name, '', lang, index)"
     >
-      <sl-icon name="x-lg"></sl-icon>
-    </sl-button>
+      <wa-icon name="x-lg"></wa-icon>
+    </wa-button>
   </div>
 </template>
 
 <script setup>
 import { reactive, onMounted, inject, ref } from "vue"
-import { Request } from "../../legacy/index"
+import { downloadUrlFor, uploadFile } from "../../request/index.js"
 defineOptions({
   inheritAttrs: false,
 })
@@ -89,65 +89,20 @@ onMounted(() => {
 })
 
 function downloadFile() {
-  console.log(Request.downloadUrlFor(props.value))
-  window.open(Request.downloadUrlFor(props.value))
+  const url = downloadUrlFor(props.value)
+  if (url) {
+    window.open(url)
+  }
 }
 
 function createBackgroundImage() {
-  return Request.downloadUrlFor(props.value, false)
-}
-
-function uploadFile(file) {
-  const filedata = {
-    fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
-    size: file.size.toString(),
-  }
-  if (boneState?.bonestructure["public"]) {
-    filedata["public"] = true
-  }
-  return new Promise((resolve, reject) => {
-    Request.securePost(`/${import.meta.env.VITE_DEFAULT_RENDERER || "vi"}/file/getUploadURL`, { dataObj: filedata })
-      .then(async (resp) => {
-        let uploadURLdata = await resp.json()
-        fetch(uploadURLdata["values"]["uploadUrl"], {
-          body: file,
-          method: "POST",
-          mode: "no-cors",
-        })
-          .then(async (uploadresp) => {
-            const addData = {
-              key: uploadURLdata["values"]["uploadKey"],
-              node: undefined,
-              skelType: "leaf",
-            }
-            Request.securePost(`/${import.meta.env.VITE_DEFAULT_RENDERER || "vi"}/file/add`, { dataObj: addData })
-              .then(async (addresp) => {
-                let addData = await addresp.json()
-                if (addData["action"] === "addSuccess") {
-                  resolve(addData["values"])
-                } else {
-                  reject(addData)
-                }
-              })
-              .catch((error) => {
-                reject(error)
-              })
-          })
-          .catch((error) => {
-            reject(error)
-          })
-      })
-      .catch((error) => {
-        reject(error)
-      })
-  })
+  return downloadUrlFor(props.value, false)
 }
 
 async function handleUpload(event) {
   state.loading = true
   for (let file of event.target.files) {
-    let fileresult = await uploadFile(file)
+    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
     uploadinput.value.value = null
     emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
   }
@@ -158,7 +113,7 @@ async function handleDrop(event) {
   state.loading = true
   state.droparea = false
   for (let file of event.dataTransfer.files) {
-    let fileresult = await uploadFile(file)
+    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
     uploadinput.value.value = null
     emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
     break
@@ -178,7 +133,7 @@ async function handleDrop(event) {
   width: 100%;
   border: 1px solid var(--sl-color-gray-500);
   border-radius: 5px;
-  height: var(--sl-input-height-medium);
+  height: var(--wa-input-height-medium);
   background-color: transparent;
 }
 
@@ -186,8 +141,8 @@ async function handleDrop(event) {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: var(--sl-input-height-medium);
-  width: var(--sl-input-height-medium);
+  height: var(--wa-input-height-medium);
+  width: var(--wa-input-height-medium);
   aspect-ratio: 1;
   border-right: 1px solid var(--sl-color-gray-500);
   margin-right: var(--sl-spacing-small);
@@ -202,7 +157,7 @@ async function handleDrop(event) {
     cursor: pointer;
   }
 
-  & sl-icon {
+  & wa-icon {
     font-size: 1.1em;
     color: var(--sl-color-gray-400);
   }

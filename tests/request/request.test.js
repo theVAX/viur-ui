@@ -279,6 +279,18 @@ describe('useListFetch', () => {
     const secondCallCount = fetchMock.mock.calls.filter(([u]) => u.includes('/list')).length
     expect(secondCallCount).toBe(firstCallCount) // no additional list fetch
   })
+
+  it('execute() rejects with HTTPError on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url) => {
+      if (url.includes('/structure')) return jsonResponse({ viewSkel: {} })
+      return jsonResponse({}, 404)
+    }))
+
+    const result = useListFetch('items', { immediate: false })
+    await expect(result.execute()).rejects.toBeInstanceOf(HTTPError)
+    expect(result.error.value).toBeInstanceOf(HTTPError)
+    expect(result.error.value.statusCode).toBe(404)
+  })
 })
 
 // ─── useListFetchAll ──────────────────────────────────────────────────────────
@@ -342,6 +354,15 @@ describe('useViewFetch', () => {
     const result = useViewFetch('items', '/', { key: 'missing' })
     await waitUntilFinished(result)
 
+    expect(result.error.value).toBeInstanceOf(HTTPError)
+    expect(result.error.value.statusCode).toBe(404)
+  })
+
+  it('execute() rejects with HTTPError on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({}, 404)))
+
+    const result = useViewFetch('items', '/', { key: 'missing' }, { immediate: false })
+    await expect(result.execute()).rejects.toBeInstanceOf(HTTPError)
     expect(result.error.value).toBeInstanceOf(HTTPError)
     expect(result.error.value.statusCode).toBe(404)
   })

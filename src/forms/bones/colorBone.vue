@@ -1,5 +1,5 @@
 <template>
-  <sl-color-picker
+  <wa-color-picker
     class="widget-bone widget-bone-color widget-bone-color-default"
     :class="[`widget-bone-color-${name}`]"
     :disabled="boneState.readonly"
@@ -8,8 +8,8 @@
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
     "
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-  ></sl-color-picker>
+    @change="changeEvent"
+  ></wa-color-picker>
 </template>
 
 <script setup>
@@ -40,7 +40,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-color-picker {
+wa-color-picker {
   &::part(trigger) {
     border-radius: 0;
   }

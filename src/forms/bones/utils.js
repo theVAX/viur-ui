@@ -104,3 +104,23 @@ export default class Utils {
     return finalStrList.join(", ")
   }
 }
+
+function normalizeBonePathSegment(segment) {
+  return String(segment)
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+export function buildBoneDomId(pathSegments, suffix = null) {
+  const normalizedSegments = pathSegments
+    .filter((segment) => segment !== null && segment !== undefined && segment !== "")
+    .map(normalizeBonePathSegment)
+    .filter(Boolean)
+
+  if (suffix) {
+    normalizedSegments.push(normalizeBonePathSegment(suffix))
+  }
+
+  return ["vi-bone", ...normalizedSegments].join("--")
+}

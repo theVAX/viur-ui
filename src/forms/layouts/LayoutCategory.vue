@@ -17,7 +17,7 @@
 
 <script setup>
 import { inject } from "vue"
-import { getBoneWidget } from "../../bones/edit"
+import { getBoneWidget } from "../bones"
 import ViFormCategory from "../ViFormCategory.vue"
 const formState = inject("formState")
 const formUpdate = inject("formUpdate")

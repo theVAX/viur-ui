@@ -6,44 +6,44 @@
       </div>
 
       <div class="image-description-flex">
-        <sl-tab-group v-if="state.value" class="lang-tab" placement="bottom">
+        <wa-tab-group v-if="state.value" class="lang-tab" placement="bottom">
           <template v-for="(val, lang) in state.value" :key="lang + '_tab'">
-            <sl-tab slot="nav" :panel="'lang_' + lang" :disabled="state.loading" @click="state.currentLang = lang">
+            <wa-tab slot="nav" :panel="'lang_' + lang" :disabled="state.loading" @click="state.currentLang = lang">
               {{ $t(lang) }}
-            </sl-tab>
+            </wa-tab>
 
-            <sl-tab-panel :name="'lang_' + lang">
-              <sl-textarea
+            <wa-tab-panel :name="'lang_' + lang">
+              <wa-textarea
                 :value="state.value[lang]"
                 :label="`Beschreibung (` + lang + `):`"
-                @sl-change="updateValue($event, lang)"
-              ></sl-textarea>
-            </sl-tab-panel>
+                @change="updateValue($event, lang)"
+              ></wa-textarea>
+            </wa-tab-panel>
           </template>
-        </sl-tab-group>
+        </wa-tab-group>
 
-        <sl-input v-model="state.prompt" placeholder="weitere Anweisungen"></sl-input>
+        <wa-input v-model="state.prompt" placeholder="weitere Anweisungen"></wa-input>
         <span class="image-description-small-print">
           * Bei der Beschreibung kommt künstliche Intelligenz zum Einsatz. Die Ergebnisse können daher fehlerhaft sein.
           Bitte prüfen Sie daher stets das Ergebnis.
         </span>
-        <sl-button size="small" variant="info" :loading="state.loading" @click="describe">
+        <wa-button size="small" variant="brand" :loading="state.loading" @click="describe">
           Beschreibung erstellen
-        </sl-button>
+        </wa-button>
       </div>
     </div>
   </div>
 
   <div slot="footer" class="footer">
-    <sl-button variant="danger" size="small" outline @click="CloseAction">{{ $t("relation.abort") }}</sl-button>
+    <wa-button variant="danger" size="small" appearance="outlined" @click="CloseAction">{{ $t("relation.abort") }}</wa-button>
 
-    <sl-button variant="success" size="small" @click="ApplySelection">Beschreibung übernehmen</sl-button>
+    <wa-button variant="success" size="small" @click="ApplySelection">Beschreibung übernehmen</wa-button>
   </div>
 </template>
 
 <script setup>
-import { reactive, defineComponent, onMounted, inject, computed, watch } from "vue"
-import { Request } from "@viur/vue-utils"
+import { reactive, onMounted, inject, computed } from "vue"
+import { createControllerFetch } from "../../../request/index.js"
 import viImage from "@viur/vue-utils/generic/Image.vue"
 
 const props = defineProps({
@@ -55,6 +55,7 @@ const props = defineProps({
 })
 const viform = inject("viform")
 const emit = defineEmits(["close", "next"])
+const describeImageFetch = createControllerFetch({ endpoint: "describe_image", method: "POST" })
 
 const state = reactive({
   value: null,
@@ -67,23 +68,24 @@ const state = reactive({
   prompt: null,
   loading: false,
 })
-function describe() {
+
+async function describe() {
   state.loading = true
-  Request.post("/json/assistant/describe_image", {
-    dataObj: {
+  try {
+    const fetchResult = describeImageFetch("assistant", "/", {
       filekey: props.params.value.dest.key,
       context: JSON.stringify(viform?.value?.state?.skel),
       prompt: state.prompt,
       language: state.currentLang,
-    },
-  })
-    .then(async (resp) => {
-      state.value[state.currentLang] = await resp.json()
-      state.loading = false
+    }, {
+      immediate: false,
     })
-    .catch((error) => {
-      state.loading = false
-    })
+    await fetchResult.execute()
+    state.value[state.currentLang] = fetchResult.data.value
+  } catch (error) {
+  } finally {
+    state.loading = false
+  }
 }
 
 onMounted(() => {
@@ -145,14 +147,14 @@ function ApplySelection() {
   gap: var(--sl-spacing-small);
 }
 
-sl-textarea {
+wa-textarea {
   &::part(form-control-label) {
     margin-bottom: var(--sl-spacing-x-small);
     font-weight: 600;
   }
 }
 
-sl-tab-panel::part(base) {
+wa-tab-panel::part(base) {
   padding: 0;
 }
 
@@ -170,7 +172,7 @@ sl-tab-panel::part(base) {
     border-top: 1px solid var(--vi-border-color);
   }
 
-  & sl-tab {
+  & wa-tab {
     margin-top: -1px;
 
     &[aria-selected="true"] {

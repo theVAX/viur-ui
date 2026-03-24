@@ -1,5 +1,5 @@
 <template>
-  <sl-input
+  <wa-input
     v-model="state.valueLat"
     class="widget-bone widget-bone-spatial widget-bone-spatial-default"
     :class="([`widget-bone-spatial-${name}`], [`widget-bone-spatial-${name}-lat`])"
@@ -13,10 +13,10 @@
     step="0.000001"
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-  ></sl-input>
+    @change="changeEvent"
+  ></wa-input>
 
-  <sl-input
+  <wa-input
     v-model="state.valueLng"
     class="widget-bone widget-bone-spatial widget-bone-spatial-default"
     :class="([`widget-bone-spatial-${name}`], [`widget-bone-spatial-${name}-long`])"
@@ -30,8 +30,8 @@
     step="0.000001"
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-  ></sl-input>
+    @change="changeEvent"
+  ></wa-input>
 </template>
 
 <script setup>
@@ -78,7 +78,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &:first-child {

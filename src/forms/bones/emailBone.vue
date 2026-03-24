@@ -1,5 +1,5 @@
 <template>
-  <sl-input
+  <wa-input
     ref="emailBone"
     class="widget-bone widget-bone-email widget-bone-email-default"
     :class="[`widget-bone-email-${name}`]"
@@ -12,9 +12,9 @@
     "
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
+    @change="changeEvent"
     @keyup="changeEvent"
-  ></sl-input>
+  ></wa-input>
 </template>
 
 <script setup>
@@ -70,7 +70,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

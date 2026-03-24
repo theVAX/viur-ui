@@ -4,34 +4,34 @@
     class="wrapper-multiple widget-bone widget-bone-select widget-bone-select-choose"
     :class="[`widget-bone-select-${name}`]"
   >
-    <sl-checkbox
+    <wa-checkbox
       v-for="value in convertObjToList()"
       :data-value="value[0]"
       :checked="state.value.includes(value[0])"
       :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-      @sl-change="changeEventMultiple"
+      @change="changeEventMultiple"
     >
       {{ value[1] }}
-    </sl-checkbox>
+    </wa-checkbox>
   </div>
 
-  <sl-radio-group
+  <wa-radio-group
     v-else
     :value="state.value"
     class="widget-bone widget-bone-select widget-bone-select-choose"
     :class="[`widget-bone-select-${name}`]"
-    @sl-change="changeEvent"
+    @change="changeEvent"
   >
-    <sl-radio
+    <wa-radio
       v-for="value in convertObjToList()"
       :value="value[0]"
       :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     >
       {{ value[1] }}
-    </sl-radio>
-  </sl-radio-group>
+    </wa-radio>
+  </wa-radio-group>
 </template>
 
 <script setup>
@@ -107,11 +107,11 @@ onMounted(() => {
   flex-direction: column;
 }
 
-sl-checkbox::part(control--checked) {
+wa-checkbox::part(control--checked) {
   background-color: var(--sl-color-success-600);
   border: 1px solid var(--sl-color-primary-600);
 }
-sl-checkbox::part(control--indeterminate) {
+wa-checkbox::part(control--indeterminate) {
   background-color: var(--sl-color-success-600);
   border: 1px solid var(--sl-color-success-600);
 }

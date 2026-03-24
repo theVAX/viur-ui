@@ -1,27 +1,42 @@
-import Request from "../legacy/utils/request"
+import { createControllerFetch } from "../request/index.js"
 import Logics from "logics-js"
-import { watch, inject, toRaw, reactive } from "vue"
+import { inject, toRaw, reactive } from "vue"
 import Utils from "./bones/utils"
 
 export function useFormUtils(props, state) {
-  function buildRequestUrl() {
-    //build Url from props
-    let url = `/${props.renderer}/${props.module}/${props.action}`
+  function buildRequestSpec(urlOverride = null) {
+    let path = urlOverride
 
-    // add uses Key as parent, clone as source and edit as target
-    const isTree = ["node", "leaf"].includes(props.skeltype)
+    if (!path) {
+      path = `/${props.renderer}/${props.module}/${props.action}`
 
-    if (props.group) {
-      url += `/${props.group}`
-    } else if (isTree) {
-      url += `/${props.skeltype}`
+      const isTree = ["node", "leaf"].includes(props.skeltype)
+
+      if (props.group) {
+        path += `/${props.group}`
+      } else if (isTree) {
+        path += `/${props.skeltype}`
+      }
+
+      if (["edit", "clone"].includes(props.action) || (isTree && props.action === "add")) {
+        path += `/${props.skelkey}`
+      }
     }
 
-    if (["edit", "clone"].includes(props.action) || (isTree && props.action === "add")) {
-      url += `/${props.skelkey}`
+    const parsedUrl = new URL(path, window.location.origin)
+    const segments = parsedUrl.pathname.split("/").filter(Boolean)
+    const renderer = segments[0] || props.renderer
+    const requestSegments = segments[0] === renderer ? segments.slice(1) : segments
+
+    if (requestSegments.length < 2) {
+      throw new Error(`Invalid request path: ${path}`)
     }
 
-    return url
+    return {
+      renderer,
+      controller: requestSegments.slice(0, -1),
+      endpoint: requestSegments.at(-1),
+    }
   }
 
   function normalizeStructure(structure) {
@@ -126,11 +141,12 @@ export function useFormUtils(props, state) {
       return new Promise((resolve, reject) => reject("Form is not valid"))
     }
 
-    let request = Request.post
-    if (props.secure) request = Request.securePost
-
-    let url = buildRequestUrl()
-    if (alternativUrl) url = alternativUrl //replace saving url
+    const requestSpec = buildRequestSpec(alternativUrl)
+    const request = createControllerFetch({
+      endpoint: requestSpec.endpoint,
+      method: "POST",
+      secure: props.secure,
+    })
 
     const formData = new FormData()
     for (const bone of toFormData()) {
@@ -152,42 +168,55 @@ export function useFormUtils(props, state) {
       data = { ...data, ...additionalData } //inject data like contexts
     }
 
-    return request(url, { dataObj: data, headers: headers }).then(async (resp) => {
-      let data = await resp.clone().json()
-      state.skel = data["values"]
+    const fetchResult = request(requestSpec.controller, "/", data, {
+      renderer: requestSpec.renderer,
+      headers,
+      immediate: false,
+    })
+
+    return fetchResult.execute().then(async () => {
+      let responseData = fetchResult.data.value
+      state.skel = responseData["values"]
       //state.structure = normalizeStructure(data["structure"])
-      state.errors = data["errors"]
-      state.actionparams = data["params"]
-      state.actionname = data["action"]
+      state.errors = responseData["errors"]
+      state.actionparams = responseData["params"]
+      state.actionname = responseData["action"]
       state.loading = false
-      return resp
+      return fetchResult
     })
   }
 
   function fetchData(alternativUrl = null, additionalData = null, headers = null) {
     //fetch data
     state.loading = true
-    let request = Request.post
-    if (props.secure) request = Request.securePost
-
-    let url = buildRequestUrl()
-    if (alternativUrl) url = alternativUrl //replace saving url
+    const requestSpec = buildRequestSpec(alternativUrl)
+    const request = createControllerFetch({
+      endpoint: requestSpec.endpoint,
+      method: "POST",
+      secure: props.secure,
+    })
 
     let data = {}
     if (additionalData) {
       data = { ...data, ...additionalData } //inject data like contexts
     }
     state.failed = null
-    return request(url, { dataObj: data, headers: headers })
-      .then(async (resp) => {
-        let data = await resp.clone().json()
-        initForm(data["values"], data["structure"], state.values)
+    const fetchResult = request(requestSpec.controller, "/", data, {
+      renderer: requestSpec.renderer,
+      headers,
+      immediate: false,
+    })
 
-        state.errors = data["errors"]
-        state.actionparams = data["params"]
-        state.actionname = data["action"]
+    return fetchResult.execute()
+      .then(async () => {
+        let responseData = fetchResult.data.value
+        initForm(responseData["values"], responseData["structure"], state.values)
+
+        state.errors = responseData["errors"]
+        state.actionparams = responseData["params"]
+        state.actionname = responseData["action"]
         state.loading = false
-        return resp
+        return fetchResult
       })
       .catch(async (error) => {
         state.failed = error
@@ -382,7 +411,10 @@ export function useFormUtils(props, state) {
   return {
     fetchData,
     sendData,
-    buildRequestUrl,
+    buildRequestUrl: () => {
+      const requestSpec = buildRequestSpec()
+      return `/${requestSpec.renderer}/${requestSpec.controller.join("/")}/${requestSpec.endpoint}`
+    },
     updateCategories,
     updateSkel,
     normalizeStructure,

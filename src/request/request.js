@@ -73,6 +73,14 @@ async function fetchSkeyToken(renderer) {
   return _skeyCache.shift()
 }
 
+async function executeAndThrow(fetchResult, executeImpl) {
+  await executeImpl()
+  if (fetchResult.error.value) {
+    throw fetchResult.error.value
+  }
+  return fetchResult
+}
+
 function createControllerListFetch({ all = false, secure = false } = {}) {
   return (controller, {
     params: initialParams = {},
@@ -162,13 +170,15 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     const { isFetching, isFinished, error, execute: _execute, abort } =
       useViurFetch(listUrl, { immediate }).json()
 
+    const fetchResult = { data, structure, orders, cursor, isFetching, isFinished, error, execute, next, filter, reset }
+
     // when all=true: automatically fetch next pages until cursor is empty
     watch(isFinished, async (finished) => {
       if (finished && all && cursor.value) {
         params.value = { ...params.value, cursor: cursor.value }
         _isNext = true
         listUrl.value = _buildUrl()
-        await _execute()
+        await executeAndThrow(fetchResult, _execute)
       }
     })
 
@@ -182,7 +192,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       const { cursor: _, ...rest } = params.value
       params.value = rest
       listUrl.value = _buildUrl()
-      return _execute()
+      return executeAndThrow(fetchResult, _execute)
     }
 
     function next() {
@@ -190,7 +200,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       params.value = { ...params.value, cursor: cursor.value }
       _isNext = true
       listUrl.value = _buildUrl()
-      return _execute()
+      return executeAndThrow(fetchResult, _execute)
     }
 
     function filter(newParams) {
@@ -208,14 +218,14 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       params.value = rest
     }
 
-    return { data, structure, orders, cursor, isFetching, isFinished, error, execute, next, filter, reset }
+    return fetchResult
   }
 }
 
 export function createControllerFetch({ endpoint, method = "GET", secure = false, invalidates = false, invalidatesAll = false } = {}) {
   return (controller, args = "/", data = {}, ctx = {}) => {
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
-    const { version = null, lang = null, headers = {}, mode = null, skey: ctxSkey = null, cached = false, ttl = 0 } = ctx
+    const { version = null, lang = null, headers = {}, mode = null, skey: ctxSkey = null, cached = false, ttl = 0, immediate = true } = ctx
 
     // Stable cache key: base URL + data params, skey excluded so it stays consistent across requests
     let _cacheKey = null
@@ -291,7 +301,10 @@ export function createControllerFetch({ endpoint, method = "GET", secure = false
           return ctx
         },
       },
-    })(args).json()
+    })(args, { immediate }).json()
+
+    const _execute = fetchReturn.execute
+    fetchReturn.execute = () => executeAndThrow(fetchReturn, _execute)
 
     // When a cache hit cancelled the fetch, isFinished fires but data is null.
     // Apply the cached value once isFinished becomes true.
@@ -423,57 +436,6 @@ export function resetState() {
   _skeyCache = []
   _skeyPending = null
   return clearCache()
-}
-
-/**
- * Simple authenticated GET request.
- * @param {string} url
- * @returns {Promise<Response>}
- */
-export function get(url) {
-  return fetch(url, { credentials: "include" })
-}
-
-/**
- * Unauthenticated POST request (no skey).
- * @param {string} url
- * @param {Record<string, any>} data
- * @param {Record<string, string>|null} [headers]
- * @returns {Promise<Response>}
- */
-export function post(url, data = {}, headers = null) {
-  const fd = _toFormData(data)
-  return fetch(url, {
-    method: "POST",
-    body: fd,
-    credentials: "include",
-    ...(headers ? { headers } : {}),
-  })
-}
-
-/**
- * Authenticated POST request — fetches a skey token and appends it to the body.
- * @param {string} url
- * @param {Record<string, any>} data
- * @param {Record<string, string>|null} [headers]
- * @param {string} [renderer]
- * @returns {Promise<Response>}
- */
-export async function securePost(
-  url,
-  data = {},
-  headers = null,
-  renderer = import.meta.env.VITE_DEFAULT_RENDERER ?? "json",
-) {
-  const skey = await fetchSkeyToken(renderer)
-  const fd = _toFormData(data)
-  fd.append("skey", skey)
-  return fetch(url, {
-    method: "POST",
-    body: fd,
-    credentials: "include",
-    ...(headers ? { headers } : {}),
-  })
 }
 
 export const useStructureFetch = createControllerFetch({ endpoint: "structure" })

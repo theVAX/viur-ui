@@ -1,6 +1,7 @@
 // Theme & base styles
 import "@viur/webawesome/dist/styles/themes/awesome.css"
 import "@viur/webawesome/dist/styles/webawesome.css"
+import "./webawesomeCompat.css"
 
 // Components
 import "@viur/webawesome/dist/components/accordion/accordion"

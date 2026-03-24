@@ -1,23 +1,22 @@
 <template>
-  <sl-select
+  <wa-select
     class="widget-bone widget-bone-select widget-bone-select-default"
     :class="[`widget-bone-select-${name}`]"
     :name="name"
     :disabled="boneState.readonly"
     :value="state.value"
-    hoist
     :multiple="boneState['bonestructure']['multiple']"
     max-options-visible="0"
     :required="boneState.bonestructure.required"
-    clearable
+    with-clear
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
+    @change="changeEvent"
   >
-    <sl-option v-for="value in convertObjToList()" :key="value[0]" :value="value[0]">
+    <wa-option v-for="value in convertObjToList()" :key="value[0]" :value="value[0]">
       {{ value[1] }}
-    </sl-option>
-  </sl-select>
+    </wa-option>
+  </wa-select>
 </template>
 
 <script setup>
@@ -86,7 +85,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-select {
+wa-select {
   width: 100%;
 
   &::part(combobox) {
@@ -102,7 +101,7 @@ sl-select {
   }
 }
 
-sl-option {
+wa-option {
   &::part(base) {
     transition: background-color ease 0.3s;
   }

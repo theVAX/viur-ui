@@ -4,7 +4,9 @@
           :placeholder="state.placeholder"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     ></textarea>
-    <sl-icon-button :name=" state.max?'arrows-angle-contract':'arrows-angle-expand'" @click="state.max = !state.max"></sl-icon-button>
+    <wa-button appearance="plain" class="expand-button" @click="state.max = !state.max">
+      <wa-icon :name="state.max ? 'arrows-angle-contract' : 'arrows-angle-expand'"></wa-icon>
+    </wa-button>
   </div>
 
   <input
@@ -141,13 +143,14 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-sl-icon-button{
+.expand-button{
   position: absolute;
   bottom:0px;
   right: 10px;
+  z-index: 1;
 }
 
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

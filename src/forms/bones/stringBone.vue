@@ -1,5 +1,5 @@
 <template>
-  <sl-input
+  <wa-input
     ref="stringBone"
     class="widget-bone widget-bone-string widget-bone-string-default"
     :class="[`widget-bone-string-${name}`]"
@@ -14,9 +14,9 @@
     :pattern="state.pattern"
     :maxlength="boneState.maxlength"
     :minlength="boneState.minlength"
-    @sl-change="changeEvent"
+    @change="changeEvent"
     @keyup="changeEvent"
-  ></sl-input>
+  ></wa-input>
 </template>
 
 <script setup>
@@ -100,7 +100,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

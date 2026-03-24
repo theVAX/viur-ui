@@ -12,38 +12,38 @@
     <bone-label v-if="!['hide', 'placeholder'].includes(label)" :name="name">
       <span :class="{ required: state.required }">{{ state.bonestructure["descr"] }}</span>
       <span v-if="state.required" class="required">*</span>
-      <sl-tooltip
+      <wa-tooltip
         v-if="state.hasTooltip && !showLabelInfo"
+        :for="state.labelTooltipTargetId"
         :content="state.bonestructure.params['tooltip']"
         placement="top-center"
-      >
-        <div class="tooltip">
-          <sl-icon name="question"></sl-icon>
-        </div>
-      </sl-tooltip>
+      ></wa-tooltip>
+      <div v-if="state.hasTooltip && !showLabelInfo" :id="state.labelTooltipTargetId" class="tooltip">
+        <wa-icon name="question"></wa-icon>
+      </div>
     </bone-label>
 
-    <sl-alert v-if="showLabelInfo && state.hasTooltip" variant="info" open class="label-info">
-      <sl-icon slot="icon" name="info-circle-fill"></sl-icon>
+    <wa-alert v-if="showLabelInfo && state.hasTooltip" variant="brand" open class="label-info">
+      <wa-icon slot="icon" name="info-circle-fill"></wa-icon>
       {{ state.bonestructure.params["tooltip"] }}
-    </sl-alert>
-    <sl-tooltip
+    </wa-alert>
+    <wa-tooltip
       class="bone-tooltip"
+      :for="state.boneTooltipTargetId"
       :disabled="!state.showtooltip"
       :content="state.bonestructure?.['descr']"
       style="--show-delay: 1000"
-    >
-      <div class="bone-inner-wrap wrapper-bone-widget" :class="[`wrapper-bone-widget-${name}`]">
+    ></wa-tooltip>
+    <div :id="state.boneTooltipTargetId" class="bone-inner-wrap wrapper-bone-widget" :class="[`wrapper-bone-widget-${name}`]">
         <div class="wrapper-bone-row">
-          <sl-select
+          <wa-select
             v-if="state.multilanguage"
             style="width: 100px"
-            hoist
             :value="state.currentLanguage"
-            @sl-change="updateLanguage"
+            @change="updateLanguage"
           >
-            <sl-option v-for="lang in state.languages" :value="lang">{{ $t(lang) }}</sl-option>
-          </sl-select>
+            <wa-option v-for="lang in state.languages" :value="lang">{{ $t(lang) }}</wa-option>
+          </wa-select>
           <div class="wrapper-bone-row">
             <div class="wrapper-bone-block">
               <component
@@ -68,20 +68,19 @@
           </div>
         </div>
         <template v-if="errorStyle === 'default'">
-          <sl-alert v-for="message in state.errorMessages" open summary="Errors" variant="danger" class="error-msg">
-            <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+          <wa-alert v-for="message in state.errorMessages" open summary="Errors" variant="danger" class="error-msg">
+            <wa-icon slot="icon" name="exclamation-triangle"></wa-icon>
             <div class="error-msg">
               {{ $t(`errors.${message}`) }}
             </div>
-          </sl-alert>
+          </wa-alert>
         </template>
         <template v-else>
           <div v-for="message in state.errorMessages" style="font-size: 0.8em; color: red">
             {{ $t(`errors.${message}`) }}
           </div>
         </template>
-      </div>
-    </sl-tooltip>
+    </div>
   </div>
 </template>
 
@@ -96,12 +95,14 @@ import {
   onMounted,
   watch,
   ref,
+  inject,
+  unref,
 } from "vue"
 import wrapperMultiple from "./wrapper_multiple.vue"
 import BoneLabel from "./boneLabel.vue"
 import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
 import rawBone from "./rawBone.vue"
-import Utils from "./utils"
+import Utils, { buildBoneDomId } from "./utils"
 import { VueDraggable } from "vue-draggable-plus"
 import BoneActions from "./boneActions.vue"
 
@@ -151,6 +152,9 @@ const props = defineProps({
     },
   },
 })
+const parentBonePath = inject("bonePath", [])
+const bonePath = computed(() => [...(unref(parentBonePath) ?? []), props.name])
+provide("bonePath", bonePath)
 const state = reactive({
   boneactions: computed(() => props.boneactions),
   bonestructure: computed(() => {
@@ -267,6 +271,8 @@ const state = reactive({
   }),
   defaultLanguage: computed(() => props.defaultLanguage),
   currentLanguage: null,
+  labelTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "label-tooltip")),
+  boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")),
 })
 provide("boneState", state)
 
@@ -423,7 +429,7 @@ watch(
         padding-bottom: var(--sl-spacing-small);
         margin-bottom: var(--sl-spacing-small);
 
-        &:deep(sl-details) {
+        &:deep(wa-details) {
           &:last-child {
             &::part(base) {
               border-bottom: none;
@@ -444,7 +450,7 @@ watch(
     }
   }
 
-  sl-tab-panel::part(base) {
+  wa-tab-panel::part(base) {
     padding: 0;
   }
 
@@ -463,7 +469,7 @@ watch(
       border-top: 1px solid var(--vi-border-color);
     }
 
-    & sl-tab {
+    & wa-tab {
       margin-top: -1px;
 
       &[aria-selected="true"] {
@@ -518,7 +524,7 @@ watch(
       margin-bottom: var(--sl-spacing-x-small);
     }
 
-    & sl-input {
+    & wa-input {
       &::part(base) {
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
@@ -527,7 +533,7 @@ watch(
     }
 
     @media (max-width: 900px) {
-      & sl-input {
+      & wa-input {
         &::part(base) {
           border-top-right-radius: 0;
           border-bottom-left-radius: var(--sl-border-radius-medium);
@@ -552,7 +558,7 @@ watch(
   .bone-inner-wrap {
     min-width: 1px;
 
-    & sl-alert {
+    & wa-alert {
       margin-top: var(--sl-spacing-x-small);
       background-color: transparent;
 
@@ -599,7 +605,7 @@ watch(
     margin-left: auto;
     padding-left: 0.4em;
 
-    & sl-icon {
+    & wa-icon {
       background-color: var(--sl-color-info-500);
       color: #fff;
       padding: 0.4em;
@@ -608,7 +614,7 @@ watch(
     }
   }
 
-  sl-tooltip {
+  wa-tooltip {
     &::part(body) {
       background-color: var(--sl-color-info-500);
     }
@@ -623,7 +629,7 @@ watch(
     font-weight: 700;
   }
 
-  :deep(sl-combobox) {
+  :deep(wa-combobox) {
     &::part(input__base) {
       border: 1px solid var(--vi-border-color);
       box-shadow: none !important;
@@ -638,7 +644,7 @@ watch(
     }
   }
 
-  sl-tooltip.bone-tooltip {
+  wa-tooltip.bone-tooltip {
     &::part(body) {
       background-color: var(--sl-color-primary-500);
     }
@@ -667,9 +673,9 @@ watch(
 </style>
 
 <style>
-sl-input[data-user-invalid]::part(base),
-sl-select[data-user-invalid]::part(combobox),
-sl-checkbox[data-user-invalid]::part(control) {
+wa-input[data-user-invalid]::part(base),
+wa-select[data-user-invalid]::part(combobox),
+wa-checkbox[data-user-invalid]::part(control) {
   border-color: var(--sl-color-danger-500);
 }
 </style>

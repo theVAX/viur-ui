@@ -2,19 +2,19 @@
   <div class="translate-wrapper">
     <div class="translate-grid">
       <div class="translate-flex">
-        <sl-textarea :value="state.value_de" label="Original Sprache (de):" @sl-change="updateValueDe"></sl-textarea>
+        <wa-textarea :value="state.value_de" label="Original Sprache (de):" @change="updateValueDe"></wa-textarea>
       </div>
 
       <div class="translate-icon-wrap">
-        <sl-icon name="arrow-left-right"></sl-icon>
+        <wa-icon name="arrow-left-right"></wa-icon>
       </div>
 
       <div class="translate-flex">
-        <sl-textarea
+        <wa-textarea
           :value="state.result || '-'"
           :label="`Zielsprache (` + state.currentLang + `):`"
-          @sl-change="updateValue"
-        ></sl-textarea>
+          @change="updateValue"
+        ></wa-textarea>
       </div>
     </div>
 
@@ -24,27 +24,27 @@
         Bitte prüfen Sie daher stets das Ergebnis.
       </span>
       <div></div>
-      <sl-button size="small" variant="info" :loading="state.loading" @click="translate">Übersetzen</sl-button>
+      <wa-button size="small" variant="brand" :loading="state.loading" @click="translate">Übersetzen</wa-button>
     </div>
   </div>
 
   <div slot="footer" class="translate-dialog-footer">
-    <sl-button variant="danger" size="small" outline @click="CloseAction">{{ $t("relation.abort") }}</sl-button>
+    <wa-button variant="danger" size="small" appearance="outlined" @click="CloseAction">{{ $t("relation.abort") }}</wa-button>
 
     <div class="translate-dialog-footer-spacer"></div>
 
-    <sl-button variant="success" outline size="small" :disabled="!state.nextlang" @click="nextlang">
+    <wa-button variant="success" appearance="outlined" size="small" :disabled="!state.nextlang" @click="nextlang">
       Übernehmen und nächste leere Sprache
-    </sl-button>
-    <sl-button variant="success" size="small" @click="ApplySelection">
+    </wa-button>
+    <wa-button variant="success" size="small" @click="ApplySelection">
       Ziel für {{ state.currentLang }} übernehmen
-    </sl-button>
+    </wa-button>
   </div>
 </template>
 
 <script setup>
-import { reactive, defineComponent, onMounted, inject, computed, watch } from "vue"
-import { Request } from "@viur/vue-utils"
+import { reactive, onMounted, computed, watch } from "vue"
+import { createControllerFetch } from "../../../request/index.js"
 
 const props = defineProps({
   name: String,
@@ -55,6 +55,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(["close", "next"])
+const translateFetch = createControllerFetch({ endpoint: "translate", method: "POST" })
 
 const state = reactive({
   result: null,
@@ -74,22 +75,23 @@ const state = reactive({
     return Object.keys(val).filter((x) => x !== "de")?.[0]
   }),
 })
-function translate() {
+
+async function translate() {
   state.loading = true
-  Request.post("/json/assistant/translate", {
-    dataObj: {
+  try {
+    const fetchResult = translateFetch("assistant", "/", {
       text: state.value_de,
       language: state.rawLang,
       characteristic: state.simple ? "simple" : null,
-    },
-  })
-    .then(async (resp) => {
-      state.result = await resp.json()
-      state.loading = false
+    }, {
+      immediate: false,
     })
-    .catch((error) => {
-      state.loading = false
-    })
+    await fetchResult.execute()
+    state.result = fetchResult.data.value
+  } catch (error) {
+  } finally {
+    state.loading = false
+  }
 }
 
 function getValue(lang = null) {
@@ -179,7 +181,7 @@ function ApplySelection() {
   font-size: 0.7em;
 }
 
-sl-textarea {
+wa-textarea {
   &::part(form-control-label) {
     margin-bottom: var(--sl-spacing-x-small);
     font-weight: 600;

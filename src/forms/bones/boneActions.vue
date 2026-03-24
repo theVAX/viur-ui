@@ -2,16 +2,16 @@
   <template v-if="bone?.params?.actions">
     <template v-if="bone.params.actions.length >= 1">
       <template v-for="action in state.actions" :key="action['arg'] + '_' + name + '_' + lang">
-        <sl-button
+        <wa-button
           :disabled="disabled(action)"
           size="medium"
-          variant="info"
-          outline
+          variant="brand"
+          appearance="outlined"
           :title="action['title']"
           @click="openPopup(action)"
         >
-          <sl-icon slot="prefix" :name="action['icon']"></sl-icon>
-        </sl-button>
+          <wa-icon slot="start" :name="action['icon']"></wa-icon>
+        </wa-button>
 
         <assistant-window
           :open="action['_opened']"

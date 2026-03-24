@@ -1,12 +1,12 @@
 <template>
-  <sl-switch
+  <wa-switch
     class="widget-bone widget-bone-boolean widget-bone-boolean-default"
     :class="[`widget-bone-boolean-${name}`]"
     :disabled="boneState.readonly"
     :checked="state.value"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @sl-change="changeEvent"
-  ></sl-switch>
+    @change="changeEvent"
+  ></wa-switch>
 </template>
 
 <script setup>
@@ -45,18 +45,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-switch {
-  border: 1px solid var(--sl-color-neutral-300);
-  padding: 0.4em 0.1em 0.4em 0.4em;
-  border-top-right-radius: var(--sl-input-border-radius-medium);
-  border-bottom-right-radius: var(--sl-input-border-radius-medium);
-  --height: calc(var(--sl-input-height-medium) - 1em);
-  --width: calc(1.7 * (var(--sl-input-height-medium) - 0.8em));
-  --thumb-size: calc(var(--sl-input-height-medium) - 1em);
 
-  @media (max-width: 900px) {
-    border-top-right-radius: 0;
-    border-bottom-left-radius: var(--sl-border-radius-medium);
-  }
-}
+
 </style>

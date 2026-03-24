@@ -1,5 +1,5 @@
 <template>
-  <sl-textarea
+  <wa-textarea
     v-if="boneState.bonestructure.type === 'raw.json'"
     class="widget-bone widget-bone-raw widget-bone-raw-default"
     :class="[`widget-bone-raw-${name}`]"
@@ -11,8 +11,8 @@
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @input="changeEvent"
-  ></sl-textarea>
-  <sl-textarea
+  ></wa-textarea>
+  <wa-textarea
     v-else
     class="widget-bone widget-bone-raw widget-bone-raw-default"
     :class="[`widget-bone-raw-${name}`]"
@@ -24,7 +24,7 @@
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @input="changeEvent"
-  ></sl-textarea>
+  ></wa-textarea>
 </template>
 
 <script setup>
@@ -65,7 +65,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-sl-input {
+wa-input {
   width: 100%;
 
   &::part(base) {

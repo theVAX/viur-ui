@@ -1,0 +1,72 @@
+:root {
+  --sl-spacing-x-small: var(--wa-space-xs);
+  --sl-spacing-small: var(--wa-space-s);
+  --sl-spacing-medium: var(--wa-space-m);
+  --sl-spacing-large: var(--wa-space-l);
+
+  --sl-border-radius-medium: var(--wa-border-radius-m);
+  --sl-input-border-radius-medium: var(--wa-form-control-border-radius);
+  --sl-input-height-medium: var(--wa-form-control-height);
+  --sl-input-font-size-medium: var(--wa-font-size-m);
+
+  --sl-color-neutral-0: var(--wa-color-surface-default);
+  --sl-color-neutral-50: var(--wa-color-neutral-95);
+  --sl-color-neutral-100: var(--wa-color-neutral-90);
+  --sl-color-neutral-200: var(--wa-color-neutral-fill-normal);
+  --sl-color-neutral-300: var(--wa-color-surface-border);
+  --sl-color-neutral-400: var(--wa-color-neutral-border-normal);
+  --sl-color-neutral-500: var(--wa-color-neutral-60);
+  --sl-color-neutral-600: var(--wa-color-neutral-50);
+  --sl-color-neutral-700: var(--wa-color-neutral-40);
+  --sl-color-neutral-800: var(--wa-color-neutral-20);
+  --sl-color-neutral-900: var(--wa-color-text-normal);
+
+  --sl-color-gray-200: var(--wa-color-neutral-95);
+  --sl-color-gray-400: var(--wa-color-neutral-60);
+  --sl-color-gray-500: var(--wa-color-neutral-border-normal);
+
+  --sl-color-primary-500: var(--wa-color-brand-50);
+  --sl-color-primary-600: var(--wa-color-brand-60);
+  --sl-color-success-500: var(--wa-color-success-50);
+  --sl-color-success-600: var(--wa-color-success-60);
+  --sl-color-danger-500: var(--wa-color-danger-50);
+  --sl-color-danger-700: var(--wa-color-danger-70);
+
+  --sl-color-info-50: var(--wa-color-brand-95);
+  --sl-color-info-300: var(--wa-color-brand-90);
+  --sl-color-info-500: var(--wa-color-brand-60);
+  --sl-color-info-900: var(--wa-color-brand-30);
+}
+
+wa-input,
+wa-textarea,
+wa-select,
+wa-combobox,
+wa-checkbox,
+wa-switch,
+wa-radio-group,
+wa-date-picker,
+wa-color-picker {
+  --wa-form-control-required-content: "";
+}
+
+wa-input::part(form-control-label),
+wa-input::part(label),
+wa-textarea::part(form-control-label),
+wa-textarea::part(label),
+wa-select::part(form-control-label),
+wa-select::part(label),
+wa-combobox::part(form-control-label),
+wa-combobox::part(label),
+wa-checkbox::part(form-control-label),
+wa-checkbox::part(label),
+wa-switch::part(form-control-label),
+wa-switch::part(label),
+wa-radio-group::part(form-control-label),
+wa-radio-group::part(label),
+wa-date-picker::part(form-control-label),
+wa-date-picker::part(label),
+wa-color-picker::part(form-control-label),
+wa-color-picker::part(label) {
+  display: none;
+}

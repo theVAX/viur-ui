@@ -1,44 +1,43 @@
 <template>
   <div class="actionbar">
-    <sl-button
+    <wa-button
       v-if="boneState.multiple && !readonly"
       variant="danger"
       :title="$t('bone.del')"
-      outline
+      appearance="outlined"
       class="delete-btn"
       @click="openSelector()"
     >
-      <sl-icon slot="prefix" name="x-lg"></sl-icon>
-    </sl-button>
+      <wa-icon slot="start" name="x-lg"></wa-icon>
+    </wa-button>
 
-    <sl-combobox
+    <wa-combobox
       :source="getList"
-      hoist
-      @sl-item-select="
+      @change="
         addMultipleEntry(lang, {
-          dest: state.skels?.[$event.detail.item.value],
+          dest: state.skels?.[$event.target.value],
           rel: state.hasUsing ? undefined : null,
         })
       "
-    ></sl-combobox>
+    ></wa-combobox>
 
-    <sl-button
+    <wa-button
       v-if="boneState.multiple && !readonly"
       variant="success"
       :title="$t('bone.add')"
-      outline
+      appearance="outlined"
       class="add-btn"
       @click="addMultiple"
     >
-      <sl-icon slot="prefix" name="plus-lg"></sl-icon>
+      <wa-icon slot="start" name="plus-lg"></wa-icon>
       {{ $t("bone.addEmpty") }}
-    </sl-button>
+    </wa-button>
   </div>
 </template>
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
-import { Request } from "../../../index"
+import { useListFetch } from "../../../request/index.js"
 
 const props = defineProps({
   name: String,
@@ -60,23 +59,27 @@ const state = reactive({
   hasUsing: computed(() => boneState?.bonestructure["using"]),
 })
 
-function getList(search) {
-  let params = ""
+async function getList(search) {
+  let params = { limit: 99 }
   if (boneState.bonestructure["type"].startsWith("relational.tree.leaf")) {
-    params = "skelType=leaf&"
+    params.skelType = "leaf"
   } else if (boneState.bonestructure["type"].startsWith("relational.tree.node")) {
-    params = "skelType=node&"
+    params.skelType = "node"
   }
-  return Request.get(
-    `/${import.meta.env.VITE_DEFAULT_RENDERER || "vi"}/${boneState.bonestructure["module"]}/list?${params}limit=99`
-  ).then(async (resp) => {
-    //?viurTags$lk=${search.toLowerCase()}
-    const data = await resp.json()
-    state.skels = data["skellist"].reduce((acc, curr) => ((acc[curr["key"]] = curr), acc), {})
+  const listFetch = useListFetch(boneState.bonestructure["module"], {
+    immediate: false,
+    params,
+    renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
+  })
 
-    return data["skellist"]?.map((d) => {
-      return { text: formatString(boneState.bonestructure["format"], { dest: d }), value: d.key, data: d }
-    })
+  await listFetch.execute()
+
+  //?viurTags$lk=${search.toLowerCase()}
+  const data = { skellist: listFetch.data.value }
+  state.skels = data["skellist"].reduce((acc, curr) => ((acc[curr["key"]] = curr), acc), {})
+
+  return data["skellist"]?.map((d) => {
+    return { text: formatString(boneState.bonestructure["format"], { dest: d }), value: d.key, data: d }
   })
 }
 
@@ -102,7 +105,7 @@ function addMultiple() {
   flex-wrap: nowrap;
 }
 
-sl-combobox {
+wa-combobox {
   width: 100%;
 }
 

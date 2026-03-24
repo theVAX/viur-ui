@@ -223,7 +223,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 }
 
 export function createControllerFetch({ endpoint, method = "GET", secure = false, invalidates = false, invalidatesAll = false } = {}) {
-  return (controller, args = "/", data = {}, ctx = {}) => {
+  return (controller, data = {}, args = "/", ctx = {}) => {
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
     const { version = null, lang = null, headers = {}, mode = null, skey: ctxSkey = null, cached = false, ttl = 0, immediate = true } = ctx
 

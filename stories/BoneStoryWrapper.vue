@@ -13,9 +13,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { markRaw } from 'vue'
 import Bone from '../src/forms/bones/bone.vue'
-import { getBoneWidget } from '../src/forms/bones/index.js'
+import stringBone from '../src/forms/bones/stringBone.vue'
+import numericBone from '../src/forms/bones/numericBone.vue'
+import booleanBone from '../src/forms/bones/booleanBone.vue'
+import dateBone from '../src/forms/bones/dateBone.vue'
+import selectBone from '../src/forms/bones/selectBone.vue'
+import rawBone from '../src/forms/bones/rawBone.vue'
+
+const BONE_COMPONENTS = {
+  str: markRaw(stringBone),
+  numeric: markRaw(numericBone),
+  bool: markRaw(booleanBone),
+  date: markRaw(dateBone),
+  select: markRaw(selectBone),
+}
 
 const props = defineProps({
   boneName: {
@@ -48,5 +61,5 @@ const props = defineProps({
   },
 })
 
-const boneComponent = computed(() => getBoneWidget(props.boneType))
+const boneComponent = BONE_COMPONENTS[props.boneType] ?? markRaw(rawBone)
 </script>

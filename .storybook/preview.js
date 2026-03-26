@@ -1,6 +1,7 @@
 import { provide, getCurrentInstance } from 'vue'
 import { createI18n } from 'vue-i18n'
 import '../src/webawesomeConfig.js'
+import './storybook.css'
 import de_translations from '../src/legacy/translations/de.js'
 import en_translations from '../src/legacy/translations/en.js'
 

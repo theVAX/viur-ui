@@ -1,0 +1,4 @@
+/* Ensure [hidden] works in Storybook canvas */
+[hidden] {
+  display: none !important;
+}

@@ -10,17 +10,14 @@ const SRC_REQUEST_MOCK_ID = '\0storybook-mock:src/request'
 const srcRequestPath = path.resolve(__dirname, '../src/request/index.js')
 
 function mockSrcRequest() {
+  const requestMockPath = mock('request.js')
   return {
     name: 'storybook-mock-src-request',
     enforce: 'pre',
     resolveId(id, importer) {
       if (!importer) return null
       const resolved = path.resolve(path.dirname(importer.replace(/\?.*$/, '')), id)
-      if (resolved === srcRequestPath) return SRC_REQUEST_MOCK_ID
-    },
-    load(id) {
-      if (id !== SRC_REQUEST_MOCK_ID) return null
-      return `export * from '${mock('request.js').replace(/\\/g, '/')}'`
+      if (resolved === srcRequestPath) return requestMockPath
     },
   }
 }

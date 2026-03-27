@@ -55,20 +55,21 @@ import { createStructure } from '../fixtures/text.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="content"
           bone-type="text"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
-          :skel="{ content: 'Langer Text\nMit mehreren Zeilen.' }"
+          :structure="state.structure"
+          :skel="{ content: '<p>Beispielinhalt</p>' }"
           :errors="state.showError ? [{ fieldPath: ['content'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.content.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.content.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

@@ -36,20 +36,21 @@ import { createStructure } from '../fixtures/password.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="password"
           bone-type="password"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ password: '' }"
           :errors="state.showError ? [{ fieldPath: ['password'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.password.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.password.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

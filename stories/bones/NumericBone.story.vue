@@ -53,20 +53,21 @@ import { createStructure } from '../fixtures/numeric.js'
     </Variant>
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="amount"
           bone-type="numeric"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ amount: 42 }"
           :errors="state.showError ? [{ fieldPath: ['amount'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.amount.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.amount.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

@@ -52,5 +52,24 @@ import { createStructure } from '../fixtures/color.js'
       />
     </Variant>
 
+    <Variant
+      title="Playground"
+      :init-state="() => ({ readonly: false, required: false, showError: false })"
+    >
+      <template #default="{ state }">
+        <BoneStoryWrapper
+          bone-name="color"
+          bone-type="color"
+          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :skel="{ color: '#3b82f6' }"
+          :errors="state.showError ? [{ fieldPath: ['color'], errorMessage: 'field_not_set', severity: 3 }] : []"
+        />
+      </template>
+      <template #controls="{ state }">
+        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+      </template>
+    </Variant>
   </Story>
 </template>

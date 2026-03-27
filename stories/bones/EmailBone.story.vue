@@ -53,5 +53,24 @@ import { createStructure } from '../fixtures/email.js'
       />
     </Variant>
 
+    <Variant
+      title="Playground"
+      :init-state="() => ({ readonly: false, required: false, showError: false })"
+    >
+      <template #default="{ state }">
+        <BoneStoryWrapper
+          bone-name="email"
+          bone-type="str.email"
+          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :skel="{ email: 'hallo@example.com' }"
+          :errors="state.showError ? [{ fieldPath: ['email'], errorMessage: 'field_not_set', severity: 3 }] : []"
+        />
+      </template>
+      <template #controls="{ state }">
+        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+      </template>
+    </Variant>
   </Story>
 </template>

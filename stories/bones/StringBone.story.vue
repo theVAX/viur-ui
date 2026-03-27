@@ -51,5 +51,25 @@ import { createStructure } from '../fixtures/string.js'
         :languages="['de', 'en']"
       />
     </Variant>
+    <Variant
+      title="Playground"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
+    >
+      <template #default="{ state }">
+        <BoneStoryWrapper
+          bone-name="title"
+          bone-type="str"
+          :structure="state.structure"
+          :skel="{ title: 'Beispieltext' }"
+          :errors="state.showError ? [{ fieldPath: ['title'], errorMessage: 'field_not_set', severity: 3 }] : []"
+        />
+      </template>
+      <template #controls="{ state }">
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.title.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.title.required" title="Required" />
+        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+      </template>
+    </Variant>
   </Story>
 </template>

@@ -43,5 +43,24 @@ import { createStructure } from '../fixtures/phone.js'
       />
     </Variant>
 
+    <Variant
+      title="Playground"
+      :init-state="() => ({ readonly: false, required: false, showError: false })"
+    >
+      <template #default="{ state }">
+        <BoneStoryWrapper
+          bone-name="phone"
+          bone-type="str.phone"
+          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :skel="{ phone: '+49 89 12345678' }"
+          :errors="state.showError ? [{ fieldPath: ['phone'], errorMessage: 'field_not_set', severity: 3 }] : []"
+        />
+      </template>
+      <template #controls="{ state }">
+        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+      </template>
+    </Variant>
   </Story>
 </template>

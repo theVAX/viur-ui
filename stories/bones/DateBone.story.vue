@@ -50,5 +50,36 @@ import { createStructure } from '../fixtures/date.js'
         :errors="[{ fieldPath: ['publishedAt'], errorMessage: 'field_not_set', severity: 3 }]"
       />
     </Variant>
+
+    <Variant title="Zeit-only">
+      <BoneStoryWrapper
+        bone-name="publishedAt"
+        bone-type="date"
+        :structure="createStructure({ date: false, time: true })"
+        :skel="{ publishedAt: '10:30:00' }"
+      />
+    </Variant>
+
+    <Variant
+      title="Playground"
+      :init-state="() => ({ date: true, time: false, readonly: false, required: false, showError: false })"
+    >
+      <template #default="{ state }">
+        <BoneStoryWrapper
+          bone-name="publishedAt"
+          bone-type="date"
+          :structure="createStructure({ date: state.date, time: state.time, readonly: state.readonly, required: state.required })"
+          :skel="{ publishedAt: '2026-03-27' }"
+          :errors="state.showError ? [{ fieldPath: ['publishedAt'], errorMessage: 'field_not_set', severity: 3 }] : []"
+        />
+      </template>
+      <template #controls="{ state }">
+        <HstCheckbox v-model="state.date" title="Datum" />
+        <HstCheckbox v-model="state.time" title="Zeit" />
+        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+      </template>
+    </Variant>
   </Story>
 </template>

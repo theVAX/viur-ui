@@ -1,11 +1,18 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/string.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/StringBone">
-    <Variant title="Default (editierbar)">
+    <Variant title="Default (editierbar)" :source="src(createStructure(), { title: 'Beispieltext' })">
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -14,7 +21,7 @@ import { createStructure } from '../fixtures/string.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { title: 'Nur lesen' })">
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -23,7 +30,7 @@ import { createStructure } from '../fixtures/string.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { title: ['Wert 1', 'Wert 2'] })">
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -32,7 +39,7 @@ import { createStructure } from '../fixtures/string.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant title="Required + Fehler" :source="src(createStructure({ required: true }), { title: '' }, { errors: [{ fieldPath: ['title'], errorMessage: 'field_not_set', severity: 3 }] })">
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -42,7 +49,7 @@ import { createStructure } from '../fixtures/string.js'
       />
     </Variant>
 
-    <Variant title="Multilang">
+    <Variant title="Multilang" :source="src(createStructure({ languages: ['de', 'en'] }), { title: { de: 'Deutsch', en: 'English' } }, { languages: ['de', 'en'] })">
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"

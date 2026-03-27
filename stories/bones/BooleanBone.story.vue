@@ -1,11 +1,18 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/boolean.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/BooleanBone">
-    <Variant title="Default (editierbar)">
+    <Variant title="Default (editierbar)" :source="src(createStructure(), { active: true })">
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -14,7 +21,7 @@ import { createStructure } from '../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { active: false })">
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -23,7 +30,7 @@ import { createStructure } from '../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { active: [true, false, true] })">
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -32,7 +39,16 @@ import { createStructure } from '../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { active: null },
+          { errors: [{ fieldPath: ['active'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -42,7 +58,7 @@ import { createStructure } from '../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Variante: Choose">
+    <Variant title="Variante: Choose" :source="src(createStructure({ type: 'bool.choose' }), { active: true })">
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool.choose"
@@ -51,7 +67,10 @@ import { createStructure } from '../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Variante: Select (Dropdown)">
+    <Variant
+      title="Variante: Select (Dropdown)"
+      :source="src(createStructure({ type: 'bool.select' }), { active: false })"
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool.select"

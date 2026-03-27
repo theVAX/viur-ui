@@ -1,12 +1,19 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/key.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/KeyBone">
 
-    <Variant title="Mit Schlüssel">
+    <Variant title="Mit Schlüssel" :source="src(createStructure(), { key: 'ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM' })">
       <BoneStoryWrapper
         bone-name="key"
         bone-type="key"
@@ -15,7 +22,7 @@ import { createStructure } from '../fixtures/key.js'
       />
     </Variant>
 
-    <Variant title="Leer">
+    <Variant title="Leer" :source="src(createStructure(), { key: null })">
       <BoneStoryWrapper
         bone-name="key"
         bone-type="key"

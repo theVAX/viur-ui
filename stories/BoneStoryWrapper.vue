@@ -8,12 +8,16 @@
       :errors="errors"
       :label="label"
       :languages="languages"
+      @change="logEvent('change', $event)"
+      @change-internal="logEvent('change-internal', $event)"
+      @handleClick="logEvent('handleClick', $event)"
     />
   </div>
 </template>
 
 <script setup>
 import { computed, markRaw } from "vue"
+import { logEvent } from "histoire/client"
 import Bone from "../src/forms/bones/bone.vue"
 import { getBoneWidget } from "../src/forms/bones/index.js"
 

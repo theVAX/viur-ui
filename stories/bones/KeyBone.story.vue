@@ -26,20 +26,21 @@ import { createStructure } from '../fixtures/key.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: true, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="key"
           bone-type="key"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ key: 'ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM' }"
           :errors="state.showError ? [{ fieldPath: ['key'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.key.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.key.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

@@ -6,12 +6,16 @@
       :structure="structure"
       :skel="skel"
       :errors="errors"
+      @change="logEvent('change', $event)"
+      @change-internal="logEvent('change-internal', $event)"
+      @handleClick="logEvent('handleClick', $event)"
     />
   </div>
 </template>
 
 <script setup>
 import { provide, markRaw } from 'vue'
+import { logEvent } from 'histoire/client'
 import { createMainformState } from './mocks/mainformState.js'
 import Bone from '../src/forms/bones/bone.vue'
 import recordBone from '../src/forms/bones/recordBone.vue'

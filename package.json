@@ -36,17 +36,22 @@
     "test:run": "vitest run",
     "story:dev": "histoire dev",
     "story:build": "histoire build"
-
   },
   "devDependencies": {
-    "@histoire/plugin-vue": "^0.17.0",
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@histoire/plugin-vue": "^1.0.0-beta.1",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vueuse/core": "^14.2.1",
-    "fake-indexeddb": "^6.0.0",
-    "happy-dom": "^14.0.0",
-    "histoire": "^0.17.0",
-    "vitest": "^2.0.0",
-    "vue": "^3.5.30"
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-vue": "^10.8.0",
+    "fake-indexeddb": "^6.2.5",
+    "globals": "^17.4.0",
+    "happy-dom": "^20.8.8",
+    "histoire": "^1.0.0-beta.1",
+    "vite": "^7.3.0",
+    "vitest": "^4.1.1",
+    "vue": "^3.5.31"
   },
   "peerDependenciesMeta": {
     "@ckeditor/ckeditor5-vue": {

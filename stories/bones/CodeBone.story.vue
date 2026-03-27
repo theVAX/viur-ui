@@ -57,25 +57,21 @@ const htmlCode = '<h1>Hello</h1>\n<p>World</p>\n'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ language: 'python', readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="code"
-          :bone-type="'raw.code.' + state.language"
-          :structure="createStructure({ type: 'raw.code.' + state.language, readonly: state.readonly, required: state.required })"
+          :bone-type="state.structure.code.type"
+          :structure="state.structure"
           :skel="{ code: 'def hello():\n    print(\'Hello, World!\')\n' }"
           :errors="state.showError ? [{ fieldPath: ['code'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstSelect
-          v-model="state.language"
-          title="Sprache"
-          :options="['python', 'html', 'javascript']"
-        />
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.code.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.code.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

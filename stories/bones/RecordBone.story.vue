@@ -41,19 +41,20 @@ import { createStructure } from '../fixtures/record.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <RecordBoneWrapper
           bone-name="address"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ address: {} }"
           :errors="state.showError ? [{ fieldPath: ['address'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.address.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.address.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

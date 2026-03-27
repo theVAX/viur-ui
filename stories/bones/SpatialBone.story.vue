@@ -54,25 +54,21 @@ import { createStructure } from '../fixtures/spatial.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ bounded: false, readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="location"
           bone-type="spatial"
-          :structure="createStructure({
-            readonly: state.readonly,
-            required: state.required,
-            ...(state.bounded ? { boundslat: [47, 55], boundslng: [6, 15], descr: 'Deutschland' } : {})
-          })"
+          :structure="state.structure"
           :skel="{ location: { lat: 48.1351, lng: 11.582 } }"
           :errors="state.showError ? [{ fieldPath: ['location'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.bounded" title="Grenzen (DE)" />
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.location.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.location.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

@@ -62,22 +62,23 @@ import { createStructure } from '../fixtures/date.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ date: true, time: false, readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="publishedAt"
           bone-type="date"
-          :structure="createStructure({ date: state.date, time: state.time, readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ publishedAt: '2026-03-27' }"
           :errors="state.showError ? [{ fieldPath: ['publishedAt'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.date" title="Datum" />
-        <HstCheckbox v-model="state.time" title="Zeit" />
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.publishedAt.date" title="Datum" />
+        <HstCheckbox v-model="state.structure.publishedAt.time" title="Zeit" />
+        <HstCheckbox v-model="state.structure.publishedAt.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.publishedAt.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

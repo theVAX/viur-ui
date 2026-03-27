@@ -86,20 +86,21 @@ const exampleJson = { name: 'Test', value: 42, active: true }
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
-          bone-name="content"
-          bone-type="raw"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
-          :skel="{ content: 'Rohtext\nZeile 2' }"
-          :errors="state.showError ? [{ fieldPath: ['content'], errorMessage: 'field_not_set', severity: 3 }] : []"
+          bone-name="code"
+          :bone-type="state.structure.code.type"
+          :structure="state.structure"
+          :skel="{ code: 'Beispielinhalt' }"
+          :errors="state.showError ? [{ fieldPath: ['code'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.code.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.code.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

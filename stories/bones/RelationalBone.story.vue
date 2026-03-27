@@ -1,6 +1,6 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
-import { createStructure, exampleEntry } from '../fixtures/relational.js'
+import { createStructure } from '../fixtures/relational.js'
 </script>
 
 <template>
@@ -72,20 +72,21 @@ import { createStructure, exampleEntry } from '../fixtures/relational.js'
 
     <Variant
       title="Playground"
-      :init-state="() => ({ readonly: false, required: false, showError: false })"
+      :init-state="() => ({ structure: createStructure(), showError: false })"
     >
       <template #default="{ state }">
         <BoneStoryWrapper
           bone-name="entry"
           bone-type="relational"
-          :structure="createStructure({ readonly: state.readonly, required: state.required })"
+          :structure="state.structure"
           :skel="{ entry: null }"
           :errors="state.showError ? [{ fieldPath: ['entry'], errorMessage: 'field_not_set', severity: 3 }] : []"
         />
       </template>
       <template #controls="{ state }">
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstJson v-model="state.structure" title="Structure" />
+        <HstCheckbox v-model="state.structure.entry.readonly" title="Readonly" />
+        <HstCheckbox v-model="state.structure.entry.required" title="Required" />
         <HstCheckbox v-model="state.showError" title="Mit Fehler" />
       </template>
     </Variant>

@@ -40,7 +40,7 @@
         </wa-dialog>
       </div>
       <div v-else class="preview">
-        <wa-icon v-if="value?.['dest']?.['name']" name="file-earmark"></wa-icon>
+        <wa-icon v-if="value?.['dest']?.['name']" name="file"></wa-icon>
       </div>
       <div v-if="value?.['dest']?.['name']">
         {{ decodeURIComponent(value?.["dest"]?.["name"]) }}
@@ -54,7 +54,7 @@
       class="delete-btn"
       @click="$emit('change', name, '', lang, index)"
     >
-      <wa-icon name="x-lg"></wa-icon>
+      <wa-icon name="xmark"></wa-icon>
     </wa-button>
   </div>
 </template>

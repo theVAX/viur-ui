@@ -31,10 +31,12 @@
     "vue-router": "^4.5.0"
   },
   "scripts": {
+    "icons": "npx wa-icons . ./src/public/assets/icons",
     "test": "vitest",
     "test:run": "vitest run",
     "story:dev": "histoire dev",
     "story:build": "histoire build"
+
   },
   "devDependencies": {
     "@histoire/plugin-vue": "^0.17.0",

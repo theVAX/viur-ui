@@ -19,7 +19,7 @@
       class="add-btn"
       @click="handleAdd(lang)"
     >
-      <wa-icon slot="start" name="plus-lg"></wa-icon>
+      <wa-icon slot="start" name="plus"></wa-icon>
       {{ $t("bone.add") }}
       <template v-if="state.counter > 1">({{ state.counter }})</template>
     </wa-button>

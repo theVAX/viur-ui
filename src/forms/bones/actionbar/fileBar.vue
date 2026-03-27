@@ -13,7 +13,7 @@
       class="delete-btn"
       @click="openSelector()"
     >
-      <wa-icon slot="start" name="x-lg"></wa-icon>
+      <wa-icon slot="start" name="xmark"></wa-icon>
     </wa-button>
 
     <div v-if="state.droparea" class="droparea">Dateien hier hinziehen</div>
@@ -26,7 +26,7 @@
       class="add-btn"
       @click="addMultipleEntry(lang)"
     >
-      <wa-icon slot="start" name="plus-lg"></wa-icon>
+      <wa-icon slot="start" name="plus"></wa-icon>
     </wa-button>
 
     <wa-button

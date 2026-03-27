@@ -9,9 +9,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: './stories/setup.js',
+  storyMatch: ['stories/bones/**/*.story.vue'],
   vite: {
     publicDir: 'stories/public',
     plugins: [
+      {
+        name: 'histoire-mock-request',
+        enforce: 'pre',
+        resolveId(id) {
+          if (/\/request\/index\.js$/.test(id)) {
+            return path.resolve(__dirname, 'stories/mocks/request.js')
+          }
+        },
+      },
       vue({
         template: {
           compilerOptions: {
@@ -21,15 +31,15 @@ export default defineConfig({
       }),
     ],
     resolve: {
-      alias: {
-        '@viur/vue-utils': path.resolve(__dirname, 'src/legacy'),
-        '@ckeditor/ckeditor5-vue': path.resolve(__dirname, 'example/node_modules/@ckeditor/ckeditor5-vue'),
-        'ckeditor5': path.resolve(__dirname, 'example/node_modules/ckeditor5'),
-        'codemirror': path.resolve(__dirname, 'example/node_modules/codemirror'),
-        '@codemirror/language-data': path.resolve(__dirname, 'example/node_modules/@codemirror/language-data'),
-        '@viur/webawesome': path.resolve(__dirname, 'example/node_modules/@viur/webawesome'),
-        'logics-js': path.resolve(__dirname, 'example/node_modules/logics-js'),
-      },
+      alias: [
+        { find: '@viur/vue-utils', replacement: path.resolve(__dirname, 'src/legacy') },
+        { find: '@ckeditor/ckeditor5-vue', replacement: path.resolve(__dirname, 'example/node_modules/@ckeditor/ckeditor5-vue') },
+        { find: 'ckeditor5', replacement: path.resolve(__dirname, 'example/node_modules/ckeditor5') },
+        { find: 'codemirror', replacement: path.resolve(__dirname, 'example/node_modules/codemirror') },
+        { find: '@codemirror/language-data', replacement: path.resolve(__dirname, 'example/node_modules/@codemirror/language-data') },
+        { find: '@viur/webawesome', replacement: path.resolve(__dirname, 'example/node_modules/@viur/webawesome') },
+        { find: 'logics-js', replacement: path.resolve(__dirname, 'example/node_modules/logics-js') },
+      ],
       dedupe: ['vue', 'pinia', 'vue-i18n', '@vueuse/core', 'vue-draggable-plus'],
     },
     optimizeDeps: {

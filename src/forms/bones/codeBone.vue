@@ -5,7 +5,7 @@
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     ></textarea>
     <wa-button appearance="plain" class="expand-button" @click="state.max = !state.max">
-      <wa-icon :name="state.max ? 'arrows-angle-contract' : 'arrows-angle-expand'"></wa-icon>
+      <wa-icon :name="state.max ? 'compress' : 'expand'"></wa-icon>
     </wa-button>
   </div>
 

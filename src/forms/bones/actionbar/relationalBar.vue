@@ -8,7 +8,7 @@
       class="delete-btn"
       @click="openSelector()"
     >
-      <wa-icon slot="start" name="x-lg"></wa-icon>
+      <wa-icon slot="start" name="xmark"></wa-icon>
     </wa-button>
 
     <wa-combobox
@@ -29,7 +29,7 @@
       class="add-btn"
       @click="addMultiple"
     >
-      <wa-icon slot="start" name="plus-lg"></wa-icon>
+      <wa-icon slot="start" name="plus"></wa-icon>
       {{ $t("bone.addEmpty") }}
     </wa-button>
   </div>

@@ -14,7 +14,7 @@
     @wa-clear="state.value1 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
   </wa-input>
   <wa-input
     v-if="!boneState.readonly"
@@ -30,7 +30,7 @@
     @wa-clear="state.value2 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
   </wa-input>
 
   <ul class="errors">

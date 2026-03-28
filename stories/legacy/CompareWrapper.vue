@@ -18,11 +18,13 @@
           @change="onLegacyChange"
         />
       </div>
-      <div
-        data-testid="legacy-event-log"
-        style="margin-top: 0.5rem; font-size: 0.7rem; font-family: monospace; background: #111; color: #aaa; padding: 0.5rem; border-radius: 4px; min-height: 2rem; max-height: 8rem; overflow-y: auto;"
-      >
-        <div v-for="(ev, i) in legacyEvents" :key="i">{{ ev }}</div>
+      <div data-testid="legacy-event-log">
+        <div
+          v-if="legacyEvents.length"
+          style="margin-top: 0.5rem; font-size: 0.7rem; font-family: monospace; background: #111; color: #aaa; padding: 0.5rem; border-radius: 4px; max-height: 8rem; overflow-y: auto;"
+        >
+          <div v-for="(ev, i) in legacyEvents" :key="i">{{ ev }}</div>
+        </div>
       </div>
     </div>
 
@@ -43,11 +45,13 @@
           @change="onNewChange"
         />
       </div>
-      <div
-        data-testid="new-event-log"
-        style="margin-top: 0.5rem; font-size: 0.7rem; font-family: monospace; background: #111; color: #aaa; padding: 0.5rem; border-radius: 4px; min-height: 2rem; max-height: 8rem; overflow-y: auto;"
-      >
-        <div v-for="(ev, i) in newEvents" :key="i">{{ ev }}</div>
+      <div data-testid="new-event-log">
+        <div
+          v-if="newEvents.length"
+          style="margin-top: 0.5rem; font-size: 0.7rem; font-family: monospace; background: #111; color: #aaa; padding: 0.5rem; border-radius: 4px; max-height: 8rem; overflow-y: auto;"
+        >
+          <div v-for="(ev, i) in newEvents" :key="i">{{ ev }}</div>
+        </div>
       </div>
     </div>
 

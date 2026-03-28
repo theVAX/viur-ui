@@ -29,19 +29,48 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
+/**
+ * Mehrzeiliges Freitext- oder JSON-Eingabefeld für Rohdaten.
+ *
+ * Rendert ein `<wa-textarea>`. Wenn `boneState.bonestructure.type === 'raw.json'`
+ * wird der Wert beim Anzeigen per `JSON.stringify` serialisiert. Unterstützt
+ * Mehrsprachigkeit (`languages`) und Mehrfachwerte (`multiple`).
+ *
+ * @displayName RawBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-raw - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-raw-default - Standard-Variante
+ * @cssClass widget-bone-raw-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-raw-content`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert. Bei `raw.json` wird ein Objekt per `JSON.stringify` dargestellt. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach dem Mount auf das Textarea-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Eingabewert
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

@@ -31,18 +31,50 @@
 <script setup>
 import { reactive, onMounted, computed, inject, ref, watchEffect } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
+/**
+ * Numerisches Eingabefeld für Ganzzahlen und Dezimalwerte.
+ *
+ * Rendert ein `<wa-input type="number">` und zeigt optional Hinweise zu
+ * Mindest-/Höchstwert und Präzision an. Unterstützt Mehrsprachigkeit
+ * (`languages`) und mehrfache Werte (`multiple`). Der Schritt (`step`) wird
+ * aus `boneState.bonestructure.precision` berechnet.
+ *
+ * @displayName NumericBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-numeric - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-numeric-default - Standard-Variante
+ * @cssClass widget-bone-numeric-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-numeric-amount`
+ */
 defineOptions({
   inheritAttrs: false,
 })
-const emit = defineEmits(["change"])
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
   autofocus: Boolean,
 })
+
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Eingabewert (als String)
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   * @arg {boolean} [valid] - Validierungsstatus; fehlt beim Init-Event
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

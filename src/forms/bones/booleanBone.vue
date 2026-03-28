@@ -11,19 +11,48 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
+/**
+ * Schalter für boolesche Werte (true/false).
+ *
+ * Verfügbar in drei Varianten: `bool` (Switch), `bool.choose` (Ja/Nein-Buttons),
+ * `bool.select` (Dropdown). Der Wert `null`, `undefined`, `false` und `""` wird
+ * einheitlich als `false` behandelt.
+ *
+ * @displayName BooleanBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-boolean - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-boolean-default - Standard-Variante
+ * @cssClass widget-bone-boolean-{name} - Dynamisch gesetzt auf den Bone-Namen
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert. `null`, `undefined`, `false` und `""` gelten als `false`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Autofocus (aktuell nicht aktiv genutzt). */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {boolean} value - Aktueller Wert
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 const boneState = inject("boneState")
 const state = reactive({
   value: computed(() => {
@@ -44,7 +73,5 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped></style>
 
-
-</style>

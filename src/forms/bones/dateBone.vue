@@ -18,19 +18,52 @@
 
 <script setup>
 import { reactive, onMounted, computed, inject } from "vue"
+/**
+ * Datums- und/oder Zeitfeld, gesteuert durch `bonestructure.date` und `bonestructure.time`.
+ *
+ * Rendert ein `<wa-input>` mit dem passenden `type`-Attribut:
+ * - `date` wenn nur `date: true`
+ * - `time` wenn nur `time: true`
+ * - `datetime-local` wenn beide gesetzt sind
+ *
+ * Bereinigt Zeitzonendaten aus dem Wert, bevor er ans Input weitergegeben wird.
+ * Unterstützt mehrfache Werte (`multiple`), aber keine Mehrsprachigkeit.
+ *
+ * @displayName DateBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-date - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-date-default - Standard-Variante
+ * @cssClass widget-bone-date-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-date-publishedAt`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert als ISO-String, z.B. `"2026-03-28"` oder `"10:30:00"`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Eingabewert als ISO-String
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

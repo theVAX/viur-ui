@@ -21,19 +21,52 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
+/**
+ * Dropdown-Auswahlfeld für vordefinierte Werte (Typ `select`).
+ *
+ * Rendert ein `<wa-select>` mit `<wa-option>`-Einträgen, die aus
+ * `boneState.bonestructure.values` generiert werden. `values` kann ein Array
+ * von `[key, label]`-Tupeln oder ein Objekt `{ key: label }` sein.
+ * Bei aktiviertem `multiple` können mehrere Optionen gleichzeitig gewählt werden.
+ * Der Bone-Typ `select.choose` wird durch die separate Komponente `SelectBoneChoose`
+ * abgehandelt und rendert Radio-Buttons bzw. Checkboxen.
+ * Bei `boneState.label === "placeholder"` wird der Bone-Name als Placeholder angezeigt.
+ *
+ * @displayName SelectBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-select - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-select-default - Standard-Variante (Dropdown)
+ * @cssClass widget-bone-select-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-select-status`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert (String, Array bei multiple). */
   value: null,
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus auf das Select-Element (aktuell nicht implementiert). */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string|string[]} value - Gewählter Wert oder Array bei multiple
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

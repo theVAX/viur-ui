@@ -20,9 +20,9 @@
     >
       <wa-icon name="upload"></wa-icon>
     </wa-button>
-    <input ref="uploadinput" hidden type="file" :multiple="boneState.multiple" @change="handleUpload" />
-    <wa-button v-if="value" :title="$t('bone.download')" @click="downloadFile">
-      <wa-icon slot="start" name="download"></wa-icon>
+    <input ref="uploadinput" style="display: none" type="file" :multiple="boneState.multiple" @change="handleUpload" />
+    <wa-button v-if="value" :title="$t('bone.download')" appearance="outlined" class="download-btn" @click="downloadFile">
+      <wa-icon name="download"></wa-icon>
     </wa-button>
     <div class="box">
       <div

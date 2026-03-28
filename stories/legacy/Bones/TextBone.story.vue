@@ -1,6 +1,6 @@
 <script setup>
 import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/text.js'
+import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
 </script>
 
 <template>
@@ -31,6 +31,15 @@ import { createStructure } from '../../fixtures/text.js'
         :structure="createStructure({ required: true })"
         :skel="{ content: '' }"
         :errors="[{ fieldPath: ['content'], errorMessage: 'field_not_set', severity: 3 }]"
+      />
+    </Variant>
+
+    <Variant title="HTML (CKEditor)" :auto-props-disabled="true">
+      <CompareWrapper
+        bone-name="content"
+        bone-type="text"
+        :structure="validHtmlStructure"
+        :skel="{ content: '<p>Beispieltext <b>fett</b></p>' }"
       />
     </Variant>
 

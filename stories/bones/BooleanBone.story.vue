@@ -12,7 +12,11 @@ function src(structure, skel, extra = {}) {
 
 <template>
   <Story title="Bones/BooleanBone">
-    <Variant title="Default (editierbar)" :source="src(createStructure(), { active: true })">
+    <Variant
+      title="Default (editierbar)"
+      :source="src(createStructure(), { active: true })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -21,7 +25,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { active: false })">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { active: false })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -30,7 +38,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { active: [true, false, true] })">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { active: [true, false, true] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool"
@@ -48,6 +60,7 @@ function src(structure, skel, extra = {}) {
           { errors: [{ fieldPath: ['active'], errorMessage: 'field_not_set', severity: 3 }] }
         )
       "
+      :auto-props-disabled="true"
     >
       <BoneStoryWrapper
         bone-name="active"
@@ -58,7 +71,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Variante: Choose" :source="src(createStructure({ type: 'bool.choose' }), { active: true })">
+    <Variant
+      title="Variante: Choose"
+      :source="src(createStructure({ type: 'bool.choose' }), { active: true })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="active"
         bone-type="bool.choose"
@@ -70,6 +87,7 @@ function src(structure, skel, extra = {}) {
     <Variant
       title="Variante: Select (Dropdown)"
       :source="src(createStructure({ type: 'bool.select' }), { active: false })"
+      :auto-props-disabled="true"
     >
       <BoneStoryWrapper
         bone-name="active"

@@ -1,12 +1,19 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/spatial.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/SpatialBone">
 
-    <Variant title="Default (editierbar)">
+    <Variant title="Default (editierbar)" :source="src(createStructure(), { location: { lat: 48.1351, lng: 11.582 } })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="location"
         bone-type="spatial"
@@ -15,7 +22,7 @@ import { createStructure } from '../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Leer">
+    <Variant title="Leer" :source="src(createStructure(), { location: null })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="location"
         bone-type="spatial"
@@ -24,7 +31,7 @@ import { createStructure } from '../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { location: { lat: 48.1351, lng: 11.582 } })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="location"
         bone-type="spatial"
@@ -33,7 +40,17 @@ import { createStructure } from '../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { location: null },
+          { errors: [{ fieldPath: ['location'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="location"
         bone-type="spatial"
@@ -43,7 +60,11 @@ import { createStructure } from '../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Eingeschränkte Grenzen">
+    <Variant
+      title="Eingeschränkte Grenzen"
+      :source="src(createStructure({ boundslat: [47, 55], boundslng: [6, 15], descr: 'Deutschland' }), { location: { lat: 52.52, lng: 13.405 } })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="location"
         bone-type="spatial"

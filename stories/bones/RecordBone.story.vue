@@ -1,12 +1,19 @@
 <script setup>
 import RecordBoneWrapper from '../RecordBoneWrapper.vue'
 import { createStructure } from '../fixtures/record.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/RecordBone">
 
-    <Variant title="Default (editierbar)">
+    <Variant title="Default (editierbar)" :source="src(createStructure(), { address: {} })" :auto-props-disabled="true">
       <RecordBoneWrapper
         bone-name="address"
         :structure="createStructure()"
@@ -14,7 +21,7 @@ import { createStructure } from '../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { address: {} })" :auto-props-disabled="true">
       <RecordBoneWrapper
         bone-name="address"
         :structure="createStructure({ readonly: true })"
@@ -22,7 +29,7 @@ import { createStructure } from '../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { address: [{}] })" :auto-props-disabled="true">
       <RecordBoneWrapper
         bone-name="address"
         :structure="createStructure({ multiple: true })"
@@ -30,7 +37,17 @@ import { createStructure } from '../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { address: null },
+          { errors: [{ fieldPath: ['address'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <RecordBoneWrapper
         bone-name="address"
         :structure="createStructure({ required: true })"

@@ -12,7 +12,11 @@ function src(structure, skel, extra = {}) {
 
 <template>
   <Story title="Bones/StringBone">
-    <Variant title="Default (editierbar)" :source="src(createStructure(), { title: 'Beispieltext' })">
+    <Variant
+      title="Default (editierbar)"
+      :source="src(createStructure(), { title: 'Beispieltext' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -21,7 +25,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { title: 'Nur lesen' })">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { title: 'Nur lesen' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -30,7 +38,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { title: ['Wert 1', 'Wert 2'] })">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { title: ['Wert 1', 'Wert 2'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -39,7 +51,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :source="src(createStructure({ required: true }), { title: '' }, { errors: [{ fieldPath: ['title'], errorMessage: 'field_not_set', severity: 3 }] })">
+    <Variant
+      title="Required + Fehler"
+      :source="src(createStructure({ required: true }), { title: '' }, { errors: [{ fieldPath: ['title'], errorMessage: 'field_not_set', severity: 3 }] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"
@@ -49,7 +65,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multilang" :source="src(createStructure({ languages: ['de', 'en'] }), { title: { de: 'Deutsch', en: 'English' } }, { languages: ['de', 'en'] })">
+    <Variant
+      title="Multilang"
+      :source="src(createStructure({ languages: ['de', 'en'] }), { title: { de: 'Deutsch', en: 'English' } }, { languages: ['de', 'en'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="title"
         bone-type="str"

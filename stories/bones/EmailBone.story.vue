@@ -13,7 +13,11 @@ function src(structure, skel, extra = {}) {
 <template>
   <Story title="Bones/EmailBone">
 
-    <Variant title="Default (editierbar)" :source="src(createStructure(), { email: 'hallo@example.com' })">
+    <Variant
+      title="Default (editierbar)"
+      :source="src(createStructure(), { email: 'hallo@example.com' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="email"
         bone-type="str.email"
@@ -22,7 +26,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { email: 'hallo@example.com' })">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { email: 'hallo@example.com' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="email"
         bone-type="str.email"
@@ -31,7 +39,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { email: ['eins@example.com', 'zwei@example.com'] })">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { email: ['eins@example.com', 'zwei@example.com'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="email"
         bone-type="str.email"
@@ -40,7 +52,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :source="src(createStructure({ required: true }), { email: '' }, { errors: [{ fieldPath: ['email'], errorMessage: 'field_not_set', severity: 3 }] })">
+    <Variant
+      title="Required + Fehler"
+      :source="src(createStructure({ required: true }), { email: '' }, { errors: [{ fieldPath: ['email'], errorMessage: 'field_not_set', severity: 3 }] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="email"
         bone-type="str.email"
@@ -50,7 +66,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multilang" :source="src(createStructure({ languages: ['de', 'en'] }), { email: { de: 'de@example.com', en: 'en@example.com' } }, { languages: ['de', 'en'] })">
+    <Variant
+      title="Multilang"
+      :source="src(createStructure({ languages: ['de', 'en'] }), { email: { de: 'de@example.com', en: 'en@example.com' } }, { languages: ['de', 'en'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="email"
         bone-type="str.email"

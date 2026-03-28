@@ -1,11 +1,22 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/select.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/SelectBone">
-    <Variant title="Default (editierbar)">
+    <Variant
+      title="Default (editierbar)"
+      :source="src(createStructure(), { status: 'draft' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select"
@@ -14,7 +25,11 @@ import { createStructure } from '../fixtures/select.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { status: 'published' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select"
@@ -23,7 +38,11 @@ import { createStructure } from '../fixtures/select.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { status: ['draft', 'published'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select"
@@ -32,7 +51,17 @@ import { createStructure } from '../fixtures/select.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { status: null },
+          { errors: [{ fieldPath: ['status'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select"
@@ -42,7 +71,17 @@ import { createStructure } from '../fixtures/select.js'
       />
     </Variant>
 
-    <Variant title="Multilang">
+    <Variant
+      title="Multilang"
+      :source="
+        src(
+          createStructure({ languages: ['de', 'en'] }),
+          { status: { de: 'draft', en: 'published' } },
+          { languages: ['de', 'en'] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select"
@@ -52,7 +91,11 @@ import { createStructure } from '../fixtures/select.js'
       />
     </Variant>
 
-    <Variant title="Variante: Choose (Buttons)">
+    <Variant
+      title="Variante: Choose (Buttons)"
+      :source="src(createStructure({ type: 'select.choose' }), { status: 'draft' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="status"
         bone-type="select.choose"

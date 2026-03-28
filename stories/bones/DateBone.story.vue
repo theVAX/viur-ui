@@ -1,11 +1,18 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/date.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/DateBone">
-    <Variant title="Default (Datum)">
+    <Variant title="Default (Datum)" :source="src(createStructure(), { publishedAt: '2026-03-26' })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"
@@ -14,7 +21,7 @@ import { createStructure } from '../fixtures/date.js'
       />
     </Variant>
 
-    <Variant title="Datetime">
+    <Variant title="Datetime" :source="src(createStructure({ date: true, time: true }), { publishedAt: '2026-03-26T10:00:00' })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"
@@ -23,7 +30,7 @@ import { createStructure } from '../fixtures/date.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { publishedAt: '2026-03-26' })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"
@@ -32,7 +39,7 @@ import { createStructure } from '../fixtures/date.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { publishedAt: ['2026-03-01', '2026-03-15'] })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"
@@ -41,7 +48,17 @@ import { createStructure } from '../fixtures/date.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { publishedAt: null },
+          { errors: [{ fieldPath: ['publishedAt'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"
@@ -51,7 +68,7 @@ import { createStructure } from '../fixtures/date.js'
       />
     </Variant>
 
-    <Variant title="Zeit-only">
+    <Variant title="Zeit-only" :source="src(createStructure({ date: false, time: true }), { publishedAt: '10:30:00' })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="publishedAt"
         bone-type="date"

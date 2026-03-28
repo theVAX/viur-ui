@@ -1,121 +1,138 @@
 <script setup>
-import BoneStoryWrapper from '../BoneStoryWrapper.vue'
-import { createStructure } from '../fixtures/boolean.js'
+import { ref } from "vue"
+import BoneStoryWrapper from "../BoneStoryWrapper.vue"
+import { hints } from "../fixtures/controlHints.js"
 
-function src(structure, skel, extra = {}) {
-  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
-  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
-  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
-  return out
+function src(structure, skel) {
+  const name = Object.keys(structure)[0]
+  return [
+    `<Bone`,
+    `  name="${name}"`,
+    `  :structure="structure"`,
+    `  :skel="skel"`,
+    `/>`,
+    ``,
+    `<!-- structure -->`,
+    JSON.stringify(structure, null, 2),
+    ``,
+    `<!-- skel -->`,
+    JSON.stringify(skel, null, 2),
+  ].join("\n")
+}
+
+const pgSourceRef = ref("")
+
+function syncPgSource(state) {
+  const structure = {
+    [state.boneName]: {
+      type: state.boneType,
+      descr: state.descr,
+      required: state.required,
+      readonly: state.readonly,
+      multiple: state.multiple,
+      languages: null,
+      params: {},
+    },
+  }
+  const skel = { [state.boneName]: false }
+  pgSourceRef.value = src(structure, skel)
+  return ""
 }
 </script>
 
 <template>
   <Story title="Bones/BooleanBone">
     <Variant
-      title="Default (editierbar)"
-      :source="src(createStructure(), { active: true })"
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool"
-        :structure="createStructure()"
-        :skel="{ active: true }"
-      />
-    </Variant>
-
-    <Variant
-      title="Readonly"
-      :source="src(createStructure({ readonly: true }), { active: false })"
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool"
-        :structure="createStructure({ readonly: true })"
-        :skel="{ active: false }"
-      />
-    </Variant>
-
-    <Variant
-      title="Multiple"
-      :source="src(createStructure({ multiple: true }), { active: [true, false, true] })"
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool"
-        :structure="createStructure({ multiple: true })"
-        :skel="{ active: [true, false, true] }"
-      />
-    </Variant>
-
-    <Variant
-      title="Required + Fehler"
-      :source="
-        src(
-          createStructure({ required: true }),
-          { active: null },
-          { errors: [{ fieldPath: ['active'], errorMessage: 'field_not_set', severity: 3 }] }
-        )
-      "
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool"
-        :structure="createStructure({ required: true })"
-        :skel="{ active: null }"
-        :errors="[{ fieldPath: ['active'], errorMessage: 'field_not_set', severity: 3 }]"
-      />
-    </Variant>
-
-    <Variant
-      title="Variante: Choose"
-      :source="src(createStructure({ type: 'bool.choose' }), { active: true })"
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool.choose"
-        :structure="createStructure({ type: 'bool.choose' })"
-        :skel="{ active: true }"
-      />
-    </Variant>
-
-    <Variant
-      title="Variante: Select (Dropdown)"
-      :source="src(createStructure({ type: 'bool.select' }), { active: false })"
-      :auto-props-disabled="true"
-    >
-      <BoneStoryWrapper
-        bone-name="active"
-        bone-type="bool.select"
-        :structure="createStructure({ type: 'bool.select' })"
-        :skel="{ active: false }"
-      />
-    </Variant>
-
-    <Variant
       title="Playground"
-      :init-state="() => ({ structure: createStructure(), showError: false })"
+      :auto-props-disabled="true"
+      :source="pgSourceRef"
+      :init-state="
+        () => ({
+          boneName: 'active',
+          descr: 'Aktiv',
+          boneType: 'bool',
+          readonly: false,
+          required: false,
+          multiple: false,
+          label: 'normal',
+        })
+      "
     >
       <template #default="{ state }">
+        {{ syncPgSource(state) }}
         <BoneStoryWrapper
-          bone-name="active"
-          bone-type="bool"
-          :structure="state.structure"
-          :skel="{ active: true }"
-          :errors="state.showError ? [{ fieldPath: ['active'], errorMessage: 'field_not_set', severity: 3 }] : []"
+          :bone-name="state.boneName"
+          :bone-type="state.boneType"
+          :structure="{
+            [state.boneName]: {
+              type: state.boneType,
+              descr: state.descr,
+              required: state.required,
+              readonly: state.readonly,
+              multiple: state.multiple,
+              languages: null,
+              params: {},
+            },
+          }"
+          :skel="{ [state.boneName]: false }"
+          :label="state.label"
         />
       </template>
       <template #controls="{ state }">
-        <HstJson v-model="state.structure" title="Structure" />
-        <HstCheckbox v-model="state.structure.active.readonly" title="Readonly" />
-        <HstCheckbox v-model="state.structure.active.required" title="Required" />
-        <HstCheckbox v-model="state.showError" title="Mit Fehler" />
+        <HstText v-model="state.boneName" title="Bone-Name" />
+        <div class="hst-hint">{{ hints.boneName }}</div>
+
+        <HstText v-model="state.descr" title="Description (Label)" />
+        <div class="hst-hint">{{ hints.descr }}</div>
+
+        <HstSelect
+          v-model="state.boneType"
+          title="Variante"
+          :options="[
+            { label: 'bool (Switch)', value: 'bool' },
+            { label: 'bool.choose (Ja/Nein)', value: 'bool.choose' },
+            { label: 'bool.select (Dropdown)', value: 'bool.select' },
+          ]"
+        />
+        <div class="hst-hint">Steuert welches Widget gerendert wird.</div>
+
+        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <div class="hst-hint">{{ hints.readonly }}</div>
+
+        <HstCheckbox v-model="state.required" title="Required" />
+        <div class="hst-hint">{{ hints.required }}</div>
+
+        <HstCheckbox v-model="state.multiple" title="Multiple" />
+        <div class="hst-hint">{{ hints.multiple }}</div>
+
+        <HstSelect
+          v-model="state.label"
+          title="Label"
+          :options="[
+            { label: 'normal', value: 'normal' },
+            { label: 'top', value: 'top' },
+            { label: 'hide', value: 'hide' },
+            { label: 'placeholder', value: 'placeholder' },
+          ]"
+        />
+        <div class="hst-hint">{{ hints.label }}</div>
       </template>
     </Variant>
   </Story>
 </template>
+
+<style>
+.hst-hint {
+  font-size: 11px;
+  color: #888;
+  padding: 2px 12px 10px;
+  line-height: 1.5;
+}
+.hst-hint code {
+  font-family: monospace;
+  background: #2a2a2a;
+  padding: 1px 4px;
+  border-radius: 3px;
+  color: #fa7;
+}
+</style>

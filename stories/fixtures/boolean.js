@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     active: {
-      type: 'bool',
-      descr: 'Aktiv',
+      type: "bool",
+      descr: "Aktiv",
       required: false,
       readonly: false,
       multiple: false,

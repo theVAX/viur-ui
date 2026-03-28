@@ -6,7 +6,12 @@
 
 ## Ziel
 
-Während der Migration von `@viur/shoelace` (Shoelace, `sl-*`) zu `@viur/webawesome` (WebAwesome, `wa-*`) sicherstellen, dass alle Schichten des Form-Systems identisch **verhalten** (Events, Props, State). Pixel-genaues visuelles Matching ist nicht das Ziel — Shoelace und WebAwesome sehen bewusst unterschiedlich aus.
+Während der Migration von `@viur/shoelace` (Shoelace, `sl-*`) zu `@viur/webawesome` (WebAwesome, `wa-*`) sicherstellen, dass alle Schichten des Form-Systems möglichst **identisch aussehen und sich identisch verhalten**.
+
+- **Visuell:** Layout, Abstände, Label-Position, Fehlerzustand, Multiple-Handling sollen so nah wie möglich an der Legacy-Darstellung sein. Der Split-View in Histoire ist das primäre Werkzeug — der Entwickler sieht Legacy und Neu nebeneinander und gleicht manuell an.
+- **Funktional:** Events (`change`, Argumente), Props, State (readonly, required, errors) müssen exakt übereinstimmen. Die Playwright Contract Tests sichern das automatisiert ab.
+
+Unterschiede in Farben, Fonts und Animationen, die aus dem Bibliothekswechsel (Shoelace → WebAwesome) resultieren, sind akzeptabel — alles andere soll übereinstimmen.
 
 Zweck ist ausschließlich die **Entwicklungszeit**. Die reguläre `histoire.config.js` und der Docs-Build bleiben unverändert und enthalten kein Legacy-Material.
 
@@ -237,6 +242,6 @@ for (const panel of panels) {
 
 ## Nicht in Scope
 
-- Visuelles Screenshot-Diffing (Playwright `toHaveScreenshot`) — Shoelace und WebAwesome sehen bewusst unterschiedlich aus, nur Verhalten muss übereinstimmen
+- Automatisches Screenshot-Diffing (Playwright `toHaveScreenshot`) — der visuelle Abgleich erfolgt manuell über den Split-View in Histoire
 - CI-Integration — kann später ergänzt werden
 - Änderungen an `histoire.config.js` oder `stories/bones/`

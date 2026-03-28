@@ -13,7 +13,11 @@ function src(structure, skel, extra = {}) {
 <template>
   <Story title="Bones/ColorBone">
 
-    <Variant title="Default (leer)" :source="src(createStructure(), { color: null })">
+    <Variant
+      title="Default (leer)"
+      :source="src(createStructure(), { color: null })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="color"
         bone-type="color"
@@ -22,7 +26,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Mit Farbe" :source="src(createStructure(), { color: '#e74c3c' })">
+    <Variant
+      title="Mit Farbe"
+      :source="src(createStructure(), { color: '#e74c3c' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="color"
         bone-type="color"
@@ -31,7 +39,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { color: '#3498db' })">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { color: '#3498db' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="color"
         bone-type="color"
@@ -40,7 +52,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :source="src(createStructure({ required: true }), { color: null }, { errors: [{ fieldPath: ['color'], errorMessage: 'field_not_set', severity: 3 }] })">
+    <Variant
+      title="Required + Fehler"
+      :source="src(createStructure({ required: true }), { color: null }, { errors: [{ fieldPath: ['color'], errorMessage: 'field_not_set', severity: 3 }] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="color"
         bone-type="color"
@@ -50,7 +66,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { color: ['#e74c3c', '#3498db'] })">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { color: ['#e74c3c', '#3498db'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="color"
         bone-type="color"

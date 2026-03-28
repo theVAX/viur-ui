@@ -1,12 +1,19 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
-import { createStructure } from '../fixtures/file.js'
+import { createStructure, exampleFile, exampleImage } from '../fixtures/file.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/FileBone">
 
-    <Variant title="Leer (Upload-Button)">
+    <Variant title="Leer (Upload-Button)" :source="src(createStructure(), { file: null })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -15,7 +22,7 @@ import { createStructure } from '../fixtures/file.js'
       />
     </Variant>
 
-    <Variant title="Mit Datei">
+    <Variant title="Mit Datei" :source="src(createStructure(), { file: exampleFile })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -24,7 +31,7 @@ import { createStructure } from '../fixtures/file.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant title="Readonly" :source="src(createStructure({ readonly: true }), { file: exampleFile })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -33,7 +40,17 @@ import { createStructure } from '../fixtures/file.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { file: null },
+          { errors: [{ fieldPath: ['file'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -43,7 +60,7 @@ import { createStructure } from '../fixtures/file.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant title="Multiple" :source="src(createStructure({ multiple: true }), { file: [exampleFile] })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -52,7 +69,7 @@ import { createStructure } from '../fixtures/file.js'
       />
     </Variant>
 
-    <Variant title="Bild-Datei (Vorschau)">
+    <Variant title="Bild-Datei (Vorschau)" :source="src(createStructure(), { file: exampleImage })" :auto-props-disabled="true">
       <BoneStoryWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"

@@ -1,12 +1,23 @@
 <script setup>
 import BoneStoryWrapper from '../BoneStoryWrapper.vue'
 import { createStructure } from '../fixtures/phone.js'
+
+function src(structure, skel, extra = {}) {
+  let out = `// structure\n${JSON.stringify(structure, null, 2)}\n\n// skel\n${JSON.stringify(skel, null, 2)}`
+  if (extra.languages) out += `\n\n// languages\n${JSON.stringify(extra.languages, null, 2)}`
+  if (extra.errors) out += `\n\n// errors\n${JSON.stringify(extra.errors, null, 2)}`
+  return out
+}
 </script>
 
 <template>
   <Story title="Bones/PhoneBone">
 
-    <Variant title="Default (editierbar)">
+    <Variant
+      title="Default (editierbar)"
+      :source="src(createStructure(), { phone: '+49 89 12345678' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="phone"
         bone-type="str.phone"
@@ -15,7 +26,11 @@ import { createStructure } from '../fixtures/phone.js'
       />
     </Variant>
 
-    <Variant title="Readonly">
+    <Variant
+      title="Readonly"
+      :source="src(createStructure({ readonly: true }), { phone: '+49 89 12345678' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="phone"
         bone-type="str.phone"
@@ -24,7 +39,11 @@ import { createStructure } from '../fixtures/phone.js'
       />
     </Variant>
 
-    <Variant title="Multiple">
+    <Variant
+      title="Multiple"
+      :source="src(createStructure({ multiple: true }), { phone: ['+49 89 12345678', '+43 1 98765432'] })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="phone"
         bone-type="str.phone"
@@ -33,7 +52,17 @@ import { createStructure } from '../fixtures/phone.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler">
+    <Variant
+      title="Required + Fehler"
+      :source="
+        src(
+          createStructure({ required: true }),
+          { phone: '' },
+          { errors: [{ fieldPath: ['phone'], errorMessage: 'field_not_set', severity: 3 }] }
+        )
+      "
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="phone"
         bone-type="str.phone"

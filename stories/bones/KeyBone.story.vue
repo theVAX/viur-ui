@@ -13,7 +13,11 @@ function src(structure, skel, extra = {}) {
 <template>
   <Story title="Bones/KeyBone">
 
-    <Variant title="Mit Schlüssel" :source="src(createStructure(), { key: 'ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM' })">
+    <Variant
+      title="Mit Schlüssel"
+      :source="src(createStructure(), { key: 'ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM' })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="key"
         bone-type="key"
@@ -22,7 +26,11 @@ function src(structure, skel, extra = {}) {
       />
     </Variant>
 
-    <Variant title="Leer" :source="src(createStructure(), { key: null })">
+    <Variant
+      title="Leer"
+      :source="src(createStructure(), { key: null })"
+      :auto-props-disabled="true"
+    >
       <BoneStoryWrapper
         bone-name="key"
         bone-type="key"

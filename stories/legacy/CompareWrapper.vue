@@ -15,7 +15,7 @@
           :errors="errors"
           :label="label"
           :languages="languages"
-          @change="onLegacyChange"
+          @change-internal="onLegacyChange"
         />
       </div>
       <div data-testid="legacy-event-log">
@@ -42,7 +42,7 @@
           :errors="errors"
           :label="label"
           :languages="languages"
-          @change="onNewChange"
+          @change-internal="onNewChange"
         />
       </div>
       <div data-testid="new-event-log">
@@ -81,11 +81,11 @@ const newBoneComponent = computed(() => markRaw(getNewBoneWidget(props.boneType)
 const legacyEvents = ref([])
 const newEvents = ref([])
 
-function onLegacyChange(...args) {
-  legacyEvents.value.push(JSON.stringify(args))
+function onLegacyChange(event) {
+  legacyEvents.value.push(JSON.stringify(event))
 }
 
-function onNewChange(...args) {
-  newEvents.value.push(JSON.stringify(args))
+function onNewChange(event) {
+  newEvents.value.push(JSON.stringify(event))
 }
 </script>

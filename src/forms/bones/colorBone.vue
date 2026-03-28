@@ -14,19 +14,47 @@
 
 <script setup>
 import { reactive, onMounted, inject } from "vue"
+/**
+ * Farbauswahl-Feld über ein natives `<wa-color-picker>`-Element.
+ *
+ * Speichert den gewählten Farbwert als Hex-String, z.B. `"#e74c3c"`.
+ * Unterstützt mehrfache Werte (`multiple`), aber keine Mehrsprachigkeit.
+ *
+ * @displayName ColorBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-color - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-color-default - Standard-Variante
+ * @cssClass widget-bone-color-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-color-color`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert als Hex-String, z.B. `"#e74c3c"`, oder `null`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string|null} value - Gewählter Farbwert als Hex-String oder `null`
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 const boneState = inject("boneState")
 const state = reactive({})
 

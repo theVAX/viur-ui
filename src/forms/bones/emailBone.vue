@@ -20,19 +20,49 @@
 <script setup>
 import { reactive, onMounted, inject, ref, watchEffect, computed } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
+/**
+ * Einzeiliges E-Mail-Eingabefeld mit nativer Browser-Validierung.
+ *
+ * Rendert ein `<wa-input type="email">` und nutzt die native Constraint
+ * Validation API des Browsers zur Format-Prüfung. Bei
+ * `boneState.label === "placeholder"` wird die Bone-Beschreibung als
+ * Placeholder angezeigt statt als Label darüber.
+ *
+ * @displayName EmailBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-email - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-email-default - Standard-Variante
+ * @cssClass widget-bone-email-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-email-email`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Eingabewert
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

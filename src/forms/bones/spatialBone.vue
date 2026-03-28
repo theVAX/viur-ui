@@ -36,19 +36,50 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
+/**
+ * Koordinaten-Eingabe für geografische Punkte (Breitengrad / Längengrad).
+ *
+ * Rendert zwei `<wa-input type="number">` Felder für Latitude und Longitude.
+ * Die erlaubten Wertebereiche werden über `boneState.bonestructure.boundslat`
+ * und `boneState.bonestructure.boundslng` gesteuert. Unterstützt weder
+ * Mehrsprachigkeit noch Mehrfachwerte.
+ *
+ * @displayName SpatialBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-spatial - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-spatial-default - Standard-Variante
+ * @cssClass widget-bone-spatial-{name}-lat - Dynamisch gesetzt für das Breiten­grad-Feld
+ * @cssClass widget-bone-spatial-{name}-long - Dynamisch gesetzt für das Längen­grad-Feld
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert als Array `[lat, lng]` oder Objekt `{ lat, lng }`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key (SpatialBone unterstützt kein multilang). */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach dem Mount auf das erste Input-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {[number, number]} value - Koordinaten als `[lat, lng]`
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

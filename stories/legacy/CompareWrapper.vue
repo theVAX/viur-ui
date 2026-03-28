@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { computed, markRaw, ref } from 'vue'
+import { computed, markRaw, ref, provide, reactive } from 'vue'
 import { getBoneWidget as getLegacyBoneWidget } from '@viur/vue-utils/bones/edit/index.js'
 import { getBoneWidget as getNewBoneWidget } from '../../src/forms/bones/index.js'
 
@@ -72,6 +72,8 @@ const props = defineProps({
   label: { type: String, default: 'normal' },
   languages: { type: Array, default: null },
 })
+
+provide('mainformState', reactive({ skel: props.skel, readonly: false, renderer: 'json' }))
 
 const legacyBoneComponent = computed(() => markRaw(getLegacyBoneWidget(props.boneType)))
 const newBoneComponent = computed(() => markRaw(getNewBoneWidget(props.boneType)))

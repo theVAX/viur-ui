@@ -1,4 +1,5 @@
 docs/superpowers
+.superpowers/
 example/node_modules
 node_modules
 example/dist

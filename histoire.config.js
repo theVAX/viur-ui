@@ -92,7 +92,7 @@ const vueDocgenDocsPlugin = {
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: './stories/setup.js',
-  storyMatch: ['stories/bones/**/*.story.vue'],
+  storyMatch: ['stories/bones/**/*.story.vue', 'stories/legacy/**/*.story.vue'],
   vite: {
     publicDir: 'stories/public',
     plugins: [
@@ -110,7 +110,7 @@ export default defineConfig({
       vue({
         template: {
           compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith('wa-'),
+            isCustomElement: (tag) => tag.startsWith('wa-') || tag.startsWith('sl-'),
           },
         },
       }),

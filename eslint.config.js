@@ -38,7 +38,7 @@ export default [
     // Rules
     rules: {
       // Prettier integration - now uses .prettierrc
-      "prettier/prettier": "warn",
+      "prettier/prettier": "error",
 
       // General rules
       "no-unused-vars": "off",

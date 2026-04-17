@@ -1,0 +1,75 @@
+{
+  "project": "viur-ui",
+  "project_name": "ViUR UI",
+  "vault_path": "/Users/cs/projects/mausbrand/viur-ui-doku",
+  "vault_root": "doku",
+  "source_mappings": [
+    {
+      "glob": "src/forms/bones/*.vue",
+      "vault": "forms/bones/",
+      "type": "bone-widget"
+    },
+    {
+      "glob": "src/forms/bones/actionbar/*.vue",
+      "vault": "forms/bones/actionbar/",
+      "type": "actionbar"
+    },
+    {
+      "glob": "src/forms/bones/assistant/*.vue",
+      "vault": "forms/bones/assistant/",
+      "type": "assistant"
+    },
+    {
+      "glob": "src/forms/bones/view/*.vue",
+      "vault": "forms/bones/view/",
+      "type": "bone-view"
+    },
+    {
+      "glob": "src/forms/*.vue",
+      "vault": "forms/",
+      "type": "form-component"
+    },
+    {
+      "glob": "src/forms/layouts/*.vue",
+      "vault": "forms/layouts/",
+      "type": "layout"
+    },
+    {
+      "glob": "src/request/*.js",
+      "vault": "request/",
+      "type": "request-utility"
+    }
+  ],
+  "test_root": "tests",
+  "wiki": {
+    "enabled": false
+  },
+  "module_tags": {},
+  "project_checks": [
+    "Bone-Typ-Registration: Ist der Bone in src/forms/bones/index.js registriert?",
+    "JSDoc vorhanden: @displayName, @cssClass Tags in Komponente?",
+    "Standard Bone-Props: Hat der Bone name, value, index, lang, bone Props?",
+    "Change-Event: Emittet change mit (name, value, lang, index, valid)?",
+    "Contract Test vorhanden: tests/contract/bone-widgets/{name}.spec.ts existiert?",
+    "Histoire Story vorhanden: stories/bones/{Name}.story.vue existiert?"
+  ],
+  "special_types": {
+    "bone-widget": {
+      "has_contract_tests": true,
+      "has_histoire": true
+    }
+  },
+  "learnings": {
+    "enabled": true,
+    "path": "doku/learnings",
+    "categories": [
+      "components",
+      "testing",
+      "patterns",
+      "viur",
+      "bugs"
+    ],
+    "parser_script": ".learnings-parser.sh",
+    "index_file": "LEARNINGS-index.md"
+  }
+}

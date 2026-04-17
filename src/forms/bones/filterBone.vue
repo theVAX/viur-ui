@@ -9,22 +9,42 @@
       [`wrapper-bone-${name}`]: true,
     }"
   >
-    <bone-label v-if="!['hide', 'placeholder'].includes(label)" :name="name">
+    <bone-label
+      v-if="!['hide', 'placeholder'].includes(label)"
+      :name="name"
+    >
       <span :class="{ required: state.required }">{{ state.bonestructure["descr"] }}</span>
-      <span v-if="state.required" class="required">*</span>
+      <span
+        v-if="state.required"
+        class="required"
+      >
+        *
+      </span>
       <wa-tooltip
         v-if="state.hasTooltip && !showLabelInfo"
         :for="state.labelTooltipTargetId"
         :content="state.bonestructure.params['tooltip']"
         placement="top-center"
       ></wa-tooltip>
-      <div v-if="state.hasTooltip && !showLabelInfo" :id="state.labelTooltipTargetId" class="tooltip">
+      <div
+        v-if="state.hasTooltip && !showLabelInfo"
+        :id="state.labelTooltipTargetId"
+        class="tooltip"
+      >
         <wa-icon name="question"></wa-icon>
       </div>
     </bone-label>
 
-    <wa-alert v-if="showLabelInfo && state.hasTooltip" variant="brand" open class="label-info">
-      <wa-icon slot="icon" name="circle-info"></wa-icon>
+    <wa-alert
+      v-if="showLabelInfo && state.hasTooltip"
+      variant="brand"
+      open
+      class="label-info"
+    >
+      <wa-icon
+        slot="icon"
+        name="circle-info"
+      ></wa-icon>
       {{ state.bonestructure.params["tooltip"] }}
     </wa-alert>
     <wa-tooltip
@@ -34,52 +54,73 @@
       :content="state.bonestructure?.['descr']"
       style="--show-delay: 1000"
     ></wa-tooltip>
-    <div :id="state.boneTooltipTargetId" class="bone-inner-wrap wrapper-bone-widget" :class="[`wrapper-bone-widget-${name}`]">
-        <div class="wrapper-bone-row">
-          <wa-select
-            v-if="state.multilanguage"
-            style="width: 100px"
-            :value="state.currentLanguage"
-            @change="updateLanguage"
+    <div
+      :id="state.boneTooltipTargetId"
+      class="bone-inner-wrap wrapper-bone-widget"
+      :class="[`wrapper-bone-widget-${name}`]"
+    >
+      <div class="wrapper-bone-row">
+        <wa-select
+          v-if="state.multilanguage"
+          style="width: 100px"
+          :value="state.currentLanguage"
+          @change="updateLanguage"
+        >
+          <wa-option
+            v-for="lang in state.languages"
+            :value="lang"
           >
-            <wa-option v-for="lang in state.languages" :value="lang">{{ $t(lang) }}</wa-option>
-          </wa-select>
-          <div class="wrapper-bone-row">
-            <div class="wrapper-bone-block">
-              <component
-                :is="is"
-                :value="state.bonevalue"
-                :name="name"
-                :index="null"
-                :bone="state.bonestructure"
-                :autofocus="autofocus"
-                @change="updateValue"
-                @keypress.enter="updateValue"
-              ></component>
-            </div>
-            <bone-actions
-              v-if="state.boneactions"
+            {{ $t(lang) }}
+          </wa-option>
+        </wa-select>
+        <div class="wrapper-bone-row">
+          <div class="wrapper-bone-block">
+            <component
+              :is="is"
               :value="state.bonevalue"
               :name="name"
               :index="null"
               :bone="state.bonestructure"
+              :autofocus="autofocus"
               @change="updateValue"
-            ></bone-actions>
+              @keypress.enter="updateValue"
+            ></component>
           </div>
+          <bone-actions
+            v-if="state.boneactions"
+            :value="state.bonevalue"
+            :name="name"
+            :index="null"
+            :bone="state.bonestructure"
+            @change="updateValue"
+          ></bone-actions>
         </div>
-        <template v-if="errorStyle === 'default'">
-          <wa-alert v-for="message in state.errorMessages" open summary="Errors" variant="danger" class="error-msg">
-            <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
-            <div class="error-msg">
-              {{ $t(`errors.${message}`) }}
-            </div>
-          </wa-alert>
-        </template>
-        <template v-else>
-          <div v-for="message in state.errorMessages" style="font-size: 0.8em; color: red">
+      </div>
+      <template v-if="errorStyle === 'default'">
+        <wa-alert
+          v-for="message in state.errorMessages"
+          open
+          summary="Errors"
+          variant="danger"
+          class="error-msg"
+        >
+          <wa-icon
+            slot="icon"
+            name="triangle-exclamation"
+          ></wa-icon>
+          <div class="error-msg">
             {{ $t(`errors.${message}`) }}
           </div>
-        </template>
+        </wa-alert>
+      </template>
+      <template v-else>
+        <div
+          v-for="message in state.errorMessages"
+          style="font-size: 0.8em; color: red"
+        >
+          {{ $t(`errors.${message}`) }}
+        </div>
+      </template>
     </div>
   </div>
 </template>

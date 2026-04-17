@@ -1,6 +1,6 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/raw.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/raw.js"
 
 const skelDefault = { code: 'print("Hello World")' }
 const skelReadonly = { code: 'print("readonly")' }
@@ -9,8 +9,10 @@ const skelMultiple = { code: ['print("A")', 'print("B")'] }
 
 <template>
   <Story title="Legacy Bones/CodeBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="code"
         bone-type="raw.code.python"
@@ -19,7 +21,10 @@ const skelMultiple = { code: ['print("A")', 'print("B")'] }
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="code"
         bone-type="raw.code.python"
@@ -28,7 +33,10 @@ const skelMultiple = { code: ['print("A")', 'print("B")'] }
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="code"
         bone-type="raw.code.python"
@@ -38,7 +46,10 @@ const skelMultiple = { code: ['print("A")', 'print("B")'] }
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="code"
         bone-type="raw.code.python"
@@ -46,6 +57,5 @@ const skelMultiple = { code: ['print("A")', 'print("B")'] }
         :skel="skelMultiple"
       />
     </Variant>
-
   </Story>
 </template>

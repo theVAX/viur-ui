@@ -31,8 +31,7 @@ function filterErrors(errors, name, { multilanguage, multiple, required }) {
       (fp.length === 1 ||
         ((multilanguage || multiple) && fp.length === 2) ||
         (multilanguage && multiple && fp.length === 3))
-    const matchesSeverity =
-      error.severity > 2 || (required && (error.severity === 2 || error.severity === 0))
+    const matchesSeverity = error.severity > 2 || (required && (error.severity === 2 || error.severity === 0))
     if (matchesLength && matchesSeverity) {
       result.push(error.errorMessage)
     }

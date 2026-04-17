@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure, exampleImage, exampleFile } from "../../fixtures/file.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/FileBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -15,7 +17,10 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
       />
     </Variant>
 
-    <Variant title="Mit Bild" :auto-props-disabled="true">
+    <Variant
+      title="Mit Bild"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -24,7 +29,10 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
       />
     </Variant>
 
-    <Variant title="Mit Datei" :auto-props-disabled="true">
+    <Variant
+      title="Mit Datei"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -33,7 +41,10 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -42,7 +53,10 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -52,7 +66,10 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="file"
         bone-type="relational.tree.leaf.file.file"
@@ -60,6 +77,5 @@ import { createStructure, exampleImage, exampleFile } from '../../fixtures/file.
         :skel="{ file: [exampleImage, exampleFile] }"
       />
     </Variant>
-
   </Story>
 </template>

@@ -16,7 +16,10 @@ async function _openDb() {
         db.createObjectStore(STORE_NAME, { keyPath: "cacheKey" })
       }
     }
-    req.onsuccess = (e) => { _db = e.target.result; resolve(_db) }
+    req.onsuccess = (e) => {
+      _db = e.target.result
+      resolve(_db)
+    }
     req.onerror = () => reject(req.error)
   })
 }
@@ -95,7 +98,7 @@ async function _ensureKeyMappings() {
   if (_keyMappingsLoaded) return
   const all = await _dbGetAll()
   for (const entry of all) {
-    for (const key of (entry.entityKeys ?? [])) {
+    for (const key of entry.entityKeys ?? []) {
       _registerKeyMapping(key, entry.cacheKey)
     }
   }

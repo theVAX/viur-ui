@@ -13,7 +13,7 @@
       :use-categories="false"
       :layout="UserPasswordLoginLayout"
     ></vi-form>
-    <sl-button variant="primary" type="submit" @click="sendotp" class="login-otp-auth-btn">
+    <sl-button variant="primary" type="submit" class="login-otp-auth-btn" @click="sendotp">
       {{ $t("login.otp") }}
     </sl-button>
   </div>

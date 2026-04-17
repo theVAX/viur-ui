@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/spatial.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/spatial.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/SpatialBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="location"
         bone-type="spatial"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Leer" :auto-props-disabled="true">
+    <Variant
+      title="Leer"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="location"
         bone-type="spatial"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="location"
         bone-type="spatial"
@@ -33,7 +41,10 @@ import { createStructure } from '../../fixtures/spatial.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="location"
         bone-type="spatial"
@@ -42,6 +53,5 @@ import { createStructure } from '../../fixtures/spatial.js'
         :errors="[{ fieldPath: ['location'], errorMessage: 'field_not_set', severity: 3 }]"
       />
     </Variant>
-
   </Story>
 </template>

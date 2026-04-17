@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/key.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/key.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/KeyBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="key"
         bone-type="key"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/key.js'
       />
     </Variant>
 
-    <Variant title="Leer" :auto-props-disabled="true">
+    <Variant
+      title="Leer"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="key"
         bone-type="key"
@@ -23,6 +28,5 @@ import { createStructure } from '../../fixtures/key.js'
         :skel="{ key: null }"
       />
     </Variant>
-
   </Story>
 </template>

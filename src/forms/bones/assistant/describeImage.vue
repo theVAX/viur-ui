@@ -2,13 +2,28 @@
   <div class="image-description-wrapper">
     <div class="image-description-grid">
       <div>
-        <vi-image :src="state.url" style="height: 50px"></vi-image>
+        <vi-image
+          :src="state.url"
+          style="height: 50px"
+        ></vi-image>
       </div>
 
       <div class="image-description-flex">
-        <wa-tab-group v-if="state.value" class="lang-tab" placement="bottom">
-          <template v-for="(val, lang) in state.value" :key="lang + '_tab'">
-            <wa-tab slot="nav" :panel="'lang_' + lang" :disabled="state.loading" @click="state.currentLang = lang">
+        <wa-tab-group
+          v-if="state.value"
+          class="lang-tab"
+          placement="bottom"
+        >
+          <template
+            v-for="(val, lang) in state.value"
+            :key="lang + '_tab'"
+          >
+            <wa-tab
+              slot="nav"
+              :panel="'lang_' + lang"
+              :disabled="state.loading"
+              @click="state.currentLang = lang"
+            >
               {{ $t(lang) }}
             </wa-tab>
 
@@ -22,22 +37,46 @@
           </template>
         </wa-tab-group>
 
-        <wa-input v-model="state.prompt" placeholder="weitere Anweisungen"></wa-input>
+        <wa-input
+          v-model="state.prompt"
+          placeholder="weitere Anweisungen"
+        ></wa-input>
         <span class="image-description-small-print">
           * Bei der Beschreibung kommt künstliche Intelligenz zum Einsatz. Die Ergebnisse können daher fehlerhaft sein.
           Bitte prüfen Sie daher stets das Ergebnis.
         </span>
-        <wa-button size="small" variant="brand" :loading="state.loading" @click="describe">
+        <wa-button
+          size="small"
+          variant="brand"
+          :loading="state.loading"
+          @click="describe"
+        >
           Beschreibung erstellen
         </wa-button>
       </div>
     </div>
   </div>
 
-  <div slot="footer" class="footer">
-    <wa-button variant="danger" size="small" appearance="outlined" @click="CloseAction">{{ $t("relation.abort") }}</wa-button>
+  <div
+    slot="footer"
+    class="footer"
+  >
+    <wa-button
+      variant="danger"
+      size="small"
+      appearance="outlined"
+      @click="CloseAction"
+    >
+      {{ $t("relation.abort") }}
+    </wa-button>
 
-    <wa-button variant="success" size="small" @click="ApplySelection">Beschreibung übernehmen</wa-button>
+    <wa-button
+      variant="success"
+      size="small"
+      @click="ApplySelection"
+    >
+      Beschreibung übernehmen
+    </wa-button>
   </div>
 </template>
 
@@ -72,14 +111,19 @@ const state = reactive({
 async function describe() {
   state.loading = true
   try {
-    const fetchResult = describeImageFetch("assistant", "/", {
-      filekey: props.params.value.dest.key,
-      context: JSON.stringify(viform?.value?.state?.skel),
-      prompt: state.prompt,
-      language: state.currentLang,
-    }, {
-      immediate: false,
-    })
+    const fetchResult = describeImageFetch(
+      "assistant",
+      "/",
+      {
+        filekey: props.params.value.dest.key,
+        context: JSON.stringify(viform?.value?.state?.skel),
+        prompt: state.prompt,
+        language: state.currentLang,
+      },
+      {
+        immediate: false,
+      }
+    )
     await fetchResult.execute()
     state.value[state.currentLang] = fetchResult.data.value
   } catch (error) {

@@ -108,7 +108,7 @@ function getValue(lang = null) {
 onMounted(() => {
   state.value_de = getValue("de")
   state.currentLang = state.nextlang
-  if (state.nextlang !== "de"){
+  if (state.nextlang !== "de") {
     state.currentLang = props.params.boneState.currentLanguage
   }
   state.result = getValue(state.currentLang)

@@ -207,7 +207,8 @@ export function useFormUtils(props, state) {
       immediate: false,
     })
 
-    return fetchResult.execute()
+    return fetchResult
+      .execute()
       .then(async () => {
         let responseData = fetchResult.data.value
         initForm(responseData["values"], responseData["structure"], state.values)

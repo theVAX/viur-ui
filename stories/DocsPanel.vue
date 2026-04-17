@@ -25,9 +25,17 @@ const cssClasses = computed(() => {
 </script>
 
 <template>
-  <div v-if="info" class="docs-panel">
+  <div
+    v-if="info"
+    class="docs-panel"
+  >
     <h1>{{ info.displayName }}</h1>
-    <p v-if="info.description" class="docs-description">{{ info.description }}</p>
+    <p
+      v-if="info.description"
+      class="docs-description"
+    >
+      {{ info.description }}
+    </p>
 
     <template v-if="cssClasses.length">
       <h2>CSS-Klassen</h2>
@@ -39,8 +47,13 @@ const cssClasses = computed(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="cls in cssClasses" :key="cls.name">
-            <td><code>{{ cls.name }}</code></td>
+          <tr
+            v-for="cls in cssClasses"
+            :key="cls.name"
+          >
+            <td>
+              <code>{{ cls.name }}</code>
+            </td>
             <td>{{ cls.desc }}</td>
           </tr>
         </tbody>
@@ -58,9 +71,16 @@ const cssClasses = computed(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="prop in info.props" :key="prop.name">
-            <td><code>{{ prop.name }}</code></td>
-            <td><code>{{ prop.type?.name ?? "-" }}</code></td>
+          <tr
+            v-for="prop in info.props"
+            :key="prop.name"
+          >
+            <td>
+              <code>{{ prop.name }}</code>
+            </td>
+            <td>
+              <code>{{ prop.type?.name ?? "-" }}</code>
+            </td>
             <td>{{ prop.description }}</td>
           </tr>
         </tbody>
@@ -77,15 +97,23 @@ const cssClasses = computed(() => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="event in info.events" :key="event.name">
-            <td><code>{{ event.name }}</code></td>
+          <tr
+            v-for="event in info.events"
+            :key="event.name"
+          >
+            <td>
+              <code>{{ event.name }}</code>
+            </td>
             <td>{{ event.description }}</td>
           </tr>
         </tbody>
       </table>
     </template>
   </div>
-  <div v-else class="docs-panel docs-panel--empty">
+  <div
+    v-else
+    class="docs-panel docs-panel--empty"
+  >
     Keine JSDoc-Doku gefunden.
   </div>
 </template>

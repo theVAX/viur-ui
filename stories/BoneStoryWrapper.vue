@@ -10,7 +10,7 @@
       :languages="languages"
       @change="logEvent('change', $event)"
       @change-internal="logEvent('change-internal', $event)"
-      @handleClick="logEvent('handleClick', $event)"
+      @handle-click="logEvent('handleClick', $event)"
     />
   </div>
 </template>
@@ -44,7 +44,7 @@ const props = defineProps({
   },
   label: {
     type: String,
-    default: 'normal',
+    default: "normal",
   },
   languages: {
     type: Array,

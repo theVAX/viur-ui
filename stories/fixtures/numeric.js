@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     amount: {
-      type: 'numeric',
-      descr: 'Betrag',
+      type: "numeric",
+      descr: "Betrag",
       required: false,
       readonly: false,
       multiple: false,

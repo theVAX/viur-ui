@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     password: {
-      type: 'password',
-      descr: 'Passwort',
+      type: "password",
+      descr: "Passwort",
       required: false,
       readonly: false,
       multiple: false,

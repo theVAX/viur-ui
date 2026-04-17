@@ -1,34 +1,42 @@
 <template>
-  <div class="wrapper widget-bone widget-bone-raw widget-bone-raw-default" :class="{'max-size':state.max}">
-    <textarea ref="element" :disabled="boneState?.readonly"
-          :placeholder="state.placeholder"
+  <div
+    class="wrapper widget-bone widget-bone-raw widget-bone-raw-default"
+    :class="{ 'max-size': state.max }"
+  >
+    <textarea
+      ref="element"
+      :disabled="boneState?.readonly"
+      :placeholder="state.placeholder"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     ></textarea>
-    <wa-button appearance="plain" class="expand-button" @click="state.max = !state.max">
+    <wa-button
+      appearance="plain"
+      class="expand-button"
+      @click="state.max = !state.max"
+    >
       <wa-icon :name="state.max ? 'compress' : 'expand'"></wa-icon>
     </wa-button>
   </div>
 
   <input
-        type="text"
-        class="vi-textbone-hidden"
-        :value="state.value"
-        :required="
-          boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
-        "
-      />
+    type="text"
+    class="vi-textbone-hidden"
+    :value="state.value"
+    :required="
+      boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
+    "
+  />
 </template>
 
 <script setup>
 import { reactive, onMounted, inject, computed, ref } from "vue"
 import { basicSetup } from "codemirror"
 import { EditorView, keymap, drawSelection } from "@codemirror/view"
-import { syntaxHighlighting, defaultHighlightStyle,LanguageDescription  } from "@codemirror/language"
+import { syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from "@codemirror/language"
 import { indentLess, indentMore, indentWithTab, indentSelection, insertTab } from "@codemirror/commands"
 import { indentString, indentUnit } from "@codemirror/language"
 import { EditorState } from "@codemirror/state"
-import {languages} from "@codemirror/language-data"
-
+import { languages } from "@codemirror/language-data"
 
 /**
  * Code-Editor auf Basis von CodeMirror für syntaxhervorgehobene Quelltext-Eingabe.
@@ -90,8 +98,8 @@ const state = reactive({
     }
     return name
   }),
-  value:"",
-  max:false
+  value: "",
+  max: false,
 })
 
 function editorFromTextArea(textarea, extensions) {
@@ -125,7 +133,7 @@ function editorFromTextArea(textarea, extensions) {
   return _view
 }
 
-async function build(){
+async function build() {
   const exts = [
     basicSetup,
     syntaxHighlighting(defaultHighlightStyle),
@@ -136,14 +144,17 @@ async function build(){
     drawSelection(),
   ]
 
-  let langDesc = LanguageDescription.matchLanguageName(languages, boneState?.bonestructure?.type.replace("raw.code.",""))
+  let langDesc = LanguageDescription.matchLanguageName(
+    languages,
+    boneState?.bonestructure?.type.replace("raw.code.", "")
+  )
 
   if (langDesc) {
     const support = await langDesc.load()
     exts.push(support)
   }
 
-  if (boneState?.readonly){
+  if (boneState?.readonly) {
     exts.push(EditorView.editable.of(false))
   }
 
@@ -175,9 +186,9 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.expand-button{
+.expand-button {
   position: absolute;
-  bottom:0px;
+  bottom: 0px;
   right: 10px;
   z-index: 1;
 }
@@ -214,6 +225,6 @@ wa-input {
 }
 
 .wrapper.max-size :deep(.cm-editor) .cm-scroller {
-    max-height: none;
+  max-height: none;
 }
 </style>

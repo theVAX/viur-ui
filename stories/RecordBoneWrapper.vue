@@ -8,17 +8,17 @@
       :errors="errors"
       @change="logEvent('change', $event)"
       @change-internal="logEvent('change-internal', $event)"
-      @handleClick="logEvent('handleClick', $event)"
+      @handle-click="logEvent('handleClick', $event)"
     />
   </div>
 </template>
 
 <script setup>
-import { provide, markRaw } from 'vue'
-import { logEvent } from 'histoire/client'
-import { createMainformState } from './mocks/mainformState.js'
-import Bone from '../src/forms/bones/bone.vue'
-import recordBone from '../src/forms/bones/recordBone.vue'
+import { provide, markRaw } from "vue"
+import { logEvent } from "histoire/client"
+import { createMainformState } from "./mocks/mainformState.js"
+import Bone from "../src/forms/bones/bone.vue"
+import recordBone from "../src/forms/bones/recordBone.vue"
 
 const props = defineProps({
   boneName: {
@@ -39,5 +39,5 @@ const props = defineProps({
   },
 })
 
-provide('mainformState', createMainformState(props.skel))
+provide("mainformState", createMainformState(props.skel))
 </script>

@@ -1,9 +1,19 @@
 <template>
-  <wa-alert v-if="!state.globalRegistration" open variant="danger">
+  <wa-alert
+    v-if="!state.globalRegistration"
+    open
+    variant="danger"
+  >
     In Order to use this Bone register the bone component globally in your main file
   </wa-alert>
-  <div v-else class="form">
-    <wa-spinner v-if="state.updating" style="position: absolute; top: 20px; left: -10px"></wa-spinner>
+  <div
+    v-else
+    class="form"
+  >
+    <wa-spinner
+      v-if="state.updating"
+      style="position: absolute; top: 20px; left: -10px"
+    ></wa-spinner>
 
     <vi-form
       ref="skelRef"
@@ -23,7 +33,18 @@
 </template>
 
 <script setup>
-import { reactive, defineComponent, onMounted, inject, computed, getCurrentInstance, watch, ref, provide, unref } from "vue"
+import {
+  reactive,
+  defineComponent,
+  onMounted,
+  inject,
+  computed,
+  getCurrentInstance,
+  watch,
+  ref,
+  provide,
+  unref,
+} from "vue"
 import { getBoneWidget } from "./index"
 import ViForm from "../ViForm.vue"
 import { useTimeoutFn } from "@vueuse/core"

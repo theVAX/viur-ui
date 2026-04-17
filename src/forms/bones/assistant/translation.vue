@@ -2,7 +2,11 @@
   <div class="translate-wrapper">
     <div class="translate-grid">
       <div class="translate-flex">
-        <wa-textarea :value="state.value_de" label="Original Sprache (de):" @change="updateValueDe"></wa-textarea>
+        <wa-textarea
+          :value="state.value_de"
+          label="Original Sprache (de):"
+          @change="updateValueDe"
+        ></wa-textarea>
       </div>
 
       <div class="translate-icon-wrap">
@@ -24,19 +28,46 @@
         Bitte prüfen Sie daher stets das Ergebnis.
       </span>
       <div></div>
-      <wa-button size="small" variant="brand" :loading="state.loading" @click="translate">Übersetzen</wa-button>
+      <wa-button
+        size="small"
+        variant="brand"
+        :loading="state.loading"
+        @click="translate"
+      >
+        Übersetzen
+      </wa-button>
     </div>
   </div>
 
-  <div slot="footer" class="translate-dialog-footer">
-    <wa-button variant="danger" size="small" appearance="outlined" @click="CloseAction">{{ $t("relation.abort") }}</wa-button>
+  <div
+    slot="footer"
+    class="translate-dialog-footer"
+  >
+    <wa-button
+      variant="danger"
+      size="small"
+      appearance="outlined"
+      @click="CloseAction"
+    >
+      {{ $t("relation.abort") }}
+    </wa-button>
 
     <div class="translate-dialog-footer-spacer"></div>
 
-    <wa-button variant="success" appearance="outlined" size="small" :disabled="!state.nextlang" @click="nextlang">
+    <wa-button
+      variant="success"
+      appearance="outlined"
+      size="small"
+      :disabled="!state.nextlang"
+      @click="nextlang"
+    >
       Übernehmen und nächste leere Sprache
     </wa-button>
-    <wa-button variant="success" size="small" @click="ApplySelection">
+    <wa-button
+      variant="success"
+      size="small"
+      @click="ApplySelection"
+    >
       Ziel für {{ state.currentLang }} übernehmen
     </wa-button>
   </div>
@@ -79,13 +110,18 @@ const state = reactive({
 async function translate() {
   state.loading = true
   try {
-    const fetchResult = translateFetch("assistant", "/", {
-      text: state.value_de,
-      language: state.rawLang,
-      characteristic: state.simple ? "simple" : null,
-    }, {
-      immediate: false,
-    })
+    const fetchResult = translateFetch(
+      "assistant",
+      "/",
+      {
+        text: state.value_de,
+        language: state.rawLang,
+        characteristic: state.simple ? "simple" : null,
+      },
+      {
+        immediate: false,
+      }
+    )
     await fetchResult.execute()
     state.result = fetchResult.data.value
   } catch (error) {
@@ -110,7 +146,7 @@ function getValue(lang = null) {
 onMounted(() => {
   state.value_de = getValue("de")
   state.currentLang = state.nextlang
-  if (state.nextlang !== "de"){
+  if (state.nextlang !== "de") {
     state.currentLang = props.params.boneState.currentLanguage
   }
   state.result = getValue(state.currentLang)

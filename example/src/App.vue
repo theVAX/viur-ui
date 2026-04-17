@@ -1,7 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue'
-import ViForm from 'viur-ui/src/forms/ViForm.vue'
-import RequestTest from './RequestTest.vue'
+import { computed, ref } from "vue"
+import ViForm from "viur-ui/src/forms/ViForm.vue"
+import RequestTest from "./RequestTest.vue"
 
 const localForm = ref(null)
 const requestForm = ref(null)
@@ -9,73 +9,73 @@ const requestError = ref(null)
 
 const localStructure = {
   key: {
-    type: 'key',
-    descr: 'Key',
+    type: "key",
+    descr: "Key",
     visible: true,
     required: false,
     readonly: true,
     multiple: false,
     languages: null,
-    params: { category: 'Meta' },
+    params: { category: "Meta" },
   },
   name: {
-    type: 'str',
-    descr: 'Name',
+    type: "str",
+    descr: "Name",
     visible: true,
     required: true,
     readonly: false,
     multiple: false,
     languages: null,
-    params: { category: 'Profil' },
+    params: { category: "Profil" },
   },
   email: {
-    type: 'str.email',
-    descr: 'E-Mail',
+    type: "str.email",
+    descr: "E-Mail",
     visible: true,
     required: true,
     readonly: false,
     multiple: false,
     languages: null,
-    params: { category: 'Profil' },
+    params: { category: "Profil" },
   },
   age: {
-    type: 'numeric',
-    descr: 'Alter',
+    type: "numeric",
+    descr: "Alter",
     visible: true,
     required: false,
     readonly: false,
     multiple: false,
     languages: null,
-    params: { category: 'Profil' },
+    params: { category: "Profil" },
   },
   isActive: {
-    type: 'bool',
-    descr: 'Aktiv',
+    type: "bool",
+    descr: "Aktiv",
     visible: true,
     required: false,
     readonly: false,
     multiple: false,
     languages: null,
-    params: { category: 'Zugang' },
+    params: { category: "Zugang" },
   },
   role: {
-    type: 'select',
-    descr: 'Rolle',
+    type: "select",
+    descr: "Rolle",
     visible: true,
     required: true,
     readonly: false,
     multiple: false,
     languages: null,
     values: {
-      admin: 'Admin',
-      editor: 'Editor',
-      user: 'User',
+      admin: "Admin",
+      editor: "Editor",
+      user: "User",
     },
-    params: { category: 'Zugang' },
+    params: { category: "Zugang" },
   },
   birthday: {
-    type: 'date',
-    descr: 'Geburtstag',
+    type: "date",
+    descr: "Geburtstag",
     visible: true,
     required: false,
     readonly: false,
@@ -83,21 +83,21 @@ const localStructure = {
     languages: null,
     date: true,
     time: false,
-    params: { category: 'Persoenlich' },
+    params: { category: "Persoenlich" },
   },
   bio: {
-    type: 'text',
-    descr: 'Kurzprofil',
+    type: "text",
+    descr: "Kurzprofil",
     visible: true,
     required: false,
     readonly: false,
     multiple: false,
     languages: null,
-    params: { category: 'Persoenlich' },
+    params: { category: "Persoenlich" },
   },
   address: {
-    type: 'record',
-    descr: 'Adresse',
+    type: "record",
+    descr: "Adresse",
     visible: true,
     required: false,
     readonly: false,
@@ -105,8 +105,8 @@ const localStructure = {
     languages: null,
     using: {
       street: {
-        type: 'str',
-        descr: 'Strasse',
+        type: "str",
+        descr: "Strasse",
         visible: true,
         required: false,
         readonly: false,
@@ -115,8 +115,8 @@ const localStructure = {
         params: {},
       },
       city: {
-        type: 'str',
-        descr: 'Ort',
+        type: "str",
+        descr: "Ort",
         visible: true,
         required: false,
         readonly: false,
@@ -125,22 +125,22 @@ const localStructure = {
         params: {},
       },
     },
-    params: { category: 'Adresse' },
+    params: { category: "Adresse" },
   },
 }
 
 const localSkel = {
-  key: 'demo-user-1',
-  name: 'Max Mustermann',
-  email: 'max@example.org',
+  key: "demo-user-1",
+  name: "Max Mustermann",
+  email: "max@example.org",
   age: 30,
   isActive: true,
-  role: 'editor',
-  birthday: '1994-08-16',
-  bio: 'Diese Demo verwendet die neuen src/forms Komponenten.',
+  role: "editor",
+  birthday: "1994-08-16",
+  bio: "Diese Demo verwendet die neuen src/forms Komponenten.",
   address: {
-    street: 'Beispielstrasse 5',
-    city: 'Brussels',
+    street: "Beispielstrasse 5",
+    city: "Brussels",
   },
 }
 
@@ -174,7 +174,12 @@ function reloadRequestForm() {
         </div>
       </div>
 
-      <ViForm ref="localForm" :structure="localStructure" :skel="localSkel" label="top" />
+      <ViForm
+        ref="localForm"
+        :structure="localStructure"
+        :skel="localSkel"
+        label="top"
+      />
 
       <div class="state-grid">
         <div>
@@ -199,21 +204,43 @@ function reloadRequestForm() {
           </p>
         </div>
         <div class="button-row">
-          <wa-button appearance="outlined" @click="reloadRequestForm">reload()</wa-button>
-          <wa-button variant="brand" @click="submitRequestForm">sendData()</wa-button>
+          <wa-button
+            appearance="outlined"
+            @click="reloadRequestForm"
+          >
+            reload()
+          </wa-button>
+          <wa-button
+            variant="brand"
+            @click="submitRequestForm"
+          >
+            sendData()
+          </wa-button>
         </div>
       </div>
 
-      <ViForm ref="requestForm" module="user" action="add" label="top" @failed="requestError = $event" />
+      <ViForm
+        ref="requestForm"
+        module="user"
+        action="add"
+        label="top"
+        @failed="requestError = $event"
+      />
 
       <div class="state-grid">
         <div>
           <h3>Status</h3>
-          <pre>{{ JSON.stringify({
-            loading: requestState?.loading ?? false,
-            actionname: requestState?.actionname ?? null,
-            failed: requestState?.failed ?? null,
-          }, null, 2) }}</pre>
+          <pre>{{
+            JSON.stringify(
+              {
+                loading: requestState?.loading ?? false,
+                actionname: requestState?.actionname ?? null,
+                failed: requestState?.failed ?? null,
+              },
+              null,
+              2
+            )
+          }}</pre>
         </div>
         <div>
           <h3>Antwort / Fehler</h3>

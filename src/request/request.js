@@ -11,14 +11,7 @@ export class HTTPError extends Error {
   }
 }
 
-
-function create_url({
-  controller,
-  endpoint,
-  renderer = "json",
-  version = null,
-  lang = null,
-} = {}) {
+function create_url({ controller, endpoint, renderer = "json", version = null, lang = null } = {}) {
   if (!controller) {
     throw new Error("Parameter 'controller' is required")
   }
@@ -82,16 +75,19 @@ async function executeAndThrow(fetchResult, executeImpl) {
 }
 
 function createControllerListFetch({ all = false, secure = false } = {}) {
-  return (controller, {
-    params: initialParams = {},
-    group = null,
-    url = null,
-    renderer = import.meta.env.VITE_DEFAULT_RENDERER ?? "json",
-    immediate = true,
-    cached = false,
-    ttl = 0,
-  } = {}) => {
-    const data = ref([])       // skellist
+  return (
+    controller,
+    {
+      params: initialParams = {},
+      group = null,
+      url = null,
+      renderer = import.meta.env.VITE_DEFAULT_RENDERER ?? "json",
+      immediate = true,
+      cached = false,
+      ttl = 0,
+    } = {}
+  ) => {
+    const data = ref([]) // skellist
     const structure = ref({})
     const cursor = ref("")
     const orders = ref([])
@@ -102,7 +98,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       const base = url ?? create_url({ controller, endpoint: group ? `list/${group}` : "list", renderer })
       const qs = new URLSearchParams()
       for (const [k, v] of Object.entries(params.value)) {
-        Array.isArray(v) ? v.forEach(item => qs.append(k, item)) : qs.append(k, v)
+        Array.isArray(v) ? v.forEach((item) => qs.append(k, item)) : qs.append(k, v)
       }
       return qs.toString() ? `${base}?${qs}` : base
     }
@@ -112,9 +108,12 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
       if (!resp.ok) return
       const structureData = await resp.json()
-      const skeltype = params.value.skelType === "node" ? "viewNodeSkel"
-        : params.value.skelType === "leaf" ? "viewLeafSkel"
-        : "viewSkel"
+      const skeltype =
+        params.value.skelType === "node"
+          ? "viewNodeSkel"
+          : params.value.skelType === "leaf"
+            ? "viewLeafSkel"
+            : "viewSkel"
       if (structureData[skeltype]) structure.value = structureData[skeltype]
     }
 
@@ -150,11 +149,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           }
           cursor.value = responseData.cursor ?? ""
           orders.value = responseData.orders ?? []
-          data.value = _isNext
-            ? data.value.concat(responseData.skellist)
-            : responseData.skellist
+          data.value = _isNext ? data.value.concat(responseData.skellist) : responseData.skellist
           if (cached && !_isNext) {
-            const entityKeys = (responseData.skellist ?? []).map(s => s.key).filter(Boolean)
+            const entityKeys = (responseData.skellist ?? []).map((s) => s.key).filter(Boolean)
             await setCached(ctx.url ?? listUrl.value, responseData, entityKeys)
           }
           ctx.data = data.value
@@ -167,8 +164,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       },
     })
 
-    const { isFetching, isFinished, error, execute: _execute, abort } =
-      useViurFetch(listUrl, { immediate }).json()
+    const { isFetching, isFinished, error, execute: _execute, abort } = useViurFetch(listUrl, { immediate }).json()
 
     const fetchResult = { data, structure, orders, cursor, isFetching, isFinished, error, execute, next, filter, reset }
 
@@ -222,10 +218,25 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
   }
 }
 
-export function createControllerFetch({ endpoint, method = "GET", secure = false, invalidates = false, invalidatesAll = false } = {}) {
+export function createControllerFetch({
+  endpoint,
+  method = "GET",
+  secure = false,
+  invalidates = false,
+  invalidatesAll = false,
+} = {}) {
   return (controller, data = {}, args = "/", ctx = {}) => {
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
-    const { version = null, lang = null, headers = {}, mode = null, skey: ctxSkey = null, cached = false, ttl = 0, immediate = true } = ctx
+    const {
+      version = null,
+      lang = null,
+      headers = {},
+      mode = null,
+      skey: ctxSkey = null,
+      cached = false,
+      ttl = 0,
+      immediate = true,
+    } = ctx
 
     // Stable cache key: base URL + data params, skey excluded so it stays consistent across requests
     let _cacheKey = null
@@ -239,7 +250,7 @@ export function createControllerFetch({ endpoint, method = "GET", secure = false
       },
       options: {
         async beforeFetch({ options, url, cancel }) {
-          const skeyToken = secure ? (ctxSkey || (await fetchSkeyToken(renderer))) : null
+          const skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
           const base = create_url({ controller, endpoint, renderer, version, lang })
 
           options.method = method
@@ -259,21 +270,28 @@ export function createControllerFetch({ endpoint, method = "GET", secure = false
               }
             }
 
-            const finalUrl = skeyToken ? `${_cacheKey}${_cacheKey.includes("?") ? "&" : "?"}skey=${skeyToken}` : _cacheKey
+            const finalUrl = skeyToken
+              ? `${_cacheKey}${_cacheKey.includes("?") ? "&" : "?"}skey=${skeyToken}`
+              : _cacheKey
             return { url: finalUrl, options }
           }
 
-          const formData = data instanceof FormData ? data : (() => {
-            const fd = new FormData()
-            for (const [key, value] of Object.entries(data)) {
-              if (Array.isArray(value)) {
-                value.forEach(item => { if (item !== null && item !== undefined) fd.append(key, item) })
-              } else if (value !== null && value !== undefined) {
-                fd.append(key, value)
-              }
-            }
-            return fd
-          })()
+          const formData =
+            data instanceof FormData
+              ? data
+              : (() => {
+                  const fd = new FormData()
+                  for (const [key, value] of Object.entries(data)) {
+                    if (Array.isArray(value)) {
+                      value.forEach((item) => {
+                        if (item !== null && item !== undefined) fd.append(key, item)
+                      })
+                    } else if (value !== null && value !== undefined) {
+                      fd.append(key, value)
+                    }
+                  }
+                  return fd
+                })()
           if (skeyToken) formData.append("skey", skeyToken)
           options.body = formData
           return { url: base, options }
@@ -334,7 +352,7 @@ function _toFormData(obj) {
   const fd = new FormData()
   for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
-      value.forEach(item => fd.append(key, item))
+      value.forEach((item) => fd.append(key, item))
     } else if (value !== undefined && value !== null) {
       fd.append(key, value)
     }
@@ -357,12 +375,14 @@ export async function uploadFile(file, { target = undefined, publicUpload = fals
   const fd1 = _toFormData(filedata)
   fd1.append("skey", await fetchSkeyToken(_renderer))
 
-  const getUrlResp = await fetch(
-    create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer }),
-    { ...fetchOpts, body: fd1 }
-  )
+  const getUrlResp = await fetch(create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer }), {
+    ...fetchOpts,
+    body: fd1,
+  })
   if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
-  const { values: { uploadUrl, uploadKey } } = await getUrlResp.json()
+  const {
+    values: { uploadUrl, uploadKey },
+  } = await getUrlResp.json()
 
   // Step 2: upload raw bytes to external storage (no-cors, no credentials)
   await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
@@ -371,10 +391,10 @@ export async function uploadFile(file, { target = undefined, publicUpload = fals
   const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
   fd3.append("skey", await fetchSkeyToken(_renderer))
 
-  const addResp = await fetch(
-    create_url({ controller: "file", endpoint: "add", renderer: _renderer }),
-    { ...fetchOpts, body: fd3 }
-  )
+  const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer }), {
+    ...fetchOpts,
+    body: fd3,
+  })
   if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
   const addData = await addResp.json()
   if (addData.action !== "addSuccess") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
@@ -426,7 +446,9 @@ export function serveUrlFor(servingurl, size = null, filename = null, options = 
   if (size) url += `/${size}`
   if (filename) url += `/${filename}`
 
-  const qs = Object.entries({ options, download }).filter(([, v]) => v).map(([k, v]) => `${k}=${v}`)
+  const qs = Object.entries({ options, download })
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${v}`)
   if (qs.length) url += `?${qs.join("&")}`
 
   return _absolute(url)
@@ -443,5 +465,15 @@ export const useListFetch = createControllerListFetch()
 export const useListFetchAll = createControllerListFetch({ all: true })
 export const useViewFetch = createControllerFetch({ endpoint: "view" })
 export const useEditFetch = createControllerFetch({ endpoint: "edit", method: "POST", secure: true, invalidates: true })
-export const useDeleteFetch = createControllerFetch({ endpoint: "delete", method: "POST", secure: true, invalidates: true })
-export const useAddFetch = createControllerFetch({ endpoint: "add", method: "POST", secure: true, invalidatesAll: true })
+export const useDeleteFetch = createControllerFetch({
+  endpoint: "delete",
+  method: "POST",
+  secure: true,
+  invalidates: true,
+})
+export const useAddFetch = createControllerFetch({
+  endpoint: "add",
+  method: "POST",
+  secure: true,
+  invalidatesAll: true,
+})

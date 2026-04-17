@@ -1,5 +1,4 @@
 <template>
-
   <div class="login-2nd-factor-provider-list">
     <template v-if="!state.selection">
       <template v-for="(provider, name, idx) in loginState.availableSecondfactors" :key="name">

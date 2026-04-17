@@ -1,5 +1,5 @@
-import { reactive } from 'vue'
+import { reactive } from "vue"
 
 export function createMainformState(skel = {}, readonly = false) {
-  return reactive({ skel, readonly, renderer: 'json' })
+  return reactive({ skel, readonly, renderer: "json" })
 }

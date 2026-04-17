@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/color.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/color.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/ColorBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="color"
         bone-type="color"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/color.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="color"
         bone-type="color"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/color.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="color"
         bone-type="color"
@@ -34,7 +42,10 @@ import { createStructure } from '../../fixtures/color.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="color"
         bone-type="color"
@@ -42,6 +53,5 @@ import { createStructure } from '../../fixtures/color.js'
         :skel="{ color: ['#3b82f6', '#f97316'] }"
       />
     </Variant>
-
   </Story>
 </template>

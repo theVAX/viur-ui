@@ -548,10 +548,12 @@ watch(
   }
 )
 
-watch(()=>state.defaultLanguage,(newVal, oldVal)=>{
-  state.currentLanguage = newVal
-})
-
+watch(
+  () => state.defaultLanguage,
+  (newVal, oldVal) => {
+    state.currentLanguage = newVal
+  }
+)
 </script>
 
 <style scoped>
@@ -702,8 +704,8 @@ watch(()=>state.defaultLanguage,(newVal, oldVal)=>{
   .multiple-bone {
     margin-bottom: var(--sl-spacing-x-small);
 
-    &:first-child{
-        padding-top:var(--sl-spacing-x-small);
+    &:first-child {
+      padding-top: var(--sl-spacing-x-small);
     }
 
     & .bone-wrapper {

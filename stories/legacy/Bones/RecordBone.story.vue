@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/record.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/record.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/RecordBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="address"
         bone-type="record"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="address"
         bone-type="record"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="address"
         bone-type="record"
@@ -34,14 +42,21 @@ import { createStructure } from '../../fixtures/record.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="address"
         bone-type="record"
         :structure="createStructure({ multiple: true })"
-        :skel="{ address: [{ street: 'Str. 1', city: 'München', zip: '80333' }, { street: 'Str. 2', city: 'Berlin', zip: '10115' }] }"
+        :skel="{
+          address: [
+            { street: 'Str. 1', city: 'München', zip: '80333' },
+            { street: 'Str. 2', city: 'Berlin', zip: '10115' },
+          ],
+        }"
       />
     </Variant>
-
   </Story>
 </template>

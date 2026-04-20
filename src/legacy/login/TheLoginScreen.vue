@@ -14,7 +14,7 @@ import { Request } from "../utils/request"
 
 // needs to be set so slots can be passed through
 defineOptions({
-  inheritAttrs: false
+  inheritAttrs: false,
 })
 
 const state = reactive({

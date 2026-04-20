@@ -39,7 +39,7 @@ function ensureValidBones(type) {
   margin: 0;
 }
 
-:deep(.widget-bone[type="password"]){
+:deep(.widget-bone[type="password"]) {
   margin-bottom: 0;
 }
 </style>

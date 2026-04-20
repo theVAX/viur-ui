@@ -70,9 +70,10 @@ export function skelDataToFormData(skel, structure) {
       if (bone["multiple"]) {
         const values = value ?? []
         for (const [idx, val] of values.entries()) {
-          const indexedName = (indexBone || val?.["rel"] || (bone["using"] && val?.["rel"] !== null))
-            ? `${currentFieldName}.${idx}`
-            : currentFieldName
+          const indexedName =
+            indexBone || val?.["rel"] || (bone["using"] && val?.["rel"] !== null)
+              ? `${currentFieldName}.${idx}`
+              : currentFieldName
           result = handleEntry(result, indexedName, bone, val)
         }
         if (values.length === 0) {
@@ -85,6 +86,5 @@ export function skelDataToFormData(skel, structure) {
     return result
   }
 
-  return Object.entries(structure)
-    .flatMap(([fieldName, bone]) => boneToForm(fieldName, bone, skel[fieldName]))
+  return Object.entries(structure).flatMap(([fieldName, bone]) => boneToForm(fieldName, bone, skel[fieldName]))
 }

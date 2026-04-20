@@ -42,9 +42,7 @@ function syncPgSource(state) {
       params: {},
     },
   }
-  const skel = langs
-    ? { [state.boneName]: Object.fromEntries(langs.map((l) => [l, 0])) }
-    : { [state.boneName]: 0 }
+  const skel = langs ? { [state.boneName]: Object.fromEntries(langs.map((l) => [l, 0])) } : { [state.boneName]: 0 }
   pgSourceRef.value = src(structure, skel, langs ? { languages: langs } : {})
   return ""
 }
@@ -115,26 +113,47 @@ function syncPgSource(state) {
         />
       </template>
       <template #controls="{ state }">
-        <HstText v-model="state.boneName" title="Bone-Name" />
+        <HstText
+          v-model="state.boneName"
+          title="Bone-Name"
+        />
         <div class="hst-hint">{{ hints.boneName }}</div>
 
-        <HstText v-model="state.descr" title="Description (Label)" />
+        <HstText
+          v-model="state.descr"
+          title="Description (Label)"
+        />
         <div class="hst-hint">{{ hints.descr }}</div>
 
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox
+          v-model="state.readonly"
+          title="Readonly"
+        />
         <div class="hst-hint">{{ hints.readonly }}</div>
 
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox
+          v-model="state.required"
+          title="Required"
+        />
         <div class="hst-hint">{{ hints.required }}</div>
 
-        <HstCheckbox v-model="state.multiple" title="Multiple" />
+        <HstCheckbox
+          v-model="state.multiple"
+          title="Multiple"
+        />
         <div class="hst-hint">{{ hints.multiple }}</div>
 
-        <HstCheckbox v-model="state.multilang" title="Multilang" />
+        <HstCheckbox
+          v-model="state.multilang"
+          title="Multilang"
+        />
         <div class="hst-hint">{{ hints.multilang }}</div>
 
         <template v-if="state.multilang">
-          <HstText v-model="state.languages" title="Sprachen" />
+          <HstText
+            v-model="state.languages"
+            title="Sprachen"
+          />
           <div class="hst-hint">{{ hints.languages }}</div>
         </template>
 

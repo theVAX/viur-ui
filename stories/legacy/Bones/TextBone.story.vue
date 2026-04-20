@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure, validHtmlStructure } from "../../fixtures/text.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/TextBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -15,7 +17,10 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -24,7 +29,10 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -34,7 +42,10 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
       />
     </Variant>
 
-    <Variant title="HTML (CKEditor)" :auto-props-disabled="true">
+    <Variant
+      title="HTML (CKEditor)"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -43,7 +54,10 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -52,7 +66,10 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
       />
     </Variant>
 
-    <Variant title="Multilang" :auto-props-disabled="true">
+    <Variant
+      title="Multilang"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="content"
         bone-type="text"
@@ -61,6 +78,5 @@ import { createStructure, validHtmlStructure } from '../../fixtures/text.js'
         :languages="['de', 'en']"
       />
     </Variant>
-
   </Story>
 </template>

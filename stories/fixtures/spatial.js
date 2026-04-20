@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     location: {
-      type: 'spatial',
-      descr: 'Koordinaten',
+      type: "spatial",
+      descr: "Koordinaten",
       required: false,
       readonly: false,
       multiple: false,

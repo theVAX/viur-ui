@@ -29,7 +29,7 @@ function getWidget(name) {
   font-size: 0.9em;
 }
 
-.login-auth-provider-list{
+.login-auth-provider-list {
   display: flex;
   flex-direction: column;
   width: 100%;

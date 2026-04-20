@@ -6,11 +6,19 @@
     @dragleave="state.droparea = false"
     @drop.prevent="handleDrop"
   >
-    <div v-if="state.loading" class="loader">
+    <div
+      v-if="state.loading"
+      class="loader"
+    >
       <wa-spinner slot="end"></wa-spinner>
     </div>
 
-    <div v-if="state.droparea" class="droparea">Dateien hier hinziehen</div>
+    <div
+      v-if="state.droparea"
+      class="droparea"
+    >
+      Dateien hier hinziehen
+    </div>
     <wa-button
       v-if="!boneState.readonly && (!value || state.loading)"
       :title="$t('bone.upload')"
@@ -20,8 +28,20 @@
     >
       <wa-icon name="upload"></wa-icon>
     </wa-button>
-    <input ref="uploadinput" style="display: none" type="file" :multiple="boneState.multiple" @change="handleUpload" />
-    <wa-button v-if="value" :title="$t('bone.download')" appearance="outlined" class="download-btn" @click="downloadFile">
+    <input
+      ref="uploadinput"
+      style="display: none"
+      type="file"
+      :multiple="boneState.multiple"
+      @change="handleUpload"
+    />
+    <wa-button
+      v-if="value"
+      :title="$t('bone.download')"
+      appearance="outlined"
+      class="download-btn"
+      @click="downloadFile"
+    >
       <wa-icon name="download"></wa-icon>
     </wa-button>
     <div class="box">
@@ -30,17 +50,30 @@
         class="preview has-preview"
         @click="state.previewopen = !state.previewopen"
       >
-        <img class="preview-img" :src="createBackgroundImage()" alt="" />
+        <img
+          class="preview-img"
+          :src="createBackgroundImage()"
+          alt=""
+        />
         <wa-dialog
           :label="decodeURIComponent(value?.['dest']?.['name'])"
           class="preview-overlay"
           :open="state.previewopen"
         >
-          <img :src="createBackgroundImage()" alt="" />
+          <img
+            :src="createBackgroundImage()"
+            alt=""
+          />
         </wa-dialog>
       </div>
-      <div v-else class="preview">
-        <wa-icon v-if="value?.['dest']?.['name']" name="file"></wa-icon>
+      <div
+        v-else
+        class="preview"
+      >
+        <wa-icon
+          v-if="value?.['dest']?.['name']"
+          name="file"
+        ></wa-icon>
       </div>
       <div v-if="value?.['dest']?.['name']">
         {{ decodeURIComponent(value?.["dest"]?.["name"]) }}

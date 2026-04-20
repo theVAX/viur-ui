@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/email.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/email.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/EmailBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="email"
         bone-type="str.email"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/email.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="email"
         bone-type="str.email"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/email.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="email"
         bone-type="str.email"
@@ -34,7 +42,10 @@ import { createStructure } from '../../fixtures/email.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="email"
         bone-type="str.email"
@@ -43,7 +54,10 @@ import { createStructure } from '../../fixtures/email.js'
       />
     </Variant>
 
-    <Variant title="Multilang" :auto-props-disabled="true">
+    <Variant
+      title="Multilang"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="email"
         bone-type="str.email"
@@ -52,6 +66,5 @@ import { createStructure } from '../../fixtures/email.js'
         :languages="['de', 'en']"
       />
     </Variant>
-
   </Story>
 </template>

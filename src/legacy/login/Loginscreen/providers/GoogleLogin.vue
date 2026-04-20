@@ -1,6 +1,6 @@
 <template>
   <div class="google-login">
-    <sl-alert class="google-login-error" v-if="userStore.state['user.loggedin'] === 'error'" variant="danger" open>
+    <sl-alert v-if="userStore.state['user.loggedin'] === 'error'" class="google-login-error" variant="danger" open>
       <sl-icon slot="icon" name="exclamation-circle-fill"></sl-icon>
       {{ $t("login.google_error") }}
     </sl-alert>
@@ -26,10 +26,10 @@ function googleLogin() {
 </script>
 
 <style scoped>
-.google-login{
+.google-login {
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-medium)
+  gap: var(--sl-spacing-medium);
 }
 
 .google-login-oauth {
@@ -39,6 +39,5 @@ function googleLogin() {
   &:empty {
     display: none;
   }
-
 }
 </style>

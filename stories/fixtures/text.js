@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     content: {
-      type: 'text',
-      descr: 'Inhalt',
+      type: "text",
+      descr: "Inhalt",
       required: false,
       readonly: false,
       multiple: false,

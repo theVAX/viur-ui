@@ -23,12 +23,12 @@
       {{ $t("login.login") }}
     </sl-button>
 
-    <sl-button v-else
-      class="login-forgot-password-logout"
-      @click="logout">{{ $t("login.logout") }}</sl-button>
+    <sl-button v-else class="login-forgot-password-logout" @click="logout">{{ $t("login.logout") }}</sl-button>
 
     <sl-bar style="width: 100%">
-      <span slot="right" class="login-forgot-password-link" @click="PasswortRecover">{{ $t("login.lost_password") }}</span>
+      <span slot="right" class="login-forgot-password-link" @click="PasswortRecover">
+        {{ $t("login.lost_password") }}
+      </span>
     </sl-bar>
   </div>
 </template>
@@ -124,8 +124,7 @@ watch(
 </script>
 
 <style scoped>
-
-.login-forgot-password{
+.login-forgot-password {
   display: flex;
   flex-direction: column;
   gap: var(--sl-spacing-medium);

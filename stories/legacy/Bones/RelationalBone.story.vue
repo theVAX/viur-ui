@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure, exampleEntry } from '../../fixtures/relational.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure, exampleEntry } from "../../fixtures/relational.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/RelationalBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="entry"
         bone-type="relational"
@@ -15,7 +17,10 @@ import { createStructure, exampleEntry } from '../../fixtures/relational.js'
       />
     </Variant>
 
-    <Variant title="Mit Wert" :auto-props-disabled="true">
+    <Variant
+      title="Mit Wert"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="entry"
         bone-type="relational"
@@ -24,7 +29,10 @@ import { createStructure, exampleEntry } from '../../fixtures/relational.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="entry"
         bone-type="relational"
@@ -33,7 +41,10 @@ import { createStructure, exampleEntry } from '../../fixtures/relational.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="entry"
         bone-type="relational"
@@ -43,7 +54,10 @@ import { createStructure, exampleEntry } from '../../fixtures/relational.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="entry"
         bone-type="relational"
@@ -51,6 +65,5 @@ import { createStructure, exampleEntry } from '../../fixtures/relational.js'
         :skel="{ entry: [exampleEntry] }"
       />
     </Variant>
-
   </Story>
 </template>

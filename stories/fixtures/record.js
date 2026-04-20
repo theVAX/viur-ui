@@ -1,8 +1,8 @@
 export function createStructure(overrides = {}) {
   return {
     address: {
-      type: 'record',
-      descr: 'Adresse',
+      type: "record",
+      descr: "Adresse",
       required: false,
       readonly: false,
       multiple: false,
@@ -10,8 +10,8 @@ export function createStructure(overrides = {}) {
       params: {},
       using: {
         street: {
-          type: 'str',
-          descr: 'Straße',
+          type: "str",
+          descr: "Straße",
           required: false,
           readonly: false,
           multiple: false,
@@ -20,8 +20,8 @@ export function createStructure(overrides = {}) {
           params: {},
         },
         city: {
-          type: 'str',
-          descr: 'Stadt',
+          type: "str",
+          descr: "Stadt",
           required: false,
           readonly: false,
           multiple: false,
@@ -30,8 +30,8 @@ export function createStructure(overrides = {}) {
           params: {},
         },
         zip: {
-          type: 'str',
-          descr: 'PLZ',
+          type: "str",
+          descr: "PLZ",
           required: false,
           readonly: false,
           multiple: false,

@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/boolean.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/boolean.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/BooleanBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="active"
         bone-type="bool"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="active"
         bone-type="bool"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="active"
         bone-type="bool"
@@ -34,7 +42,10 @@ import { createStructure } from '../../fixtures/boolean.js'
       />
     </Variant>
 
-    <Variant title="Multiple" :auto-props-disabled="true">
+    <Variant
+      title="Multiple"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="active"
         bone-type="bool"
@@ -42,6 +53,5 @@ import { createStructure } from '../../fixtures/boolean.js'
         :skel="{ active: [true, false, true] }"
       />
     </Variant>
-
   </Story>
 </template>

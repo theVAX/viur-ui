@@ -12,7 +12,7 @@
       "options": {
         "htmlWhitespaceSensitivity": "ignore",
         "vueIndentScriptAndStyle": false,
-        "singleAttributePerLine": false
+        "singleAttributePerLine": true
       }
     }
   ]

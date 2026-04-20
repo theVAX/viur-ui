@@ -1,12 +1,14 @@
 <script setup>
-import CompareWrapper from '../CompareWrapper.vue'
-import { createStructure } from '../../fixtures/password.js'
+import CompareWrapper from "../CompareWrapper.vue"
+import { createStructure } from "../../fixtures/password.js"
 </script>
 
 <template>
   <Story title="Legacy Bones/PasswordBone">
-
-    <Variant title="Default" :auto-props-disabled="true">
+    <Variant
+      title="Default"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="password"
         bone-type="password"
@@ -15,7 +17,10 @@ import { createStructure } from '../../fixtures/password.js'
       />
     </Variant>
 
-    <Variant title="Readonly" :auto-props-disabled="true">
+    <Variant
+      title="Readonly"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="password"
         bone-type="password"
@@ -24,7 +29,10 @@ import { createStructure } from '../../fixtures/password.js'
       />
     </Variant>
 
-    <Variant title="Required + Fehler" :auto-props-disabled="true">
+    <Variant
+      title="Required + Fehler"
+      :auto-props-disabled="true"
+    >
       <CompareWrapper
         bone-name="password"
         bone-type="password"
@@ -33,6 +41,5 @@ import { createStructure } from '../../fixtures/password.js'
         :errors="[{ fieldPath: ['password'], errorMessage: 'field_not_set', severity: 3 }]"
       />
     </Variant>
-
   </Story>
 </template>

@@ -20,7 +20,7 @@
   "peerDependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@codemirror/language-data": "^6.5.2",
-    "@viur/shoelace": ">=1.0.0",
+    "@viur/shoelace": ">=1.0.0-0",
     "@viur/webawesome": ">=0.10.0",
     "@vueuse/core": "^12.4.0",
     "ckeditor5": "^45.2.0",
@@ -31,15 +31,32 @@
     "vue-router": "^4.5.0"
   },
   "scripts": {
+    "icons": "npx wa-icons . ./src/public/assets/icons",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
+    "histoire:legacy": "histoire dev --config histoire.legacy.config.js",
+    "test:contract": "playwright test --config tests/contract/playwright.config.ts"
   },
   "devDependencies": {
+    "@histoire/plugin-vue": "^1.0.0-beta.1",
+    "@playwright/test": "^1.58.2",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vueuse/core": "^14.2.1",
-    "fake-indexeddb": "^6.0.0",
-    "happy-dom": "^14.0.0",
-    "vitest": "^2.0.0",
-    "vue": "^3.5.30"
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-vue": "^10.8.0",
+    "fake-indexeddb": "^6.2.5",
+    "globals": "^17.4.0",
+    "happy-dom": "^20.8.8",
+    "histoire": "^1.0.0-beta.1",
+    "vite": "^7.3.0",
+    "vitest": "^4.1.1",
+    "vue": "^3.5.31",
+    "vue-component-meta": "^3.2.6",
+    "vue-docgen-api": "^4.79.2"
   },
   "peerDependenciesMeta": {
     "@ckeditor/ckeditor5-vue": {

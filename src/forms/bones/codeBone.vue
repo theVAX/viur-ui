@@ -5,7 +5,7 @@
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     ></textarea>
     <wa-button appearance="plain" class="expand-button" @click="state.max = !state.max">
-      <wa-icon :name="state.max ? 'arrows-angle-contract' : 'arrows-angle-expand'"></wa-icon>
+      <wa-icon :name="state.max ? 'compress' : 'expand'"></wa-icon>
     </wa-button>
   </div>
 
@@ -30,6 +30,23 @@ import { EditorState } from "@codemirror/state"
 import {languages} from "@codemirror/language-data"
 
 
+/**
+ * Code-Editor auf Basis von CodeMirror für syntaxhervorgehobene Quelltext-Eingabe.
+ *
+ * Erkennt die Programmiersprache anhand von `boneState.bonestructure.type`
+ * (z.B. `raw.code.python`, `raw.code.html`, `raw.code.javascript`) und lädt
+ * das passende CodeMirror-Language-Plugin dynamisch nach. Unterstützt
+ * Mehrfachwerte (`multiple`). Ein Expand-Button ermöglicht das Aufklappen
+ * auf volle Höhe.
+ *
+ * @displayName CodeBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-raw - Kennzeichnet den übergeordneten Bone-Typ
+ * @cssClass widget-bone-raw-default - Standard-Variante
+ * @cssClass wrapper - Umschließt Editor und Expand-Button
+ * @cssClass max-size - Wird per Expand-Button umgeschaltet; hebt die maximale Höhe auf
+ */
 defineOptions({
   inheritAttrs: false,
 })
@@ -38,15 +55,30 @@ const element = ref(null)
 const view = ref(null)
 
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert (Quelltext als String). */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones (CodeBone unterstützt kein multilang). */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach dem Mount auf den CodeMirror-Editor. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Quelltext
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

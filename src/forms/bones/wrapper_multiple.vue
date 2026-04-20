@@ -25,7 +25,7 @@
       class="delete-btn"
       @click="emit('delete')"
     >
-      <wa-icon slot="start" name="x-lg"></wa-icon>
+      <wa-icon slot="start" name="xmark"></wa-icon>
     </wa-button>
   </div>
 </template>

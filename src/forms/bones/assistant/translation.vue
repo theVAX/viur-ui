@@ -6,7 +6,7 @@
       </div>
 
       <div class="translate-icon-wrap">
-        <wa-icon name="arrow-left-right"></wa-icon>
+        <wa-icon name="arrows-left-right"></wa-icon>
       </div>
 
       <div class="translate-flex">

@@ -76,19 +76,51 @@ import coreTranslations from "ckeditor5/dist/translations/de.js"
 import "ckeditor5/dist/ckeditor5.css"
 import { ViURUploadAdapterPlugin } from "./uploadAdapter"
 
+/**
+ * Mehrzeiliges Textfeld für längere Inhalte, wahlweise als Textarea oder Rich-Text-Editor (CKEditor 5).
+ *
+ * Wenn `boneState.bonestructure.valid_html` oder `boneState.bonestructure.validHtml` gesetzt ist,
+ * wird ein CKEditor 5 (ClassicEditor) gerendert. Die sichtbaren Toolbar-Aktionen werden anhand
+ * der erlaubten HTML-Tags (`validTags`) gefiltert. Ohne HTML-Konfiguration erscheint ein
+ * einfaches `<wa-textarea>`. Bei `boneState.label === "placeholder"` wird der Bone-Name als
+ * Placeholder angezeigt statt als Label.
+ *
+ * @displayName TextBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-text - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-text-default - Standard-Variante (Textarea oder CKEditor)
+ * @cssClass widget-bone-text-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-text-content`
+ * @cssClass widget-bone-text-{name}-html - Gesetzt wenn der Bone HTML-Inhalt enthält
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert als Klartext oder HTML-String. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus auf das Eingabefeld (aktuell nicht implementiert). */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Textwert oder HTML-String
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

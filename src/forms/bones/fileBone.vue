@@ -20,9 +20,9 @@
     >
       <wa-icon name="upload"></wa-icon>
     </wa-button>
-    <input ref="uploadinput" hidden type="file" :multiple="boneState.multiple" @change="handleUpload" />
-    <wa-button v-if="value" :title="$t('bone.download')" @click="downloadFile">
-      <wa-icon slot="start" name="download"></wa-icon>
+    <input ref="uploadinput" style="display: none" type="file" :multiple="boneState.multiple" @change="handleUpload" />
+    <wa-button v-if="value" :title="$t('bone.download')" appearance="outlined" class="download-btn" @click="downloadFile">
+      <wa-icon name="download"></wa-icon>
     </wa-button>
     <div class="box">
       <div
@@ -40,7 +40,7 @@
         </wa-dialog>
       </div>
       <div v-else class="preview">
-        <wa-icon v-if="value?.['dest']?.['name']" name="file-earmark"></wa-icon>
+        <wa-icon v-if="value?.['dest']?.['name']" name="file"></wa-icon>
       </div>
       <div v-if="value?.['dest']?.['name']">
         {{ decodeURIComponent(value?.["dest"]?.["name"]) }}
@@ -54,7 +54,7 @@
       class="delete-btn"
       @click="$emit('change', name, '', lang, index)"
     >
-      <wa-icon name="x-lg"></wa-icon>
+      <wa-icon name="xmark"></wa-icon>
     </wa-button>
   </div>
 </template>
@@ -62,19 +62,51 @@
 <script setup>
 import { reactive, onMounted, inject, ref } from "vue"
 import { downloadUrlFor, uploadFile } from "../../request/index.js"
+/**
+ * Datei-Upload-Widget für Bones vom Typ `relational.tree.leaf.file.file`.
+ *
+ * Zeigt eine Upload-Schaltfläche und einen optionalen Drag-and-Drop-Bereich.
+ * Bei Bilddateien wird eine klickbare Vorschau angezeigt, die einen Dialog öffnet.
+ * Der Download der aktuell gespeicherten Datei ist über eine Download-Schaltfläche möglich.
+ *
+ * @displayName FileBone
+ *
+ * @cssClass file-wrapper - Äußerer Container des Widgets
+ * @cssClass droparea - Eingeblendet während eines aktiven Drag-over
+ * @cssClass box - Anzeige-Box mit Dateiname und optionaler Vorschau
+ * @cssClass preview - Container für das Vorschaubild oder das Datei-Icon
+ * @cssClass has-preview - Zusatzklasse wenn ein Bild-Vorschau vorliegt
+ * @cssClass upload-btn - Upload-Schaltfläche (nur sichtbar wenn kein Wert gesetzt)
+ * @cssClass delete-btn - Löschen-Schaltfläche (nur bei `multiple: false`)
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert; Objekt mit `dest`- und `rel`-Schlüsseln oder `null`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur; `public`-Flag steuert ob der Upload öffentlich ist. */
   bone: Object,
+  /** Aktuell nicht genutzt. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei Datei-Upload, Datei-Drop, Löschen und beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {{ dest: object, rel: null }|string} value - Hochgeladenes Datei-Objekt oder `""` beim Löschen
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const uploadinput = ref()
@@ -101,24 +133,30 @@ function createBackgroundImage() {
 
 async function handleUpload(event) {
   state.loading = true
-  for (let file of event.target.files) {
-    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
-    uploadinput.value.value = null
-    emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
+  try {
+    for (let file of event.target.files) {
+      let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
+      uploadinput.value.value = ""
+      emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
+    }
+  } finally {
+    state.loading = false
   }
-  state.loading = false
 }
 
 async function handleDrop(event) {
   state.loading = true
   state.droparea = false
-  for (let file of event.dataTransfer.files) {
-    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
-    uploadinput.value.value = null
-    emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
-    break
+  try {
+    for (let file of event.dataTransfer.files) {
+      let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
+      uploadinput.value.value = ""
+      emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
+      break
+    }
+  } finally {
+    state.loading = false
   }
-  state.loading = false
 }
 </script>
 

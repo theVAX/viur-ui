@@ -23,19 +23,51 @@
 import { reactive, onMounted, inject, computed, watchEffect, ref } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
 import Utils from "./utils"
+/**
+ * Einzeiliges Textfeld für einfache Zeichenketten.
+ *
+ * Rendert ein `<wa-input>` und delegiert Validierung an das native
+ * Constraint Validation API. Unterstützt optionale Regex-Validierung
+ * via `boneState.params.pattern` sowie eine eigene Fehlermeldung via
+ * `boneState.params.pattern_error`. Bei `boneState.label === "placeholder"`
+ * wird der Bone-Name als Placeholder angezeigt statt als Label darüber.
+ *
+ * @displayName StringBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-string - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-string-default - Standard-Variante
+ * @cssClass widget-bone-string-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-string-title`
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Eingabewert
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   * @arg {boolean} [valid] - Validierungsstatus; fehlt beim Init-Event
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({
@@ -71,6 +103,13 @@ const state = reactive({
 
 const stringBone = ref(null)
 
+/**
+ * Verarbeitet `change`- und `keyup`-Events des `<wa-input>`.
+ * Prüft die native Validität, setzt bei `patternMismatch` eine eigene
+ * Fehlermeldung und emittiert den `change`-Event mit Validierungsstatus.
+ *
+ * @param {Event} event - Das DOM-Event vom Input-Element
+ */
 function changeEvent(event) {
   let valid = stringBone.value.reportValidity()
   let validStates = stringBone.value.validity

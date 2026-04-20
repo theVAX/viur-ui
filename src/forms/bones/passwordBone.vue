@@ -14,7 +14,7 @@
     @wa-clear="state.value1 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
   </wa-input>
   <wa-input
     v-if="!boneState.readonly"
@@ -30,7 +30,7 @@
     @wa-clear="state.value2 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'x'"></wa-icon>
+    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
   </wa-input>
 
   <ul class="errors">
@@ -46,19 +46,52 @@
 <script setup>
 import { reactive, onMounted, computed, inject, watch, ref, watchEffect } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
+/**
+ * Passwort-Eingabefeld mit Wiederholung und Stärke-Validierung.
+ *
+ * Rendert zwei `<wa-input type="password">` Felder (Eingabe + Wiederholung).
+ * Das Wiederholungs-Feld wird im Readonly-Modus ausgeblendet. Passwort-Tests
+ * werden über `boneState.bonestructure.tests` (Array aus `[regex, message, required]`
+ * Tupeln) konfiguriert. `boneState.bonestructure.test_threshold` legt fest,
+ * wie viele optionale Tests fehlschlagen dürfen.
+ *
+ * @displayName PasswordBone
+ *
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-password - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-password-default - Standard-Variante
+ * @cssClass widget-bone-password-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass has-check - Gesetzt wenn nicht readonly; entfernt border-bottom-right-radius für nahtlosen Übergang zum Wiederholungs-Feld
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert (wird in `state.value1` gespiegelt). */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
   bone: Object,
+  /** Setzt den Fokus nach 600 ms auf das erste Passwort-Feld. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {string} value - Aktueller Passwortwert (nur wenn beide Felder übereinstimmen und Tests bestanden)
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   * @arg {boolean} valid - `true` wenn Passwort gültig (Tests bestanden + Felder gleich)
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const state = reactive({

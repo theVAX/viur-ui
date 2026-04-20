@@ -24,7 +24,7 @@
     </bone-label>
 
     <wa-alert v-if="showLabelInfo && state.hasTooltip" variant="brand" open class="label-info">
-      <wa-icon slot="icon" name="info-circle-fill"></wa-icon>
+      <wa-icon slot="icon" name="circle-info"></wa-icon>
       {{ state.bonestructure.params["tooltip"] }}
     </wa-alert>
     <wa-tooltip
@@ -69,7 +69,7 @@
         </div>
         <template v-if="errorStyle === 'default'">
           <wa-alert v-for="message in state.errorMessages" open summary="Errors" variant="danger" class="error-msg">
-            <wa-icon slot="icon" name="exclamation-triangle"></wa-icon>
+            <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
             <div class="error-msg">
               {{ $t(`errors.${message}`) }}
             </div>

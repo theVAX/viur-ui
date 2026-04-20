@@ -31,7 +31,7 @@
           }
         "
       >
-        <wa-icon slot="start" name="x-lg"></wa-icon>
+        <wa-icon slot="start" name="xmark"></wa-icon>
       </wa-button>
     </div>
     <Wrapper_nested
@@ -51,19 +51,55 @@
 import { reactive, onMounted, inject, computed } from "vue"
 import { useListFetch } from "../../request/index.js"
 import Wrapper_nested from "./wrapper_nested.vue"
+/**
+ * Relational-Auswahl-Widget für Bones vom Typ `relational` und `relational.select`.
+ *
+ * Beim Typ `relational` wird eine `<wa-combobox>` angezeigt, die via `getList`
+ * Einträge aus dem konfigurierten `module` lädt und filtert. Ist ein Wert gesetzt,
+ * wird stattdessen ein gesperrtes `<wa-input>` mit dem formatierten Eintrag angezeigt.
+ * Beim Typ `relational.select` wird ein Dropdown-Widget gerendert.
+ * Falls die Struktur ein `using`-Objekt enthält, wird zusätzlich ein `Wrapper_nested`
+ * für die relationalen Zusatz-Felder (`rel`) eingeblendet.
+ *
+ * @displayName RelationalBone
+ *
+ * @cssClass record - Äußerer Container des Widgets
+ * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
+ * @cssClass widget-bone-relational - Kennzeichnet den Bone-Typ
+ * @cssClass widget-bone-relational-default - Standard-Variante
+ * @cssClass widget-bone-relational-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass single-entry - Zeile mit Combobox/Input und Löschen-Button
+ * @cssClass delete-btn - Löschen-Schaltfläche (nur bei `multiple: false` und gesetztem Wert)
+ * @cssClass square-btn - Quadratische Schaltflächen-Variante
+ */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
+  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
   name: String,
+  /** Aktueller Bone-Wert; Objekt mit `dest`- und `rel`-Schlüsseln oder `null`. */
   value: [Object, String, Number, Boolean, Array],
+  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
   index: Number,
+  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
   lang: String,
+  /** Bone-Struktur; `using` steuert ob ein Nested-Wrapper angezeigt wird. */
   bone: Object,
+  /** Aktuell nicht genutzt. */
   autofocus: Boolean,
 })
 
-const emit = defineEmits(["change"])
+const emit = defineEmits([
+  /**
+   * Wird bei Auswahl eines Eintrags, beim Löschen und beim Mount (Initialisierung) gefeuert.
+   * @arg {string} name - Bone-Name
+   * @arg {{ dest: object, rel: object|null }|string} value - Ausgewähltes Relational-Objekt oder `""` beim Löschen
+   * @arg {string|undefined} lang - Sprach-Key
+   * @arg {number|undefined} index - Index im Multiple-Array
+   */
+  "change",
+])
 
 const boneState = inject("boneState")
 const formatString = inject("formatString")

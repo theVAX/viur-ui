@@ -12,7 +12,7 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed, getCurrentInstance } from "vue"
-import Wrapper_nested from "./wrapper_nested.vue"
+import Wrapper_nested from "../wrapper_nested.vue"
 /**
  * Record-Widget für Bones vom Typ `record`.
  *

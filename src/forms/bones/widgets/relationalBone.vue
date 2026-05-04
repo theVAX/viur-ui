@@ -49,8 +49,8 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
-import { useListFetch } from "../../request/index.js"
-import Wrapper_nested from "./wrapper_nested.vue"
+import { useListFetch } from "../../../request/index.js"
+import Wrapper_nested from "../wrapper_nested.vue"
 /**
  * Relational-Auswahl-Widget für Bones vom Typ `relational` und `relational.select`.
  *

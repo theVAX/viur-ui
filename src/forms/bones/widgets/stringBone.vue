@@ -22,7 +22,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed, watchEffect, ref } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
-import Utils from "./utils"
+import Utils from "../utils"
 /**
  * Einzeiliges Textfeld für einfache Zeichenketten.
  *

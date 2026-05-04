@@ -235,7 +235,7 @@ import { reactive, computed, onBeforeMount, provide, watch, watchEffect, inject,
 import wrapperMultiple from "./wrapper_multiple.vue"
 import BoneLabel from "./boneLabel.vue"
 import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
-import rawBone from "./rawBone.vue"
+import rawBone from "./widgets/rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils"
 import { VueDraggable } from "vue-draggable-plus"
 import BoneActions from "./boneActions.vue"

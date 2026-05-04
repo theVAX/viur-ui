@@ -35,8 +35,8 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
-import { useListFetch } from "../../request/index.js"
-import Wrapper_nested from "./wrapper_nested.vue"
+import { useListFetch } from "../../../request/index.js"
+import Wrapper_nested from "../wrapper_nested.vue"
 defineOptions({
   inheritAttrs: false,
 })

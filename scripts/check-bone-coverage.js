@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
 
-const BONES_DIR = resolve(repoRoot, "src/forms/bones")
+const BONES_DIR = resolve(repoRoot, "src/forms/bones/widgets")
 const STORIES_DIR = resolve(repoRoot, "stories/bones")
 const CONTRACT_DIR = resolve(repoRoot, "tests/contract/bone-widgets")
 

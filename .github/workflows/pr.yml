@@ -24,7 +24,6 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
-    continue-on-error: true # 3 pre-existing failures in tests/request/request.test.js; separate backlog tracks cleanup
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup

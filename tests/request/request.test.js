@@ -80,8 +80,8 @@ describe("skey token fetching", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    const r1 = useEditFetch("mod", "/", { key: "k1" })
-    const r2 = useEditFetch("mod", "/", { key: "k2" })
+    const r1 = useEditFetch("mod", { key: "k1" })
+    const r2 = useEditFetch("mod", { key: "k2" })
     await waitUntilFinished(r1)
     await waitUntilFinished(r2)
 
@@ -98,7 +98,7 @@ describe("skey token fetching", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useEditFetch("mod", "/", {})
+    const result = useEditFetch("mod", {})
     await waitUntilFinished(result)
 
     const fallbackCall = fetchMock.mock.calls.find(([url]) => url.includes("/skey") && !url.includes("amount="))
@@ -347,7 +347,7 @@ describe("useViewFetch", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: { key: "v1", name: "Test" } }))
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useViewFetch("items", "/", { key: "v1" })
+    const result = useViewFetch("items", { key: "v1" })
     await waitUntilFinished(result)
 
     const [url] = fetchMock.mock.calls[0]
@@ -359,13 +359,13 @@ describe("useViewFetch", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: { key: "cv1" } }))
     vi.stubGlobal("fetch", fetchMock)
 
-    const r1 = useViewFetch("items", "/", { key: "cv1" }, { cached: true, ttl: 3600 })
+    const r1 = useViewFetch("items", { key: "cv1" }, "/", { cached: true, ttl: 3600 })
     await waitUntilFinished(r1)
     expect(r1.data.value).toEqual({ values: { key: "cv1" } })
 
     const callCountAfterFirst = fetchMock.mock.calls.length
 
-    const r2 = useViewFetch("items", "/", { key: "cv1" }, { cached: true, ttl: 3600 })
+    const r2 = useViewFetch("items", { key: "cv1" }, "/", { cached: true, ttl: 3600 })
     await waitUntilFinished(r2)
     expect(r2.data.value).toEqual({ values: { key: "cv1" } })
     expect(fetchMock.mock.calls.length).toBe(callCountAfterFirst) // no new fetch
@@ -374,7 +374,7 @@ describe("useViewFetch", () => {
   it("sets HTTPError on non-ok response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, 404)))
 
-    const result = useViewFetch("items", "/", { key: "missing" })
+    const result = useViewFetch("items", { key: "missing" })
     await waitUntilFinished(result)
 
     expect(result.error.value).toBeInstanceOf(HTTPError)
@@ -384,7 +384,7 @@ describe("useViewFetch", () => {
   it("execute() rejects with HTTPError on non-ok response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, 404)))
 
-    const result = useViewFetch("items", "/", { key: "missing" }, { immediate: false })
+    const result = useViewFetch("items", { key: "missing" }, "/", { immediate: false })
     await expect(result.execute()).rejects.toBeInstanceOf(HTTPError)
     expect(result.error.value).toBeInstanceOf(HTTPError)
     expect(result.error.value.statusCode).toBe(404)
@@ -398,7 +398,7 @@ describe("useStructureFetch", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ viewSkel: { title: { type: "str" } } }))
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useStructureFetch("items", "/")
+    const result = useStructureFetch("items")
     await waitUntilFinished(result)
 
     const [url] = fetchMock.mock.calls[0]
@@ -416,7 +416,7 @@ describe("useEditFetch", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useEditFetch("items", "/", { key: "k1", name: "Updated" })
+    const result = useEditFetch("items", { key: "k1", name: "Updated" })
     await waitUntilFinished(result)
 
     const [editUrl, editOptions] = fetchMock.mock.calls.find(([u]) => u.includes("/edit"))
@@ -442,7 +442,7 @@ describe("useEditFetch", () => {
       })
     )
 
-    const result = useEditFetch("items", "/", { key: "k1" })
+    const result = useEditFetch("items", { key: "k1" })
     await waitUntilFinished(result)
 
     const cached = await import("../../src/request/cache.js").then((m) =>
@@ -458,7 +458,7 @@ describe("useEditFetch", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useEditFetch("items", "/", {})
+    const result = useEditFetch("items", {})
     await waitUntilFinished(result)
 
     const [, options] = fetchMock.mock.calls.find(([u]) => u.includes("/edit"))
@@ -474,7 +474,7 @@ describe("useEditFetch", () => {
       })
     )
 
-    const result = useEditFetch("items", "/", { name: "x", emptyField: null })
+    const result = useEditFetch("items", { name: "x", emptyField: null })
     await waitUntilFinished(result)
 
     const [, options] = vi.mocked(globalThis.fetch).mock.calls.find(([u]) => u.includes("/edit"))
@@ -494,7 +494,7 @@ describe("useAddFetch", () => {
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    const result = useAddFetch("items", "/", { name: "New Item" })
+    const result = useAddFetch("items", { name: "New Item" })
     await waitUntilFinished(result)
 
     const [addUrl, addOptions] = fetchMock.mock.calls.find(([u]) => u.includes("/add"))
@@ -514,7 +514,7 @@ describe("useAddFetch", () => {
       })
     )
 
-    const result = useAddFetch("items", "/", { name: "New" })
+    const result = useAddFetch("items", { name: "New" })
     await waitUntilFinished(result)
 
     const cached = await import("../../src/request/cache.js").then((m) => m.getCached(listKey, 0))
@@ -537,7 +537,7 @@ describe("useDeleteFetch", () => {
       })
     )
 
-    const result = useDeleteFetch("items", "/", { key: "del1" })
+    const result = useDeleteFetch("items", { key: "del1" })
     await waitUntilFinished(result)
 
     const [delUrl] = vi.mocked(globalThis.fetch).mock.calls.find(([u]) => u.includes("/delete"))

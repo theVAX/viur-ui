@@ -46,32 +46,47 @@ let _skeyCache = []
 let _skeyPending = null
 
 async function _refillSkeys(renderer) {
-  const base = import.meta.env.VITE_API_URL ?? window.location.origin
-  let response = await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
-  if (!response.ok) {
-    response = await fetch(`${base}/${renderer}/skey`, { credentials: "include" })
-    if (!response.ok) throw new Error("Failed to fetch skey token")
+  try {
+    const base = import.meta.env.VITE_API_URL ?? window.location.origin
+    let response = await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
+    if (!response.ok) {
+      response = await fetch(`${base}/${renderer}/skey`, { credentials: "include" })
+      if (!response.ok) throw new Error("Failed to fetch skey token")
+    }
+    let data = await response.json()
+    if (!Array.isArray(data)) data = [data]
+    _skeyCache.push(...data)
+    _skeyPending = null
+  } catch (e) {
+    // TODO: error handling required
+    throw e
   }
-  let data = await response.json()
-  if (!Array.isArray(data)) data = [data]
-  _skeyCache.push(...data)
-  _skeyPending = null
 }
 
 async function fetchSkeyToken(renderer) {
-  if (_skeyCache.length === 0) {
-    if (!_skeyPending) _skeyPending = _refillSkeys(renderer)
-    await _skeyPending
+  try {
+    if (_skeyCache.length === 0) {
+      if (!_skeyPending) _skeyPending = _refillSkeys(renderer)
+      await _skeyPending
+    }
+    return _skeyCache.shift()
+  } catch (e) {
+    // TODO: error handling required
+    throw e
   }
-  return _skeyCache.shift()
 }
 
 async function executeAndThrow(fetchResult, executeImpl) {
-  await executeImpl()
-  if (fetchResult.error.value) {
-    throw fetchResult.error.value
+  try {
+    await executeImpl()
+    if (fetchResult.error.value) {
+      throw fetchResult.error.value
+    }
+    return fetchResult
+  } catch (e) {
+    // TODO: error handling required
+    throw e
   }
-  return fetchResult
 }
 
 function createControllerListFetch({ all = false, secure = false } = {}) {
@@ -104,17 +119,22 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     }
 
     async function _fetchStructure() {
-      const url = create_url({ controller, endpoint: "structure", renderer })
-      const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
-      if (!resp.ok) return
-      const structureData = await resp.json()
-      const skeltype =
-        params.value.skelType === "node"
-          ? "viewNodeSkel"
-          : params.value.skelType === "leaf"
-            ? "viewLeafSkel"
-            : "viewSkel"
-      if (structureData[skeltype]) structure.value = structureData[skeltype]
+      try {
+        const url = create_url({ controller, endpoint: "structure", renderer })
+        const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
+        if (!resp.ok) return
+        const structureData = await resp.json()
+        const skeltype =
+          params.value.skelType === "node"
+            ? "viewNodeSkel"
+            : params.value.skelType === "leaf"
+              ? "viewLeafSkel"
+              : "viewSkel"
+        if (structureData[skeltype]) structure.value = structureData[skeltype]
+      } catch (e) {
+        // TODO: error handling required
+        throw e
+      }
     }
 
     const listUrl = ref(_buildUrl())
@@ -127,35 +147,45 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       },
       options: {
         async beforeFetch({ options, url, cancel }) {
-          if (cached && !_isNext) {
-            const hit = await getCached(url, ttl)
-            if (hit) {
-              data.value = hit.skellist ?? hit
-              cursor.value = hit.cursor ?? ""
-              orders.value = hit.orders ?? []
-              cancel()
-              return { options, url }
+          try {
+            if (cached && !_isNext) {
+              const hit = await getCached(url, ttl)
+              if (hit) {
+                data.value = hit.skellist ?? hit
+                cursor.value = hit.cursor ?? ""
+                orders.value = hit.orders ?? []
+                cancel()
+                return { options, url }
+              }
             }
+            if (!secure) return { options, url }
+            const skey = await fetchSkeyToken(renderer)
+            const separator = url.includes("?") ? "&" : "?"
+            return { url: `${url}${separator}skey=${skey}`, options }
+          } catch (e) {
+            // TODO: error handling required
+            throw e
           }
-          if (!secure) return { options, url }
-          const skey = await fetchSkeyToken(renderer)
-          const separator = url.includes("?") ? "&" : "?"
-          return { url: `${url}${separator}skey=${skey}`, options }
         },
         async afterFetch(ctx) {
-          const responseData = ctx.data
-          if (!_isNext) {
-            await _fetchStructure()
+          try {
+            const responseData = ctx.data
+            if (!_isNext) {
+              await _fetchStructure()
+            }
+            cursor.value = responseData.cursor ?? ""
+            orders.value = responseData.orders ?? []
+            data.value = _isNext ? data.value.concat(responseData.skellist) : responseData.skellist
+            if (cached && !_isNext) {
+              const entityKeys = (responseData.skellist ?? []).map((s) => s.key).filter(Boolean)
+              await setCached(ctx.url ?? listUrl.value, responseData, entityKeys)
+            }
+            ctx.data = data.value
+            return ctx
+          } catch (e) {
+            // TODO: error handling required
+            throw e
           }
-          cursor.value = responseData.cursor ?? ""
-          orders.value = responseData.orders ?? []
-          data.value = _isNext ? data.value.concat(responseData.skellist) : responseData.skellist
-          if (cached && !_isNext) {
-            const entityKeys = (responseData.skellist ?? []).map((s) => s.key).filter(Boolean)
-            await setCached(ctx.url ?? listUrl.value, responseData, entityKeys)
-          }
-          ctx.data = data.value
-          return ctx
         },
         onFetchError(ctx) {
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
@@ -170,11 +200,16 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 
     // when all=true: automatically fetch next pages until cursor is empty
     watch(isFinished, async (finished) => {
-      if (finished && all && cursor.value) {
-        params.value = { ...params.value, cursor: cursor.value }
-        _isNext = true
-        listUrl.value = _buildUrl()
-        await executeAndThrow(fetchResult, _execute)
+      try {
+        if (finished && all && cursor.value) {
+          params.value = { ...params.value, cursor: cursor.value }
+          _isNext = true
+          listUrl.value = _buildUrl()
+          await executeAndThrow(fetchResult, _execute)
+        }
+      } catch (e) {
+        // TODO: error handling required
+        throw e
       }
     })
 
@@ -250,73 +285,83 @@ export function createControllerFetch({
       },
       options: {
         async beforeFetch({ options, url, cancel }) {
-          const skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
-          const base = create_url({ controller, endpoint, renderer, version, lang })
+          try {
+            const skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
+            const base = create_url({ controller, endpoint, renderer, version, lang })
 
-          options.method = method
-          options.headers = { ...options.headers, ...headers }
-          if (mode) options.mode = mode
+            options.method = method
+            options.headers = { ...options.headers, ...headers }
+            if (mode) options.mode = mode
 
-          if (method.toUpperCase() === "GET") {
-            const qs = new URLSearchParams(data).toString()
-            _cacheKey = qs ? `${base}?${qs}` : base
+            if (method.toUpperCase() === "GET") {
+              const qs = new URLSearchParams(data).toString()
+              _cacheKey = qs ? `${base}?${qs}` : base
 
-            if (cached) {
-              const hit = await getCached(_cacheKey, ttl)
-              if (hit) {
-                _cachedHit = hit
-                cancel()
-                return { url, options }
+              if (cached) {
+                const hit = await getCached(_cacheKey, ttl)
+                if (hit) {
+                  _cachedHit = hit
+                  cancel()
+                  return { url, options }
+                }
               }
+
+              const finalUrl = skeyToken
+                ? `${_cacheKey}${_cacheKey.includes("?") ? "&" : "?"}skey=${skeyToken}`
+                : _cacheKey
+              return { url: finalUrl, options }
             }
 
-            const finalUrl = skeyToken
-              ? `${_cacheKey}${_cacheKey.includes("?") ? "&" : "?"}skey=${skeyToken}`
-              : _cacheKey
-            return { url: finalUrl, options }
-          }
-
-          const formData =
-            data instanceof FormData
-              ? data
-              : (() => {
-                  const fd = new FormData()
-                  for (const [key, value] of Object.entries(data)) {
-                    if (Array.isArray(value)) {
-                      value.forEach((item) => {
-                        if (item !== null && item !== undefined) fd.append(key, item)
-                      })
-                    } else if (value !== null && value !== undefined) {
-                      fd.append(key, value)
+            const formData =
+              data instanceof FormData
+                ? data
+                : (() => {
+                    const fd = new FormData()
+                    for (const [key, value] of Object.entries(data)) {
+                      if (Array.isArray(value)) {
+                        value.forEach((item) => {
+                          if (item !== null && item !== undefined) fd.append(key, item)
+                        })
+                      } else if (value !== null && value !== undefined) {
+                        fd.append(key, value)
+                      }
                     }
-                  }
-                  return fd
-                })()
-          if (skeyToken) formData.append("skey", skeyToken)
-          options.body = formData
-          return { url: base, options }
+                    return fd
+                  })()
+            if (skeyToken) formData.append("skey", skeyToken)
+            options.body = formData
+            return { url: base, options }
+          } catch (e) {
+            // TODO: error handling required
+            throw e
+          }
         },
         onFetchError(ctx) {
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
           return ctx
         },
         async afterFetch(ctx) {
-          if (cached && method.toUpperCase() === "GET" && _cacheKey) {
-            const entityKey = ctx.data?.values?.key
-            await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : [])
+          try {
+            if (cached && method.toUpperCase() === "GET" && _cacheKey) {
+              const entityKey = ctx.data?.values?.key
+              await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : [])
+            }
+            if (invalidates) {
+              const keys = []
+              if (data.key) keys.push(data.key)
+              if (ctx.data?.values?.key) keys.push(ctx.data.values.key)
+              if (keys.length) await invalidateByKey(keys)
+            }
+            if (invalidatesAll) {
+              const base = import.meta.env.VITE_API_URL ?? window.location.origin
+              const controllerPath = Array.isArray(controller) ? controller.join("/") : controller
+              await clearCache(`${base}/${renderer}/${controllerPath}/`)
+            }
+            return ctx
+          } catch (e) {
+            // TODO: error handling required
+            throw e
           }
-          if (invalidates) {
-            const keys = []
-            if (data.key) keys.push(data.key)
-            if (ctx.data?.values?.key) keys.push(ctx.data.values.key)
-            if (keys.length) await invalidateByKey(keys)
-          }
-          if (invalidatesAll) {
-            const base = import.meta.env.VITE_API_URL ?? window.location.origin
-            const controllerPath = Array.isArray(controller) ? controller.join("/") : controller
-            await clearCache(`${base}/${renderer}/${controllerPath}/`)
-          }
-          return ctx
         },
       },
     })(args, { immediate }).json()
@@ -361,44 +406,49 @@ function _toFormData(obj) {
 }
 
 export async function uploadFile(file, { target = undefined, publicUpload = false, renderer = null } = {}) {
-  const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
-  const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
+  try {
+    const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
+    const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
 
-  // Step 1: get upload URL
-  const filedata = {
-    fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
-    size: file.size.toString(),
+    // Step 1: get upload URL
+    const filedata = {
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: file.size.toString(),
+    }
+    if (target) filedata.node = target
+    if (publicUpload) filedata.public = true
+    const fd1 = _toFormData(filedata)
+    fd1.append("skey", await fetchSkeyToken(_renderer))
+
+    const getUrlResp = await fetch(create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer }), {
+      ...fetchOpts,
+      body: fd1,
+    })
+    if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
+    const {
+      values: { uploadUrl, uploadKey },
+    } = await getUrlResp.json()
+
+    // Step 2: upload raw bytes to external storage (no-cors, no credentials)
+    await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
+
+    // Step 3: register file in ViUR
+    const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
+    fd3.append("skey", await fetchSkeyToken(_renderer))
+
+    const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer }), {
+      ...fetchOpts,
+      body: fd3,
+    })
+    if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
+    const addData = await addResp.json()
+    if (addData.action !== "addSuccess") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
+    return addData.values
+  } catch (e) {
+    // TODO: error handling required
+    throw e
   }
-  if (target) filedata.node = target
-  if (publicUpload) filedata.public = true
-  const fd1 = _toFormData(filedata)
-  fd1.append("skey", await fetchSkeyToken(_renderer))
-
-  const getUrlResp = await fetch(create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer }), {
-    ...fetchOpts,
-    body: fd1,
-  })
-  if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
-  const {
-    values: { uploadUrl, uploadKey },
-  } = await getUrlResp.json()
-
-  // Step 2: upload raw bytes to external storage (no-cors, no credentials)
-  await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
-
-  // Step 3: register file in ViUR
-  const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
-  fd3.append("skey", await fetchSkeyToken(_renderer))
-
-  const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer }), {
-    ...fetchOpts,
-    body: fd3,
-  })
-  if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
-  const addData = await addResp.json()
-  if (addData.action !== "addSuccess") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
-  return addData.values
 }
 
 function _absolute(url) {

@@ -5,3 +5,5 @@ node_modules
 example/dist
 example/public/shoelace
 .histoire
+test-results
+playwright-report

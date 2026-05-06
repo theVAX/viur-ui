@@ -8,7 +8,10 @@
       class="delete-btn"
       @click="openSelector()"
     >
-      <wa-icon slot="start" name="xmark"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="xmark"
+      ></wa-icon>
     </wa-button>
 
     <wa-combobox
@@ -29,7 +32,10 @@
       class="add-btn"
       @click="addMultiple"
     >
-      <wa-icon slot="start" name="plus"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="plus"
+      ></wa-icon>
       {{ $t("bone.addEmpty") }}
     </wa-button>
   </div>
@@ -72,7 +78,11 @@ async function getList(search) {
     renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
   })
 
-  await listFetch.execute()
+  try {
+    await listFetch.execute()
+  } catch (e) {
+    // TODO: error handling required
+  }
 
   //?viurTags$lk=${search.toLowerCase()}
   const data = { skellist: listFetch.data.value }

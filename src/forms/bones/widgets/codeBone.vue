@@ -150,8 +150,12 @@ async function build() {
   )
 
   if (langDesc) {
-    const support = await langDesc.load()
-    exts.push(support)
+    try {
+      const support = await langDesc.load()
+      exts.push(support)
+    } catch (e) {
+      // TODO: error handling required
+    }
   }
 
   if (boneState?.readonly) {
@@ -165,15 +169,19 @@ onMounted(async () => {
   if (props.value !== null) {
     state.value = props.value
   }
-  const exts = await build()
-  view.value = editorFromTextArea(element.value, exts)
+  try {
+    const exts = await build()
+    view.value = editorFromTextArea(element.value, exts)
 
-  //init editor
-  view.value.dispatch({
-    changes: { from: 0, to: view.value.state.doc.length, insert: state.value },
-  })
+    //init editor
+    view.value.dispatch({
+      changes: { from: 0, to: view.value.state.doc.length, insert: state.value },
+    })
 
-  emit("change", props.name, props.value, props.lang, props.index) //init
+    emit("change", props.name, props.value, props.lang, props.index) //init
+  } catch (e) {
+    // TODO: error handling required
+  }
 })
 </script>
 

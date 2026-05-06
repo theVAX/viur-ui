@@ -31,7 +31,10 @@
           }
         "
       >
-        <wa-icon slot="start" name="xmark"></wa-icon>
+        <wa-icon
+          slot="start"
+          name="xmark"
+        ></wa-icon>
       </wa-button>
     </div>
     <Wrapper_nested
@@ -134,7 +137,11 @@ async function getList(search) {
     renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
   })
 
-  await listFetch.execute()
+  try {
+    await listFetch.execute()
+  } catch (e) {
+    // TODO: error handling required
+  }
 
   //?viurTags$lk=${search.toLowerCase()
   const data = { skellist: listFetch.data.value }

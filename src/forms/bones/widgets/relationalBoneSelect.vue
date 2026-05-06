@@ -16,7 +16,11 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       >
-        <wa-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
+        <wa-option
+          v-for="(obj, key) in state.skellistdata"
+          :key="key"
+          :value="key"
+        >
           {{ formatString(state.format, obj) }}
         </wa-option>
       </wa-select>
@@ -83,7 +87,11 @@ async function getList(search) {
     renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
   })
 
-  await listFetch.execute()
+  try {
+    await listFetch.execute()
+  } catch (e) {
+    // TODO: error handling required
+  }
 
   //?viurTags$lk=${search.toLowerCase()
   const data = { skellist: listFetch.data.value }

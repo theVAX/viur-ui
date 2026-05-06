@@ -133,7 +133,7 @@ export function useFormUtils(props, state) {
     return formdata
   }
 
-  function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
+  async function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
     state.loading = true
     let isValid = state.viformelement.reportValidity()
     if (!isValid) {
@@ -174,16 +174,21 @@ export function useFormUtils(props, state) {
       immediate: false,
     })
 
-    return fetchResult.execute().then(async () => {
+    try {
+      await fetchResult.execute()
       let responseData = fetchResult.data.value
       state.skel = responseData["values"]
       //state.structure = normalizeStructure(data["structure"])
       state.errors = responseData["errors"]
       state.actionparams = responseData["params"]
       state.actionname = responseData["action"]
-      state.loading = false
       return fetchResult
-    })
+    } catch (e) {
+      // TODO: error handling required
+      throw e
+    } finally {
+      state.loading = false
+    }
   }
 
   function fetchData(alternativUrl = null, additionalData = null, headers = null) {

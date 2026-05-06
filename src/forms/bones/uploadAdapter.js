@@ -9,23 +9,25 @@ class ViURUploadAdapter {
   async upload() {
     this.loader.uploadTotal = 100
     this.loader.uploaded = 0
-    return this.loader.file.then(
-      async (file) =>
-        new Promise((resolve, reject) => {
-          this.loader.uploaded = 10
-          uploadFile(file, { renderer: "vi" })
-            .then((uploadedData) => {
-              this.loader.uploaded = 75
-              this.loader.uploaded = 100
-              resolve({
-                default: downloadUrlFor({ dest: uploadedData }, false, "vi"),
-              })
+    try {
+      const file = await this.loader.file
+      return new Promise((resolve, reject) => {
+        this.loader.uploaded = 10
+        uploadFile(file, { renderer: "vi" })
+          .then((uploadedData) => {
+            this.loader.uploaded = 75
+            this.loader.uploaded = 100
+            resolve({
+              default: downloadUrlFor({ dest: uploadedData }, false, "vi"),
             })
-            .catch((error) => {
-              reject(error)
-            })
-        })
-    )
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    } catch (e) {
+      // TODO: error handling required
+    }
   }
 
   // Aborts the upload process.

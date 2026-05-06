@@ -14,6 +14,7 @@ export default [
       "sources/old_dt4/*",
       "sources/viur-scriptor/*",
       "sources/vi-admin/*",
+      "src/legacy/**",
     ],
   },
   // Vue plugin configurations (must come first)

@@ -97,6 +97,17 @@ export default [
     },
   },
 
+  // Test files and POC: relax no-restricted-syntax (await/then-catch).
+  // Vitest catches every Promise rejection and reports it as a test failure,
+  // so the production-code error-handling discipline does not apply here.
+  // poc_request.js is throwaway proof-of-concept code.
+  {
+    files: ["tests/**", "poc_request.js"],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+
   // Prettier config to disable conflicting rules (must come last)
   eslintConfigPrettier,
 ]

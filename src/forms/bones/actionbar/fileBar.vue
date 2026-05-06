@@ -13,12 +13,26 @@
       class="delete-btn"
       @click="openSelector()"
     >
-      <wa-icon slot="start" name="xmark"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="xmark"
+      ></wa-icon>
     </wa-button>
 
-    <div v-if="state.droparea" class="droparea">Dateien hier hinziehen</div>
+    <div
+      v-if="state.droparea"
+      class="droparea"
+    >
+      Dateien hier hinziehen
+    </div>
 
-    <input ref="uploadinput" hidden type="file" :multiple="boneState.multiple" @change="handleUpload" />
+    <input
+      ref="uploadinput"
+      hidden
+      type="file"
+      :multiple="boneState.multiple"
+      @change="handleUpload"
+    />
     <wa-button
       v-if="boneState.multiple && !readonly"
       appearance="outlined"
@@ -26,7 +40,10 @@
       class="add-btn"
       @click="addMultipleEntry(lang)"
     >
-      <wa-icon slot="start" name="plus"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="plus"
+      ></wa-icon>
     </wa-button>
 
     <wa-button
@@ -39,7 +56,10 @@
     >
       <wa-icon name="upload"></wa-icon>
       {{ $t("bone.upload") }}
-      <wa-spinner v-if="state.loading" slot="end"></wa-spinner>
+      <wa-spinner
+        v-if="state.loading"
+        slot="end"
+      ></wa-spinner>
     </wa-button>
   </div>
 </template>

@@ -1,12 +1,19 @@
 <template>
   <wa-spinner v-if="state.loading"></wa-spinner>
-  <div v-else class="input-wrapper">
+  <div
+    v-else
+    class="input-wrapper"
+  >
     <wa-select
       :value="state.dialCode"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="handleSelect"
     >
-      <wa-option v-for="country in state.countryInfo" :key="country.currentCode" :value="country.dialCode">
+      <wa-option
+        v-for="country in state.countryInfo"
+        :key="country.currentCode"
+        :value="country.dialCode"
+      >
         {{ country.emoji }}
       </wa-option>
     </wa-select>

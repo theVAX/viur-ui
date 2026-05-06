@@ -10,7 +10,10 @@
     :class="[`viform-category-${encodeURI(name.toLowerCase())}`]"
     :open="open"
   >
-    <div slot="summary" v-html="name"></div>
+    <div
+      slot="summary"
+      v-html="name"
+    ></div>
     <slot></slot>
   </wa-details>
 </template>

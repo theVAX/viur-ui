@@ -10,22 +10,43 @@
       'wrapper-bone-required': state.required,
     }"
   >
-    <bone-label v-if="!['hide', 'placeholder'].includes(label)" :name="name" :debug="state.debug">
+    <bone-label
+      v-if="!['hide', 'placeholder'].includes(label)"
+      :name="name"
+      :debug="state.debug"
+    >
       <span :class="{ required: state.required }">{{ state.bonestructure["descr"] }}</span>
-      <span v-if="state.required" class="required">*</span>
+      <span
+        v-if="state.required"
+        class="required"
+      >
+        *
+      </span>
       <wa-tooltip
         v-if="state.hasTooltip && !showLabelInfo"
         :for="state.labelTooltipTargetId"
         :content="$t(state.bonestructure.params['tooltip'])"
         placement="top-center"
       ></wa-tooltip>
-      <div v-if="state.hasTooltip && !showLabelInfo" :id="state.labelTooltipTargetId" class="tooltip">
+      <div
+        v-if="state.hasTooltip && !showLabelInfo"
+        :id="state.labelTooltipTargetId"
+        class="tooltip"
+      >
         <wa-icon name="question"></wa-icon>
       </div>
     </bone-label>
 
-    <wa-alert v-if="showLabelInfo && state.hasTooltip" variant="brand" open class="label-info">
-      <wa-icon slot="icon" name="circle-info"></wa-icon>
+    <wa-alert
+      v-if="showLabelInfo && state.hasTooltip"
+      variant="brand"
+      open
+      class="label-info"
+    >
+      <wa-icon
+        slot="icon"
+        name="circle-info"
+      ></wa-icon>
       {{ state.bonestructure.params["tooltip"] }}
     </wa-alert>
     <wa-tooltip
@@ -41,9 +62,18 @@
       :class="{ 'wrapper-bone-required': state.required, [`wrapper-bone-widget-${name}`]: true }"
     >
       <!--Language chooser -->
-      <div v-if="state.multilanguage" class="wrapper-bone-row">
-        <wa-tab-group class="lang-tab" placement="bottom">
-          <template v-for="lang in state.languages" :key="name + '_' + lang + '_tab'">
+      <div
+        v-if="state.multilanguage"
+        class="wrapper-bone-row"
+      >
+        <wa-tab-group
+          class="lang-tab"
+          placement="bottom"
+        >
+          <template
+            v-for="lang in state.languages"
+            :key="name + '_' + lang + '_tab'"
+          >
             <wa-tab
               slot="nav"
               :panel="'lang_' + lang"
@@ -54,7 +84,10 @@
               {{ $t(lang) }}
             </wa-tab>
 
-            <wa-tab-panel :name="'lang_' + lang" :active="state.currentLanguage === lang">
+            <wa-tab-panel
+              :name="'lang_' + lang"
+              :active="state.currentLanguage === lang"
+            >
               <!--Bone rendering for multiple bones-->
               <template v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])">
                 <!--multilang and multiple-->
@@ -94,8 +127,16 @@
                     </div>
                   </vue-draggable>
                 </template>
-                <div v-else class="multiple-placeholder" :class="{ readonly: state.readonly }">
-                  <wa-input readonly size="medium" :placeholder="$t('bone.no_entries')"></wa-input>
+                <div
+                  v-else
+                  class="multiple-placeholder"
+                  :class="{ readonly: state.readonly }"
+                >
+                  <wa-input
+                    readonly
+                    size="medium"
+                    :placeholder="$t('bone.no_entries')"
+                  ></wa-input>
                 </div>
 
                 <!--Bone Buttonbar -->
@@ -109,7 +150,10 @@
                 ></component>
               </template>
               <!--Bone rendering for normal bones-->
-              <div v-else class="wrapper-bone-row">
+              <div
+                v-else
+                class="wrapper-bone-row"
+              >
                 <div class="wrapper-bone-block">
                   <component
                     :is="is"
@@ -169,8 +213,15 @@
               </div>
             </vue-draggable>
           </template>
-          <div v-else class="multiple-placeholder">
-            <wa-input readonly size="medium" :placeholder="$t('bone.no_entries')"></wa-input>
+          <div
+            v-else
+            class="multiple-placeholder"
+          >
+            <wa-input
+              readonly
+              size="medium"
+              :placeholder="$t('bone.no_entries')"
+            ></wa-input>
           </div>
           <!--Bone Buttonbar -->
           <component
@@ -182,7 +233,10 @@
           ></component>
         </template>
         <!--Bone rendering for normal bones-->
-        <div v-else class="wrapper-bone-row">
+        <div
+          v-else
+          class="wrapper-bone-row"
+        >
           <div class="wrapper-bone-block">
             <component
               :is="is"
@@ -214,14 +268,21 @@
           variant="danger"
           class="error-msg"
         >
-          <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
+          <wa-icon
+            slot="icon"
+            name="triangle-exclamation"
+          ></wa-icon>
           <div class="error-msg">
             {{ errorMessage(message) }}
           </div>
         </wa-alert>
       </template>
       <template v-else>
-        <div v-for="message in state.errorMessages" :key="message" style="font-size: 0.8em; color: red">
+        <div
+          v-for="message in state.errorMessages"
+          :key="message"
+          style="font-size: 0.8em; color: red"
+        >
           {{ errorMessage(message) }}
         </div>
       </template>

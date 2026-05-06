@@ -8,7 +8,11 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-option v-for="val in [true, false]" :key="val" :value="val">
+    <wa-option
+      v-for="val in [true, false]"
+      :key="val"
+      :value="val"
+    >
       <template v-if="val">
         {{ $t("bones.bool.true") }}
       </template>

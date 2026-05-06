@@ -13,7 +13,11 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-option v-for="value in convertObjToList()" :key="value[0]" :value="value[0]">
+    <wa-option
+      v-for="value in convertObjToList()"
+      :key="value[0]"
+      :value="value[0]"
+    >
       {{ value[1] }}
     </wa-option>
   </wa-select>

@@ -1,7 +1,13 @@
 <template>
-  <div v-id="Object.keys(formState.structure).length > 0" class="wrapper">
+  <div
+    v-id="Object.keys(formState.structure).length > 0"
+    class="wrapper"
+  >
     <div class="column left">
-      <template v-for="(boneValue, boneName, idx) in formState.skel" :key="boneName">
+      <template
+        v-for="(boneValue, boneName, idx) in formState.skel"
+        :key="boneName"
+      >
         <template v-if="formState.bones.includes(boneName)">
           <slot
             v-if="idx % 2 === 0"
@@ -12,7 +18,10 @@
       </template>
     </div>
     <div class="column right">
-      <template v-for="(boneValue, boneName, idx) in formState.skel" :key="boneName">
+      <template
+        v-for="(boneValue, boneName, idx) in formState.skel"
+        :key="boneName"
+      >
         <template v-if="formState.bones.includes(boneName)">
           <slot
             v-if="idx % 2 !== 0"

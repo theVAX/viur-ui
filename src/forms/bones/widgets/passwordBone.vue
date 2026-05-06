@@ -14,7 +14,10 @@
     @wa-clear="state.value1 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
+    <wa-icon
+      slot="end"
+      :name="state.equal && state.value1.length ? 'check' : 'xmark'"
+    ></wa-icon>
   </wa-input>
   <wa-input
     v-if="!boneState.readonly"
@@ -30,14 +33,24 @@
     @wa-clear="state.value2 = ''"
     @keyup="changeEvent"
   >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
+    <wa-icon
+      slot="end"
+      :name="state.equal && state.value1.length ? 'check' : 'xmark'"
+    ></wa-icon>
   </wa-input>
 
   <ul class="errors">
-    <li v-for="(error, index) in state.passwordInfo" :key="index">
+    <li
+      v-for="(error, index) in state.passwordInfo"
+      :key="index"
+    >
       {{ error }}
     </li>
-    <li v-for="(error, index) in state.requiredPasswordInfo" :key="index" class="requiredInfo">
+    <li
+      v-for="(error, index) in state.requiredPasswordInfo"
+      :key="index"
+      class="requiredInfo"
+    >
       {{ error }}
     </li>
   </ul>

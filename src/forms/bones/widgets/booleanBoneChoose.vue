@@ -9,8 +9,18 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-radio :value="'true'" :disabled="boneState.readonly">{{ $t("bones.bool.true") }}</wa-radio>
-    <wa-radio :value="'false'" :disabled="boneState.readonly">{{ $t("bones.bool.false") }}</wa-radio>
+    <wa-radio
+      :value="'true'"
+      :disabled="boneState.readonly"
+    >
+      {{ $t("bones.bool.true") }}
+    </wa-radio>
+    <wa-radio
+      :value="'false'"
+      :disabled="boneState.readonly"
+    >
+      {{ $t("bones.bool.false") }}
+    </wa-radio>
   </wa-radio-group>
 </template>
 

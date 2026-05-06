@@ -16,7 +16,11 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       >
-        <wa-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
+        <wa-option
+          v-for="(obj, key) in state.skellistdata"
+          :key="key"
+          :value="key"
+        >
           {{ formatString(state.format, obj) }}
         </wa-option>
       </wa-select>

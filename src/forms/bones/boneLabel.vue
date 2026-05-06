@@ -1,18 +1,33 @@
 <template>
   <label class="bone-name label-bone">
     <slot v-if="!debug"></slot>
-    <wa-tooltip v-else :for="tooltipTargetId" :content="name"></wa-tooltip>
-    <span v-if="debug" :id="tooltipTargetId">
+    <wa-tooltip
+      v-else
+      :for="tooltipTargetId"
+      :content="name"
+    ></wa-tooltip>
+    <span
+      v-if="debug"
+      :id="tooltipTargetId"
+    >
       <slot></slot>
     </span>
     <template v-if="debug">
-      <div class="debug" @click="state.debug = !state.debug">
+      <div
+        class="debug"
+        @click="state.debug = !state.debug"
+      >
         <wa-icon name="bug"></wa-icon>
       </div>
     </template>
   </label>
 
-  <wa-dialog v-if="state.debug" open :label="name" @wa-after-hide="state.debug = false">
+  <wa-dialog
+    v-if="state.debug"
+    open
+    :label="name"
+    @wa-after-hide="state.debug = false"
+  >
     <pre>
         {{ boneState }}
       </pre

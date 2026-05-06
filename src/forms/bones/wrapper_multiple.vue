@@ -1,7 +1,13 @@
 <template>
   <div class="value-line">
-    <wa-button :disabled="boneState.readonly" class="drag-button">
-      <wa-icon slot="start" name="grip-vertical"></wa-icon>
+    <wa-button
+      :disabled="boneState.readonly"
+      class="drag-button"
+    >
+      <wa-icon
+        slot="start"
+        name="grip-vertical"
+      ></wa-icon>
     </wa-button>
     <div class="row-wrapper">
       <div class="value">
@@ -25,7 +31,10 @@
       class="delete-btn"
       @click="emit('delete')"
     >
-      <wa-icon slot="start" name="xmark"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="xmark"
+      ></wa-icon>
     </wa-button>
   </div>
 </template>

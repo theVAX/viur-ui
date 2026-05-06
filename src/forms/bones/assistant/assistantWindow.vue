@@ -1,6 +1,15 @@
 <template>
-  <teleport v-if="open" to="body" :disabled="!open">
-    <wa-dialog open :label="action['name'] + ' - ' + name" class="relation-popup" @wa-after-hide="CloseActionEvent">
+  <teleport
+    v-if="open"
+    to="body"
+    :disabled="!open"
+  >
+    <wa-dialog
+      open
+      :label="action['name'] + ' - ' + name"
+      class="relation-popup"
+      @wa-after-hide="CloseActionEvent"
+    >
       <component
         :is="actions[action['arg']]"
         :name="name"

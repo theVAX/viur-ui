@@ -1,5 +1,10 @@
 <template>
-  <JsonEditorVue ref="editorRef" v-model="value_ref" :on-change="changeEvent" :read-only="boneState.readonly" />
+  <JsonEditorVue
+    ref="editorRef"
+    v-model="value_ref"
+    :on-change="changeEvent"
+    :read-only="boneState.readonly"
+  />
 </template>
 
 <script setup>

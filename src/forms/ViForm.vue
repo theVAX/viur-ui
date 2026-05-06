@@ -1,7 +1,18 @@
 <template>
-  <form :ref="(el) => (state.viformelement = el)" @submit.prevent.stop="() => {}">
-    <slot :structure="state.structure" :skel="state.skel" :errors="state.errors" :categories="state.categories">
-      <component :is="layout" v-slot="{ boneName, widget, visible, label }">
+  <form
+    :ref="(el) => (state.viformelement = el)"
+    @submit.prevent.stop="() => {}"
+  >
+    <slot
+      :structure="state.structure"
+      :skel="state.skel"
+      :errors="state.errors"
+      :categories="state.categories"
+    >
+      <component
+        :is="layout"
+        v-slot="{ boneName, widget, visible, label }"
+      >
         <bone
           :is="widget"
           v-if="widget !== undefined"

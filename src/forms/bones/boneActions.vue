@@ -1,7 +1,10 @@
 <template>
   <template v-if="bone?.params?.actions">
     <template v-if="bone.params.actions.length >= 1">
-      <template v-for="action in state.actions" :key="action['arg'] + '_' + name + '_' + lang">
+      <template
+        v-for="action in state.actions"
+        :key="action['arg'] + '_' + name + '_' + lang"
+      >
         <wa-button
           :disabled="disabled(action)"
           size="medium"
@@ -10,7 +13,10 @@
           :title="action['title']"
           @click="openPopup(action)"
         >
-          <wa-icon slot="start" :name="action['icon']"></wa-icon>
+          <wa-icon
+            slot="start"
+            :name="action['icon']"
+          ></wa-icon>
         </wa-button>
 
         <assistant-window

@@ -1,5 +1,8 @@
 <template>
-  <template v-for="(category, identifier) in formState.categories">
+  <template
+    v-for="(category, identifier) in formState.categories"
+    :key="identifier"
+  >
     <vi-form-category
       v-if="hasCategoryBones(category)"
       :name="category['name']"

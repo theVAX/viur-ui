@@ -68,6 +68,7 @@
         >
           <wa-option
             v-for="lang in state.languages"
+            :key="lang"
             :value="lang"
           >
             {{ $t(lang) }}
@@ -99,6 +100,7 @@
       <template v-if="errorStyle === 'default'">
         <wa-alert
           v-for="message in state.errorMessages"
+          :key="message"
           open
           summary="Errors"
           variant="danger"
@@ -116,6 +118,7 @@
       <template v-else>
         <div
           v-for="message in state.errorMessages"
+          :key="message"
           style="font-size: 0.8em; color: red"
         >
           {{ $t(`errors.${message}`) }}

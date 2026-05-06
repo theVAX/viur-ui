@@ -6,6 +6,7 @@
   >
     <wa-checkbox
       v-for="value in convertObjToList()"
+      :key="value[0]"
       :data-value="value[0]"
       :checked="state.value.includes(value[0])"
       :disabled="boneState.readonly"
@@ -25,6 +26,7 @@
   >
     <wa-radio
       v-for="value in convertObjToList()"
+      :key="value[0]"
       :value="value[0]"
       :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"

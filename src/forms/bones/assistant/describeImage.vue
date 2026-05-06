@@ -153,12 +153,10 @@ function CloseAction() {
 }
 
 function ApplySelection() {
-  if (!props.params.value.rel) {
-    props.params.value["rel"] = { alt: state.value }
-  } else {
-    props.params.value.rel.alt = state.value
-  }
-  emit("close", props.params.value)
+  emit("close", {
+    ...props.params.value,
+    rel: { ...(props.params.value.rel ?? {}), alt: state.value },
+  })
 }
 </script>
 

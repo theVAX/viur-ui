@@ -44,7 +44,6 @@ jobs:
   contract:
     name: Contract Tests (Playwright)
     runs-on: ubuntu-latest
-    continue-on-error: true # 17 pre-existing [legacy]-panel mount-event failures; separate backlog tracks cleanup
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup

@@ -15,7 +15,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx histoire dev --config histoire.legacy.config.js',
+    // Statisches Histoire-Build serviert via 'serve' — vermeidet Vite-Cold-Compile-Races.
+    // Build laeuft als pretest:contract Hook in package.json.
+    command: 'npx serve .histoire-legacy/dist --listen 6007 --no-clipboard --no-port-switching --config ../../tests/contract/serve.json',
     cwd: '../..',
     port: 6007,
     reuseExistingServer: !process.env.CI,

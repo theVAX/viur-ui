@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./stories/legacy/setup.js",
   storyMatch: ["stories/legacy/**/*.story.vue"],
+  outDir: ".histoire-legacy/dist",
   vite: {
     publicDir: "stories/public",
     server: {

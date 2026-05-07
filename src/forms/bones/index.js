@@ -2,7 +2,6 @@ import rawBone from "./widgets/rawBone.vue"
 import keyBone from "./widgets/keyBone.vue"
 import stringBone from "./widgets/stringBone.vue"
 import emailBone from "./widgets/emailBone.vue"
-import phoneBone from "./widgets/phoneBone.vue"
 import dateBone from "./widgets/dateBone.vue"
 import selectBone from "./widgets/selectBone.vue"
 import booleanBone from "./widgets/booleanBone.vue"
@@ -11,11 +10,8 @@ import recordBone from "./widgets/recordBone.vue"
 import colorBone from "./widgets/colorBone.vue"
 import numericBone from "./widgets/numericBone.vue"
 import relationalBone from "./widgets/relationalBone.vue"
-import jsonBone from "./widgets/jsonBone.vue"
 import fileBone from "./widgets/fileBone.vue"
-import textBone from "./widgets/textBone.vue"
 import spatialBone from "./widgets/spatialBone.vue"
-import codeBone from "./widgets/codeBone.vue"
 
 import booleanBoneSelect from "./widgets/booleanBoneSelect.vue"
 import booleanBoneChoose from "./widgets/booleanBoneChoose.vue"
@@ -26,8 +22,17 @@ import defaultBar from "./actionbar/defaultBar.vue"
 import relationalBar from "./actionbar/relationalBar.vue"
 import fileBar from "./actionbar/fileBar.vue"
 
-import { reactive, shallowRef } from "vue"
+import { reactive, shallowRef, defineAsyncComponent } from "vue"
 import { defineStore } from "pinia"
+
+// Heavy bones — lazy loaded so consumers don't pay for their deps unless used.
+// json-editor-vue (~60KB+), libphonenumber-js (~150KB), CodeMirror suite (~200KB+),
+// CKEditor5 suite (~400KB+) only land in the bundle when a form actually renders
+// the corresponding bone type.
+const jsonBone = defineAsyncComponent(() => import("./widgets/jsonBone.vue"))
+const phoneBone = defineAsyncComponent(() => import("./widgets/phoneBone.vue"))
+const codeBone = defineAsyncComponent(() => import("./widgets/codeBone.vue"))
+const textBone = defineAsyncComponent(() => import("./widgets/textBone.vue"))
 
 export const useBoneStore = defineStore("boneStore", () => {
   const state = reactive({

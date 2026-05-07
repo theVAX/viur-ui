@@ -1,0 +1,47 @@
+name: Deploy Histoire to GitHub Pages
+
+# Auto-deploy on every push to develop, plus a manual trigger from the
+# Actions tab for ad-hoc rebuilds.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+# Pages requires:
+#   1. Repo Settings -> Pages -> Source = "GitHub Actions" (one-time admin setup)
+#   2. The permissions block below
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time. Don't cancel an in-flight deploy with a
+# fresh push -- finish the current one first to avoid half-deployed states.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Histoire
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+      - name: Build histoire
+        run: npm run story:build
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .histoire/dist
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

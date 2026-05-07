@@ -95,9 +95,13 @@ const vueDocgenDocsPlugin = {
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./stories/setup.js",
-  storyMatch: ["stories/bones/**/*.story.vue", "stories/legacy/**/*.story.vue"],
+  storyMatch: ["stories/bones/**/*.story.vue"],
   vite: {
     publicDir: "stories/public",
+    // Pages serves project repos at https://<owner>.github.io/<repo>/
+    // Base path must match the repo segment, otherwise CSS/JS 404 in production.
+    // Override locally if needed: VITE_BASE=/ npm run story:build
+    base: process.env.VITE_BASE ?? "/viur-ui/",
     plugins: [
       vueDocgenDocsPlugin,
       vueDocgenPlugin,

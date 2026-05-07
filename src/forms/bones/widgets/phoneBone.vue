@@ -1,12 +1,19 @@
 <template>
   <wa-spinner v-if="state.loading"></wa-spinner>
-  <div v-else class="input-wrapper">
+  <div
+    v-else
+    class="wa-flank wa-gap-xs bone-widget-input-wrapper"
+  >
     <wa-select
       :value="state.dialCode"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="handleSelect"
     >
-      <wa-option v-for="country in state.countryInfo" :key="country.currentCode" :value="country.dialCode">
+      <wa-option
+        v-for="country in state.countryInfo"
+        :key="country.currentCode"
+        :value="country.dialCode"
+      >
         {{ country.emoji }}
       </wa-option>
     </wa-select>
@@ -42,8 +49,8 @@ import { AsYouType, validatePhoneNumberLength } from "libphonenumber-js/min"
  *
  * @displayName PhoneBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets (auf dem inneren `<wa-input>`)
- * @cssClass widget-bone-phone - Kennzeichnet den Bone-Typ (auf dem inneren `<wa-input>`, via Wrapper-Klasse)
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets (auf dem inneren `<wa-input>`)
+ * @cssClass bone-widget-phone - Kennzeichnet den Bone-Typ (auf dem inneren `<wa-input>`, via Wrapper-Klasse)
  */
 defineOptions({
   inheritAttrs: false,
@@ -159,7 +166,14 @@ onMounted(() => {
   // let available_countries = []
 })
 </script>
+<style scoped>
+wa-select{
+  width: 6rem;
+}
 
+</style>
+
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -187,8 +201,9 @@ wa-select {
 
 wa-option {
 }
-.input-wrapper {
+.bone-widget-input-wrapper {
   display: flex;
   gap: 0.5em;
 }
 </style>
+-->

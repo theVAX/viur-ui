@@ -1,7 +1,7 @@
 <template>
   <wa-input
-    class="widget-bone widget-bone-key widget-bone-key-default"
-    :class="[`widget-bone-key-${name}`]"
+    class="bone-widget bone-widget-key bone-widget-key-default"
+    :class="[`bone-widget-key-${name}`]"
     disabled
     :value="value"
     :data-data-invalid="boneState.errorMessages.length === 0 ? undefined : true"
@@ -20,10 +20,10 @@ import { reactive, onMounted, inject } from "vue"
  *
  * @displayName KeyBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-key - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-key-default - Standard-Variante
- * @cssClass widget-bone-key-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-key-key`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-key - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-key-default - Standard-Variante
+ * @cssClass bone-widget-key-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-key-key`
  */
 defineOptions({
   inheritAttrs: false,
@@ -69,9 +69,10 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
 }
 </style>
+-->

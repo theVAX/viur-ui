@@ -9,8 +9,8 @@
         :required="
           boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
         "
-        class="widget-bone widget-bone-text widget-bone-text-default"
-        :class="([`widget-bone-text-${name}`], [`widget-bone-text-${name}-html`])"
+        class="bone-widget bone-widget-text bone-widget-text-default"
+        :class="([`bone-widget-text-${name}`], [`bone-widget-text-${name}-html`])"
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @ready="onReady"
         @input="changeEvent"
@@ -26,8 +26,8 @@
     </template>
     <wa-textarea
       v-else
-      class="widget-bone widget-bone-text widget-bone-text-default"
-      :class="[`widget-bone-text-${name}`]"
+      class="bone-widget bone-widget-text bone-widget-text-default"
+      :class="[`bone-widget-text-${name}`]"
       :disabled="boneState?.readonly"
       :value="value"
       :required="
@@ -87,11 +87,11 @@ import { ViURUploadAdapterPlugin } from "../uploadAdapter"
  *
  * @displayName TextBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-text - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-text-default - Standard-Variante (Textarea oder CKEditor)
- * @cssClass widget-bone-text-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-text-content`
- * @cssClass widget-bone-text-{name}-html - Gesetzt wenn der Bone HTML-Inhalt enthält
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-text - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-text-default - Standard-Variante (Textarea oder CKEditor)
+ * @cssClass bone-widget-text-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-text-content`
+ * @cssClass bone-widget-text-{name}-html - Gesetzt wenn der Bone HTML-Inhalt enthält
  */
 defineOptions({
   inheritAttrs: false,
@@ -364,7 +364,7 @@ watch(
   }
 )
 </script>
-
+<!--
 <style scoped>
 .vi-textbone-hidden {
   max-height: 0;
@@ -641,3 +641,4 @@ wa-textarea {
   display: inline !important;
 }
 </style>
+-->

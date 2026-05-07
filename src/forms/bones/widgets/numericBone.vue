@@ -1,8 +1,8 @@
 <template>
   <wa-input
     ref="numericBone"
-    class="widget-bone widget-bone-numeric widget-bone-numeric-default"
-    :class="[`widget-bone-numeric-${name}`]"
+    class="bone-widget bone-widget-numeric bone-widget-numeric-default"
+    :class="[`bone-widget-numeric-${name}`]"
     type="number"
     :disabled="boneState.readonly"
     :value="value"
@@ -17,7 +17,7 @@
     @change="changeEvent"
     @keyup="changeEvent"
   ></wa-input>
-  <ul class="info">
+  <ul class="bone-widget-info">
     <li v-if="state.minAmount !== -9223372036854776000 && state.minAmount">
       {{ $t("bones.numeric.min", { val: state.minAmount }) }}
     </li>
@@ -41,10 +41,10 @@ import { useTimeoutFn } from "@vueuse/core"
  *
  * @displayName NumericBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-numeric - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-numeric-default - Standard-Variante
- * @cssClass widget-bone-numeric-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-numeric-amount`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-numeric - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-numeric-default - Standard-Variante
+ * @cssClass bone-widget-numeric-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-numeric-amount`
  */
 defineOptions({
   inheritAttrs: false,
@@ -123,7 +123,7 @@ onMounted(() => {
   emit("change", props.name, "" + props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -141,7 +141,7 @@ wa-input {
   }
 }
 
-.info {
+.bone-widget-info {
   display: flex;
   gap: 2px 7px;
   margin-top: var(--sl-spacing-x-small);
@@ -149,3 +149,4 @@ wa-input {
   font-weight: bold;
 }
 </style>
+-->

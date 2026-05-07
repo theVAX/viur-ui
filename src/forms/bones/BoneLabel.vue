@@ -1,5 +1,5 @@
 <template>
-  <label class="bone-name label-bone">
+  <label class="bone-label">
     <slot v-if="!debug"></slot>
     <wa-tooltip v-else :for="tooltipTargetId" :content="name"></wa-tooltip>
     <span v-if="debug" :id="tooltipTargetId">
@@ -45,7 +45,25 @@ const state = reactive({
   debug: false,
 })
 </script>
+<style scoped>
+@layer foundation.form {
+  .bone-label{
+    display: flex;
+    padding: var(--wa-space-xs) var(--wa-space-xs);
+    background-color: var(--wa-color-fill-quiet);
+    color: var(--wa-color-text-normal);
+    border-radius: var(--wa-border-radius-m);
+    word-break: break-word;
+    align-self: flex-start;
+    min-height: var(--wa-form-control-height);
+    align-items: center;
 
+  }
+}
+</style>
+
+
+<!--
 <style scoped>
 @layer foundation.form {
   .bone-name {
@@ -86,3 +104,4 @@ const state = reactive({
   }
 }
 </style>
+-->

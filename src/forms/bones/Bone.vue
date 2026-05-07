@@ -1,31 +1,52 @@
 <template>
   <div
-    class="bone-wrapper wrapper-bone"
+    class="bone"
     :class="{
       'has-subbones': state.bonestructure['using'],
-      'label-top': label === 'top',
-      'label-hide': ['hide', 'placeholder'].includes(label),
-      [`wrapper-bone-${state.bonestructure['type'].split('.')[0]}`]: true,
-      [`wrapper-bone-${name}`]: true,
-      'wrapper-bone-required': state.required,
+      'is-label-top': label === 'top',
+      'is-label-hide': ['hide', 'placeholder'].includes(label),
+      [`bone-type-${state.bonestructure['type'].split('.')[0]}`]: true,
+      [`bone-name-${name}`]: true,
+      'is-required': state.required,
     }"
   >
-    <bone-label v-if="!['hide', 'placeholder'].includes(label)" :name="name" :debug="state.debug">
-      <span :class="{ required: state.required }">{{ state.bonestructure["descr"] }}</span>
-      <span v-if="state.required" class="required">*</span>
+    <bone-label
+      v-if="!['hide', 'placeholder'].includes(label)"
+      :name="name"
+      :debug="state.debug"
+    >
+      <span :class="{ 'bone-label-required': state.required }">{{ state.bonestructure["descr"] }}</span>
+      <span
+        v-if="state.required"
+        class="bone-label-required"
+      >
+        *
+      </span>
       <wa-tooltip
         v-if="state.hasTooltip && !showLabelInfo"
         :for="state.labelTooltipTargetId"
         :content="$t(state.bonestructure.params['tooltip'])"
         placement="top-center"
       ></wa-tooltip>
-      <div v-if="state.hasTooltip && !showLabelInfo" :id="state.labelTooltipTargetId" class="tooltip">
+      <div
+        v-if="state.hasTooltip && !showLabelInfo"
+        :id="state.labelTooltipTargetId"
+        class="bone-label-tooltip"
+      >
         <wa-icon name="question"></wa-icon>
       </div>
     </bone-label>
 
-    <wa-alert v-if="showLabelInfo && state.hasTooltip" variant="brand" open class="label-info">
-      <wa-icon slot="icon" name="circle-info"></wa-icon>
+    <wa-alert
+      v-if="showLabelInfo && state.hasTooltip"
+      variant="brand"
+      open
+      class="bone-label-info"
+    >
+      <wa-icon
+        slot="icon"
+        name="circle-info"
+      ></wa-icon>
       {{ state.bonestructure.params["tooltip"] }}
     </wa-alert>
     <wa-tooltip
@@ -35,15 +56,25 @@
       :content="state.bonestructure?.['descr']"
       style="--show-delay: 1000"
     ></wa-tooltip>
+
     <div
       :id="state.boneTooltipTargetId"
-      class="bone-inner-wrap wrapper-bone-widget"
-      :class="{ 'wrapper-bone-required': state.required, [`wrapper-bone-widget-${name}`]: true }"
+      class="bone-inner wa-stack wa-gap-xs"
+      :class="{ 'is-required': state.required }"
     >
-      <!--Language chooser -->
-      <div v-if="state.multilanguage" class="wrapper-bone-row">
-        <wa-tab-group class="lang-tab" placement="bottom">
-          <template v-for="lang in state.languages" :key="name + '_' + lang + '_tab'">
+      <!-- Multilanguage: Tab per Sprache -->
+      <div
+        v-if="state.multilanguage"
+        class="bone-row"
+      >
+        <wa-tab-group
+          class="bone-lang-tabs"
+          placement="bottom"
+        >
+          <template
+            v-for="lang in state.languages"
+            :key="name + '_' + lang + '_tab'"
+          >
             <wa-tab
               slot="nav"
               :panel="'lang_' + lang"
@@ -53,75 +84,29 @@
             >
               {{ $t(lang) }}
             </wa-tab>
-
-            <wa-tab-panel :name="'lang_' + lang" :active="state.currentLanguage === lang">
-              <!--Bone rendering for multiple bones-->
-              <template v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])">
-                <!--multilang and multiple-->
-                <template v-if="state.bonevalue?.[lang]?.length">
-                  <vue-draggable
-                    v-model="state.bonevalue[lang]"
-                    :animation="150"
-                    handle=".drag-button"
-                    @end="updateValue(name, state.bonevalue[lang], lang)"
-                  >
-                    <div
-                      v-for="(val, index) in state.bonevalue?.[lang]"
-                      :key="val?._key ? val._key : index + '_' + state.bonevalue[lang].length"
-                      class="multiple-bone"
-                    >
-                      <wrapper-multiple
-                        :readonly="!state.readonly"
-                        :index="index"
-                        :lang="lang"
-                        :name="name"
-                        @delete="removeMultipleEntry(index, lang)"
-                      >
-                        <component
-                          :is="is"
-                          :value="
-                            !val && state.bonestructure?.['defaultvalue']
-                              ? state.bonestructure['defaultvalue'][lang]?.[index]
-                              : val
-                          "
-                          :index="index"
-                          :lang="lang"
-                          :name="name"
-                          :bone="state.bonestructure"
-                          @change="updateValue"
-                        ></component>
-                      </wrapper-multiple>
-                    </div>
-                  </vue-draggable>
-                </template>
-                <div v-else class="multiple-placeholder" :class="{ readonly: state.readonly }">
-                  <wa-input readonly size="medium" :placeholder="$t('bone.no_entries')"></wa-input>
-                </div>
-
-                <!--Bone Buttonbar -->
-                <component
-                  :is="state.actionbar"
-                  v-if="!state.readonly"
-                  :value="state.bonevalue?.[lang]"
-                  :name="name"
-                  :lang="lang"
-                  @change="updateValue"
-                ></component>
-              </template>
-              <!--Bone rendering for normal bones-->
-              <div v-else class="wrapper-bone-row">
-                <div class="wrapper-bone-block">
-                  <component
-                    :is="is"
-                    :value="state.bonevalue?.[lang]"
-                    :index="null"
-                    :lang="lang"
-                    :name="name"
-                    :bone="state.bonestructure"
-                    @change="updateValue"
-                  ></component>
-                </div>
-              </div>
+            <wa-tab-panel
+              :name="'lang_' + lang"
+              :active="state.currentLanguage === lang"
+            >
+              <bone-multiple-list
+                v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
+                :is="is"
+                :name="name"
+                :lang="lang"
+                :entries="state.bonevalue?.[lang]"
+                :bonestructure="state.bonestructure"
+                :readonly="state.readonly"
+                :actionbar="state.actionbar"
+                @delete="removeMultipleEntry($event, lang)"
+              />
+              <bone-single-entry
+                v-else
+                :is="is"
+                :name="name"
+                :lang="lang"
+                :bonevalue="state.bonevalue?.[lang]"
+                :bonestructure="state.bonestructure"
+              />
             </wa-tab-panel>
           </template>
         </wa-tab-group>
@@ -134,94 +119,55 @@
           @change="updateValue"
         ></bone-actions>
       </div>
+
+      <!-- Einsprachig -->
       <template v-else>
-        <!--Bone rendering for multiple bones-->
-        <template v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])">
-          <template v-if="state.bonevalue?.length">
-            <vue-draggable
-              v-model="state.bonevalue"
-              :animation="150"
-              handle=".drag-button"
-              @end="updateValue(name, state.bonevalue)"
-            >
-              <div
-                v-for="(val, index) in state.bonevalue"
-                :key="val?._key ? val._key : index + '_' + state.bonevalue.length"
-                class="multiple-bone"
-              >
-                <wrapper-multiple
-                  :readonly="!state.readonly"
-                  :index="index"
-                  :name="name"
-                  @delete="removeMultipleEntry(index)"
-                >
-                  <component
-                    :is="is"
-                    :value="
-                      !val && state.bonestructure?.['defaultvalue'] ? state.bonestructure['defaultvalue']?.[index] : val
-                    "
-                    :index="index"
-                    :name="name"
-                    :bone="state.bonestructure"
-                    @change="updateValue"
-                  ></component>
-                </wrapper-multiple>
-              </div>
-            </vue-draggable>
-          </template>
-          <div v-else class="multiple-placeholder">
-            <wa-input readonly size="medium" :placeholder="$t('bone.no_entries')"></wa-input>
-          </div>
-          <!--Bone Buttonbar -->
-          <component
-            :is="state.actionbar"
-            v-if="!state.readonly"
-            :value="state.bonevalue"
-            :name="name"
-            @change="updateValue"
-          ></component>
-        </template>
-        <!--Bone rendering for normal bones-->
-        <div v-else class="wrapper-bone-row">
-          <div class="wrapper-bone-block">
-            <component
-              :is="is"
-              :value="state.bonevalue"
-              :name="name"
-              :index="null"
-              :bone="state.bonestructure"
-              :autofocus="autofocus"
-              @change="updateValue"
-              @keypress.enter="updateValue"
-            ></component>
-          </div>
-          <bone-actions
-            v-if="state.boneactions"
-            :value="state.bonevalue"
-            :name="name"
-            :index="null"
-            :bone="state.bonestructure"
-            @change="updateValue"
-          ></bone-actions>
-        </div>
+        <bone-multiple-list
+          v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
+          :is="is"
+          :name="name"
+          :entries="state.bonevalue"
+          :bonestructure="state.bonestructure"
+          :readonly="state.readonly"
+          :actionbar="state.actionbar"
+          @delete="removeMultipleEntry"
+        />
+        <bone-single-entry
+          v-else
+          :is="is"
+          :name="name"
+          :bonevalue="state.bonevalue"
+          :bonestructure="state.bonestructure"
+          :boneactions="state.boneactions"
+          :autofocus="autofocus"
+        />
       </template>
+
+      <!-- Fehlermeldungen -->
       <template v-if="errorStyle === 'default'">
-        <wa-alert
+        <wa-callout
           v-for="message in state.errorMessages"
           :key="message"
           open
           :summary="$t('bone.errors_summary')"
           variant="danger"
-          class="error-msg"
+          class="bone-error"
         >
-          <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
-          <div class="error-msg">
+          <wa-icon
+            slot="icon"
+            name="triangle-exclamation"
+          ></wa-icon>
+          <div class="bone-error">
             {{ errorMessage(message) }}
           </div>
-        </wa-alert>
+        </wa-callout>
       </template>
       <template v-else>
-        <div v-for="message in state.errorMessages" :key="message" style="font-size: 0.8em; color: red">
+        <div
+          v-for="message in state.errorMessages"
+          :key="message"
+          style="font-size: 0.8em; color: red"
+        >
           {{ errorMessage(message) }}
         </div>
       </template>
@@ -232,13 +178,13 @@
 <script setup>
 /** @displayName Bone */
 import { reactive, computed, onBeforeMount, provide, watch, watchEffect, inject, unref } from "vue"
-import wrapperMultiple from "./wrapper_multiple.vue"
-import BoneLabel from "./boneLabel.vue"
+import BoneLabel from "./BoneLabel.vue"
 import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
 import rawBone from "./widgets/rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils"
-import { VueDraggable } from "vue-draggable-plus"
-import BoneActions from "./boneActions.vue"
+import BoneActions from "./BoneActions.vue"
+import BoneMultipleList from "./BoneMultipleList.vue"
+import BoneSingleEntry from "./BoneSingleEntry.vue"
 import { useI18n } from "vue-i18n"
 
 /**
@@ -658,6 +604,90 @@ provide("formatString", formatString)
 
 <style scoped>
 @layer foundation.form {
+  /* Bone-Wrapper: Label links, Inhalt rechts (auf Mobile gestapelt) */
+  .bone {
+    display: grid;
+    grid-template-columns: 235px 1fr;
+    grid-gap: var(--sl-spacing-small);
+    margin-bottom: 20px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  .bone-label-required{
+    color: var(--wa-color-brand-50);
+    font-weight: 700;
+  }
+
+  /* Fehler-Callout unter dem Bone-Inhalt */
+  wa-callout.bone-error {
+    padding: var(--wa-space-xs);
+    border: 1px solid var(--wa-color-border-loud);
+    border-radius: var(--wa-border-radius-m);
+    color: var(--wa-color-on-quiet);
+
+    & wa-icon {
+      margin-inline-end: var(--wa-space-2xs);
+    }
+  }
+
+  /* Sprachumschaltung: Tabs unter dem Eingabefeld (Multilang-Bones) */
+  .bone-lang-tabs {
+    width: 100%;
+    --track-width: 0;
+
+    &::part(body) {
+      overflow-x: hidden;
+    }
+
+    & wa-tab-panel::part(base) {
+      padding: 0;
+    }
+
+    & wa-tab {
+      &::part(base) {
+        padding: var(--wa-space-xs);
+        background-color: var(--wa-color-neutral-80);
+        border-radius: 0;
+        border-left: 1px solid var(--wa-color-border-loud);
+        border-bottom: 1px solid var(--wa-color-border-loud);
+      }
+
+      &:hover::part(base) {
+        background-color: var(--wa-color-neutral-90);
+        
+      }
+
+      &[aria-selected="true"] {
+        &::part(base) {
+          border-bottom: 2px solid var(--wa-color-brand-50);
+          background-color: var(--wa-color-fill-quiet);
+        }
+      }
+
+      /* abgerundete Außenecken; Nachbar-Tabs überlappen sich um 1px */
+      &:first-child::part(base) {
+        margin-left: 1rem;
+        border-bottom-left-radius: 5px;
+      }
+
+      &:nth-last-child(2)::part(base) {
+        border-bottom-right-radius: 5px;
+        border-right: 1px solid var(--wa-color-border-loud);
+      }
+
+      &:not(:first-child)::part(base) {
+        margin-left: -1px;
+      }
+    }
+  }
+}
+</style>
+
+<!--
+<style scoped>
+@layer foundation.form {
   .bone-wrapper {
     display: grid;
     grid-template-columns: 235px 1fr;
@@ -942,3 +972,4 @@ wa-checkbox[data-user-invalid]::part(control) {
   border-color: var(--sl-color-danger-500);
 }
 </style>
+-->

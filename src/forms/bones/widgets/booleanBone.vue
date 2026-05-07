@@ -1,7 +1,8 @@
 <template>
   <wa-switch
-    class="widget-bone widget-bone-boolean widget-bone-boolean-default"
-    :class="[`widget-bone-boolean-${name}`]"
+  
+    class="bone-widget bone-widget-boolean bone-widget-boolean-default"
+    :class="[`bone-widget-boolean-${name}`]"
     :disabled="boneState.readonly"
     :checked="state.value"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
@@ -20,10 +21,10 @@ import { reactive, onMounted, inject, computed } from "vue"
  *
  * @displayName BooleanBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-boolean - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-boolean-default - Standard-Variante
- * @cssClass widget-bone-boolean-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-boolean - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-boolean-default - Standard-Variante
+ * @cssClass bone-widget-boolean-{name} - Dynamisch gesetzt auf den Bone-Namen
  */
 defineOptions({
   inheritAttrs: false,
@@ -73,4 +74,13 @@ onMounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+  wa-switch{
+    padding: calc(var(--wa-form-control-height)/2 - var(--wa-form-control-toggle-size)/2 - 1px) ;
+    border:1px solid var(--wa-color-border-quiet);
+    border-radius: var(--wa-border-radius-m);
+    background-color: var(--wa-color-neutral-on-loud);
+  }
+
+
+</style>

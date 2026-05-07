@@ -1,22 +1,22 @@
 <template>
   <div
-    class="bone-wrapper wrapper-bone"
+    class="bone"
     :class="{
       'has-subbones': state.bonestructure['using'],
-      'label-top': label === 'top',
-      'label-hide': ['hide', 'placeholder'].includes(label),
-      [`wrapper-bone-${state.bonestructure['type'].split('.')[0]}`]: true,
-      [`wrapper-bone-${name}`]: true,
+      'is-label-top': label === 'top',
+      'is-label-hide': ['hide', 'placeholder'].includes(label),
+      [`bone-type-${state.bonestructure['type'].split('.')[0]}`]: true,
+      [`bone-name-${name}`]: true,
     }"
   >
     <bone-label
       v-if="!['hide', 'placeholder'].includes(label)"
       :name="name"
     >
-      <span :class="{ required: state.required }">{{ state.bonestructure["descr"] }}</span>
+      <span :class="{ 'bone-label-required': state.required }">{{ state.bonestructure["descr"] }}</span>
       <span
         v-if="state.required"
-        class="required"
+        class="bone-label-required"
       >
         *
       </span>
@@ -29,7 +29,7 @@
       <div
         v-if="state.hasTooltip && !showLabelInfo"
         :id="state.labelTooltipTargetId"
-        class="tooltip"
+        class="bone-label-tooltip"
       >
         <wa-icon name="question"></wa-icon>
       </div>
@@ -39,7 +39,7 @@
       v-if="showLabelInfo && state.hasTooltip"
       variant="brand"
       open
-      class="label-info"
+      class="bone-label-info"
     >
       <wa-icon
         slot="icon"
@@ -56,10 +56,10 @@
     ></wa-tooltip>
     <div
       :id="state.boneTooltipTargetId"
-      class="bone-inner-wrap wrapper-bone-widget"
-      :class="[`wrapper-bone-widget-${name}`]"
+      class="bone-inner"
+      :class="[`bone-widget-${name}`]"
     >
-      <div class="wrapper-bone-row">
+      <div class="bone-row">
         <wa-select
           v-if="state.multilanguage"
           style="width: 100px"
@@ -73,8 +73,8 @@
             {{ $t(lang) }}
           </wa-option>
         </wa-select>
-        <div class="wrapper-bone-row">
-          <div class="wrapper-bone-block">
+        <div class="bone-row">
+          <div class="bone-block">
             <component
               :is="is"
               :value="state.bonevalue"
@@ -102,13 +102,13 @@
           open
           summary="Errors"
           variant="danger"
-          class="error-msg"
+          class="bone-error"
         >
           <wa-icon
             slot="icon"
             name="triangle-exclamation"
           ></wa-icon>
-          <div class="error-msg">
+          <div class="bone-error">
             {{ $t(`errors.${message}`) }}
           </div>
         </wa-alert>
@@ -139,13 +139,13 @@ import {
   inject,
   unref,
 } from "vue"
-import wrapperMultiple from "./wrapper_multiple.vue"
-import BoneLabel from "./boneLabel.vue"
+import wrapperMultiple from "./BoneMultipleWrapper.vue"
+import BoneLabel from "./BoneLabel.vue"
 import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
 import rawBone from "./rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils"
 import { VueDraggable } from "vue-draggable-plus"
-import BoneActions from "./boneActions.vue"
+import BoneActions from "./BoneActions.vue"
 
 const emit = defineEmits(["change", "change-internal", "handleClick"])
 
@@ -440,47 +440,32 @@ watch(
 
 <style scoped>
 @layer foundation.form {
-  .bone-wrapper {
+  .bone {
     display: grid;
     grid-template-columns: 235px 1fr;
     grid-gap: var(--sl-spacing-small);
     margin-bottom: 20px;
 
-    &.bone-wrapper-record,
-    &.label-top,
+    &.is-label-top,
     &.has-subbones {
       display: flex;
       flex-direction: column;
       grid-gap: 0;
 
-      & > :deep(.bone-name) {
+      & > :deep(.bone-label) {
         border-bottom-left-radius: 0;
         border-top-right-radius: var(--sl-border-radius-medium);
         min-width: 235px;
       }
 
-      & > .bone-inner-wrap {
+      & > .bone-inner {
         padding-top: var(--sl-spacing-small);
         border-top: 2px solid var(--sl-color-neutral-300);
         margin-bottom: 5px;
       }
-
-      & .multiple-bone {
-        border-bottom: 1px solid var(--sl-color-neutral-300);
-        padding-bottom: var(--sl-spacing-small);
-        margin-bottom: var(--sl-spacing-small);
-
-        &:deep(wa-details) {
-          &:last-child {
-            &::part(base) {
-              border-bottom: none;
-            }
-          }
-        }
-      }
     }
 
-    &.label-hide {
+    &.is-label-hide {
       display: flex;
       flex-direction: column;
       grid-gap: 0;
@@ -495,7 +480,7 @@ watch(
     padding: 0;
   }
 
-  .lang-tab {
+  .bone-lang-tabs {
     width: 100%;
     --track-width: 0;
     --indicator-color: var(--vi-background-color);
@@ -560,8 +545,8 @@ watch(
     }
   }
 
-  .multiple-placeholder {
-    &:not(.readonly) {
+  .bone-multiple-placeholder {
+    &:not(.is-readonly) {
       margin-bottom: var(--sl-spacing-x-small);
     }
 
@@ -583,20 +568,7 @@ watch(
     }
   }
 
-  .multiple-bone {
-    margin-bottom: var(--sl-spacing-x-small);
-
-    & .bone-wrapper {
-      margin-bottom: var(--sl-spacing-x-small);
-    }
-
-    &:first-child {
-      & :deep(.value-line) {
-      }
-    }
-  }
-
-  .bone-inner-wrap {
+  .bone-inner {
     min-width: 1px;
 
     & wa-alert {
@@ -613,7 +585,7 @@ watch(
     }
   }
 
-  .label-info {
+  .bone-label-info {
     &::part(base) {
       align-items: center;
       margin-left: 0.5em;
@@ -639,7 +611,7 @@ watch(
     }
   }
 
-  .tooltip {
+  .bone-label-tooltip {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -665,7 +637,7 @@ watch(
     }
   }
 
-  .required {
+  .bone-label-required {
     color: var(--sl-color-primary-500);
     font-weight: 700;
   }
@@ -696,18 +668,18 @@ watch(
   }
 }
 
-.error-msg::part(base) {
+.bone-error::part(base) {
   background-color: #ffecec;
   color: var(--sl-color-danger-700);
 }
 
-.wrapper-bone-row {
+.bone-row {
   display: flex;
   flex-direction: row;
   gap: var(--sl-spacing-x-small);
 }
 
-.wrapper-bone-block {
+.bone-block {
   display: block;
   width: 100%;
 }

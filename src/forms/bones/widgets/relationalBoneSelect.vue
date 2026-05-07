@@ -1,9 +1,9 @@
 <template>
   <div
-    class="record widget-bone widget-bone-relational widget-bone-relational-select"
-    :class="[`widget-bone-relational-${name}`]"
+    class="bone-widget-record bone-widget bone-widget-relational bone-widget-relational-select"
+    :class="[`bone-widget-relational-${name}`]"
   >
-    <div class="single-entry">
+    <div class="bone-widget-single-entry">
       <wa-select
         :disabled="boneState.readonly"
         :value="state.selection?.['dest']['key']"
@@ -16,7 +16,11 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       >
-        <wa-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
+        <wa-option
+          v-for="(obj, key) in state.skellistdata"
+          :key="key"
+          :value="key"
+        >
           {{ formatString(state.format, obj) }}
         </wa-option>
       </wa-select>
@@ -36,7 +40,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 import { useListFetch } from "../../../request/index.js"
-import Wrapper_nested from "../wrapper_nested.vue"
+import Wrapper_nested from "../BoneNestedWrapper.vue"
 defineOptions({
   inheritAttrs: false,
 })
@@ -114,9 +118,9 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
-.single-entry {
+.bone-widget-single-entry {
   display: flex;
   gap: var(--sl-spacing-x-small);
 
@@ -168,3 +172,4 @@ wa-option {
   }
 }
 </style>
+-->

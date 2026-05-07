@@ -1,7 +1,7 @@
 <template>
   <wa-input
-    class="widget-bone widget-bone-date widget-bone-date-default"
-    :class="[`widget-bone-date-${name}`]"
+    class="bone-widget bone-widget-date bone-widget-date-default"
+    :class="[`bone-widget-date-${name}`]"
     :disabled="boneState.readonly"
     :type="state.typeString"
     :name="name"
@@ -31,10 +31,10 @@ import { reactive, onMounted, computed, inject } from "vue"
  *
  * @displayName DateBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-date - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-date-default - Standard-Variante
- * @cssClass widget-bone-date-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-date-publishedAt`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-date - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-date-default - Standard-Variante
+ * @cssClass bone-widget-date-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-date-publishedAt`
  */
 defineOptions({
   inheritAttrs: false,
@@ -112,7 +112,7 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -130,3 +130,4 @@ wa-input {
   }
 }
 </style>
+-->

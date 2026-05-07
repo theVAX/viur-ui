@@ -1,5 +1,10 @@
 <template>
-  <JsonEditorVue ref="editorRef" v-model="value_ref" :on-change="changeEvent" :read-only="boneState.readonly" />
+  <JsonEditorVue
+    ref="editorRef"
+    v-model="value_ref"
+    :on-change="changeEvent"
+    :read-only="boneState.readonly"
+  />
 </template>
 
 <script setup>
@@ -40,9 +45,9 @@ watch(value_ref, (newVal, oldVal) => {
   }
 })
 </script>
-
+<!--
 <style scoped>
-.box {
+.bone-widget-box {
   width: 100%;
   border: 1px solid var(--sl-color-gray-500);
   border-radius: 5px;
@@ -56,3 +61,4 @@ watch(value_ref, (newVal, oldVal) => {
   --jse-theme-color-highlight: var(--sl-color-neutral-200);
 }
 </style>
+-->

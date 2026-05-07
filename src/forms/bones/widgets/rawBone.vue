@@ -1,8 +1,8 @@
 <template>
   <wa-textarea
     v-if="boneState.bonestructure.type === 'raw.json'"
-    class="widget-bone widget-bone-raw widget-bone-raw-default"
-    :class="[`widget-bone-raw-${name}`]"
+    class="bone-widget bone-widget-raw bone-widget-raw-default"
+    :class="[`bone-widget-raw-${name}`]"
     :disabled="boneState?.readonly"
     :value="typeof value === 'object' ? JSON.stringify(value) : value"
     :required="
@@ -14,8 +14,8 @@
   ></wa-textarea>
   <wa-textarea
     v-else
-    class="widget-bone widget-bone-raw widget-bone-raw-default"
-    :class="[`widget-bone-raw-${name}`]"
+    class="bone-widget bone-widget-raw bone-widget-raw-default"
+    :class="[`bone-widget-raw-${name}`]"
     :disabled="boneState?.readonly"
     :value="value"
     :required="
@@ -38,10 +38,10 @@ import { reactive, onMounted, inject, computed } from "vue"
  *
  * @displayName RawBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-raw - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-raw-default - Standard-Variante
- * @cssClass widget-bone-raw-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-raw-content`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-raw - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-raw-default - Standard-Variante
+ * @cssClass bone-widget-raw-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-raw-content`
  */
 defineOptions({
   inheritAttrs: false,
@@ -92,7 +92,7 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -110,3 +110,4 @@ wa-input {
   }
 }
 </style>
+-->

@@ -3,12 +3,16 @@
     :disabled="boneState.readonly"
     :value="state.value"
     max-options-visible="0"
-    class="widget-bone widget-bone-boolean widget-bone-boolean-select"
-    :class="[`widget-bone-boolean-${name}`]"
+    class="bone-widget bone-widget-boolean bone-widget-boolean-select"
+    :class="[`bone-widget-boolean-${name}`]"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-option v-for="val in [true, false]" :key="val" :value="val">
+    <wa-option
+      v-for="val in [true, false]"
+      :key="val"
+      :value="val"
+    >
       <template v-if="val">
         {{ $t("bones.bool.true") }}
       </template>
@@ -54,7 +58,7 @@ onMounted(() => {
   emit("change", props.name, val, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-switch {
   border: 1px solid var(--sl-color-neutral-300);
@@ -71,3 +75,4 @@ wa-switch {
   }
 }
 </style>
+-->

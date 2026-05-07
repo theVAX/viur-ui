@@ -1,7 +1,7 @@
 <template>
   <div
-    class="wrapper widget-bone widget-bone-raw widget-bone-raw-default"
-    :class="{ 'max-size': state.max }"
+    class="bone-widget-wrapper bone-widget bone-widget-raw bone-widget-raw-default"
+    :class="{ 'is-max-size': state.max }"
   >
     <textarea
       ref="element"
@@ -11,7 +11,7 @@
     ></textarea>
     <wa-button
       appearance="plain"
-      class="expand-button"
+      class="bone-expand-button"
       @click="state.max = !state.max"
     >
       <wa-icon :name="state.max ? 'compress' : 'expand'"></wa-icon>
@@ -49,11 +49,11 @@ import { languages } from "@codemirror/language-data"
  *
  * @displayName CodeBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-raw - Kennzeichnet den übergeordneten Bone-Typ
- * @cssClass widget-bone-raw-default - Standard-Variante
- * @cssClass wrapper - Umschließt Editor und Expand-Button
- * @cssClass max-size - Wird per Expand-Button umgeschaltet; hebt die maximale Höhe auf
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-raw - Kennzeichnet den übergeordneten Bone-Typ
+ * @cssClass bone-widget-raw-default - Standard-Variante
+ * @cssClass bone-widget-wrapper - Umschließt Editor und Expand-Button
+ * @cssClass is-max-size - Wird per Expand-Button umgeschaltet; hebt die maximale Höhe auf
  */
 defineOptions({
   inheritAttrs: false,
@@ -176,7 +176,7 @@ onMounted(async () => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 .vi-textbone-hidden {
   max-height: 0;
@@ -186,7 +186,7 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.expand-button {
+.bone-expand-button {
   position: absolute;
   bottom: 0px;
   right: 10px;
@@ -208,7 +208,7 @@ wa-input {
     }
   }
 }
-.wrapper {
+.bone-widget-wrapper {
   position: relative;
   display: flex;
   height: 100%;
@@ -224,7 +224,8 @@ wa-input {
   }
 }
 
-.wrapper.max-size :deep(.cm-editor) .cm-scroller {
+.bone-widget-wrapper.is-max-size :deep(.cm-editor) .cm-scroller {
   max-height: none;
 }
 </style>
+-->

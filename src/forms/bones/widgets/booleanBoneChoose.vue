@@ -1,16 +1,26 @@
 <template>
   <wa-radio-group
     :value="state.value"
-    class="widget-bone widget-bone-boolean widget-bone-boolean-choose"
-    :class="[`widget-bone-boolean-${name}`]"
+    class="bone-widget bone-widget-boolean bone-widget-boolean-choose"
+    :class="[`bone-widget-boolean-${name}`]"
     :required="
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
     "
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-radio :value="'true'" :disabled="boneState.readonly">{{ $t("bones.bool.true") }}</wa-radio>
-    <wa-radio :value="'false'" :disabled="boneState.readonly">{{ $t("bones.bool.false") }}</wa-radio>
+    <wa-radio
+      :value="'true'"
+      :disabled="boneState.readonly"
+    >
+      {{ $t("bones.bool.true") }}
+    </wa-radio>
+    <wa-radio
+      :value="'false'"
+      :disabled="boneState.readonly"
+    >
+      {{ $t("bones.bool.false") }}
+    </wa-radio>
   </wa-radio-group>
 </template>
 
@@ -48,7 +58,7 @@ onMounted(() => {
   emit("change", props.name, val, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-switch {
   border: 1px solid var(--sl-color-neutral-300);
@@ -65,3 +75,4 @@ wa-switch {
   }
 }
 </style>
+-->

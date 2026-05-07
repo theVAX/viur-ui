@@ -1,43 +1,57 @@
 <template>
-  <wa-input
-    ref="passwordBone"
-    v-model="state.value1"
-    class="widget-bone widget-bone-password widget-bone-password-default"
-    :class="([`widget-bone-password-${name}`], { 'has-check': !boneState.readonly })"
-    :disabled="boneState.readonly"
-    type="password"
-    with-clear
-    password-toggle="true"
-    :placeholder="state.placeholder"
-    :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @change="changeEvent"
-    @wa-clear="state.value1 = ''"
-    @keyup="changeEvent"
-  >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
-  </wa-input>
-  <wa-input
-    v-if="!boneState.readonly"
-    v-model="state.value2"
-    class="widget-bone widget-bone-boolean widget-bone-boolean-default widget-bone-boolean-repeat password-check"
-    :class="[`widget-bone-boolean-${name}`]"
-    type="password"
-    with-clear
-    password-toggle="true"
-    :placeholder="state.placeholder"
-    :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @change="changeEvent"
-    @wa-clear="state.value2 = ''"
-    @keyup="changeEvent"
-  >
-    <wa-icon slot="end" :name="state.equal && state.value1.length ? 'check' : 'xmark'"></wa-icon>
-  </wa-input>
-
-  <ul class="errors">
-    <li v-for="(error, index) in state.passwordInfo" :key="index">
+  <div class="wa-stack wa-gap-2xs">
+    <wa-input
+      ref="passwordBone"
+      v-model="state.value1"
+      class="bone-widget bone-widget-password bone-widget-password-default"
+      :class="([`bone-widget-password-${name}`], { 'has-check': !boneState.readonly })"
+      :disabled="boneState.readonly"
+      type="password"
+      with-clear
+      password-toggle="true"
+      :placeholder="state.placeholder"
+      :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+      @change="changeEvent"
+      @wa-clear="state.value1 = ''"
+      @keyup="changeEvent"
+    >
+      <wa-icon
+        slot="end"
+        :name="state.equal && state.value1.length ? 'check' : 'xmark'"
+      ></wa-icon>
+    </wa-input>
+    <wa-input
+      v-if="!boneState.readonly"
+      v-model="state.value2"
+      class="bone-widget bone-widget-boolean bone-widget-boolean-default bone-widget-boolean-repeat bone-widget-password-check"
+      :class="[`bone-widget-boolean-${name}`]"
+      type="password"
+      with-clear
+      password-toggle="true"
+      :placeholder="state.placeholder"
+      :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+      @change="changeEvent"
+      @wa-clear="state.value2 = ''"
+      @keyup="changeEvent"
+    >
+      <wa-icon
+        slot="end"
+        :name="state.equal && state.value1.length ? 'check' : 'xmark'"
+      ></wa-icon>
+    </wa-input>
+  </div>
+  <ul class="bone-widget-errors">
+    <li
+      v-for="(error, index) in state.passwordInfo"
+      :key="index"
+    >
       {{ error }}
     </li>
-    <li v-for="(error, index) in state.requiredPasswordInfo" :key="index" class="requiredInfo">
+    <li
+      v-for="(error, index) in state.requiredPasswordInfo"
+      :key="index"
+      class="bone-widget-required-info"
+    >
       {{ error }}
     </li>
   </ul>
@@ -57,10 +71,10 @@ import { useTimeoutFn } from "@vueuse/core"
  *
  * @displayName PasswordBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-password - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-password-default - Standard-Variante
- * @cssClass widget-bone-password-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-password - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-password-default - Standard-Variante
+ * @cssClass bone-widget-password-{name} - Dynamisch gesetzt auf den Bone-Namen
  * @cssClass has-check - Gesetzt wenn nicht readonly; entfernt border-bottom-right-radius für nahtlosen Übergang zum Wiederholungs-Feld
  */
 defineOptions({
@@ -176,7 +190,7 @@ watch(
   }
 )
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -199,7 +213,7 @@ wa-input {
   }
 }
 
-.password-check {
+.bone-widget-password-check {
   margin-top: var(--sl-spacing-x-small);
 
   &::part(base) {
@@ -207,7 +221,7 @@ wa-input {
     border-bottom-left-radius: var(--sl-border-radius-medium);
   }
 }
-.pw-legend {
+.bone-widget-password-legend {
   display: flex;
   justify-content: space-between;
   align-content: flex-start;
@@ -221,7 +235,7 @@ span {
   padding: 0;
   font-style: italic;
 }
-.errors {
+.bone-widget-errors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-gap: 2px 7px;
@@ -230,7 +244,8 @@ span {
   font-weight: bold;
 }
 
-.requiredInfo {
+.bone-widget-required-info {
   color: var(--sl-color-danger-500);
 }
 </style>
+-->

@@ -1,38 +1,44 @@
 <template>
-  <div class="value-line">
-    <wa-button :disabled="boneState.readonly" class="drag-button">
-      <wa-icon slot="start" name="grip-vertical"></wa-icon>
+  <div class="wa-flank wa-align-items-start wa-gap-xs bone-multiple-entry">
+    <wa-button
+      appearance="filled"
+      :disabled="boneState.readonly"
+      class="bone-drag-button"
+    >
+      <wa-icon name="grip-vertical"></wa-icon>
     </wa-button>
-    <div class="row-wrapper">
+    <div class="wa-flank:end wa-gap-xs wa-align-items-start">
       <div class="value">
         <slot></slot>
       </div>
-      <bone-actions
-        v-if="boneState.boneactions"
-        :value="state.value"
-        :name="name"
-        :lang="lang"
-        :index="index"
-        :bone="boneState.bonestructure"
-        @change="updateValue"
-      ></bone-actions>
+      <div>
+        <bone-actions
+          v-if="boneState.boneactions"
+          :value="state.value"
+          :name="name"
+          :lang="lang"
+          :index="index"
+          :bone="boneState.bonestructure"
+          @change="updateValue"
+        ></bone-actions>
+        <wa-button
+          variant="danger"
+          :disabled="boneState.readonly"
+          appearance="outlined"
+          :title="$t('bone.del')"
+          class="bone-delete-button"
+          @click="emit('delete')"
+        >
+          <wa-icon name="xmark"></wa-icon>
+        </wa-button>
+      </div>
     </div>
-    <wa-button
-      variant="danger"
-      :disabled="boneState.readonly"
-      appearance="outlined"
-      :title="$t('bone.del')"
-      class="delete-btn"
-      @click="emit('delete')"
-    >
-      <wa-icon slot="start" name="xmark"></wa-icon>
-    </wa-button>
   </div>
 </template>
 
 <script setup>
 import { reactive, inject, computed } from "vue"
-import BoneActions from "./boneActions.vue"
+import BoneActions from "./BoneActions.vue"
 
 const props = defineProps({
   index: Number,
@@ -56,7 +62,7 @@ const emit = defineEmits(["change", "delete"])
 const boneState = inject("boneState")
 const updateValue = inject("updateValue")
 </script>
-
+<!--
 <style scoped>
 .value-line {
   display: flex;
@@ -105,3 +111,4 @@ const updateValue = inject("updateValue")
   gap: var(--sl-spacing-x-small);
 }
 </style>
+-->

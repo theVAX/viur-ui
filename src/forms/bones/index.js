@@ -29,7 +29,7 @@ import fileBar from "./actionbar/fileBar.vue"
 import { reactive, shallowRef } from "vue"
 import { defineStore } from "pinia"
 
-export const useBoneStore = defineStore("boneStore", () => {
+export const useBoneStore = defineStore("boneStore2", () => {
   const state = reactive({
     additionalBones: shallowRef({}),
     defaultBones: shallowRef({

@@ -1,5 +1,5 @@
 <template>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; max-width: 1200px">
+  <div style="display:flex; gap: 1rem; padding: 1rem; max-width: 1200px; flex-direction: column;">
     <!-- Legacy Panel -->
     <div>
       <div

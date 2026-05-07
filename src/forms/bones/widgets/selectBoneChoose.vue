@@ -1,8 +1,8 @@
 <template>
   <div
     v-if="boneState['bonestructure']['multiple']"
-    class="wrapper-multiple widget-bone widget-bone-select widget-bone-select-choose"
-    :class="[`widget-bone-select-${name}`]"
+    class="bone-widget-multiple-wrapper bone-widget bone-widget-select bone-widget-select-choose"
+    :class="[`bone-widget-select-${name}`]"
   >
     <wa-checkbox
       v-for="value in convertObjToList()"
@@ -19,8 +19,8 @@
   <wa-radio-group
     v-else
     :value="state.value"
-    class="widget-bone widget-bone-select widget-bone-select-choose"
-    :class="[`widget-bone-select-${name}`]"
+    class="bone-widget bone-widget-select bone-widget-select-choose"
+    :class="[`bone-widget-select-${name}`]"
     @change="changeEvent"
   >
     <wa-radio
@@ -100,9 +100,9 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
-.wrapper-multiple {
+.bone-widget-multiple-wrapper {
   display: flex;
   flex-direction: column;
 }
@@ -116,3 +116,4 @@ wa-checkbox::part(control--indeterminate) {
   border: 1px solid var(--sl-color-success-600);
 }
 </style>
+-->

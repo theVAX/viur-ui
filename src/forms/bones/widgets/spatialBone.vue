@@ -1,8 +1,8 @@
 <template>
   <wa-input
     v-model="state.valueLat"
-    class="widget-bone widget-bone-spatial widget-bone-spatial-default"
-    :class="([`widget-bone-spatial-${name}`], [`widget-bone-spatial-${name}-lat`])"
+    class="bone-widget bone-widget-spatial bone-widget-spatial-default"
+    :class="([`bone-widget-spatial-${name}`], [`bone-widget-spatial-${name}-lat`])"
     index="lat"
     type="number"
     :name="name"
@@ -18,8 +18,8 @@
 
   <wa-input
     v-model="state.valueLng"
-    class="widget-bone widget-bone-spatial widget-bone-spatial-default"
-    :class="([`widget-bone-spatial-${name}`], [`widget-bone-spatial-${name}-long`])"
+    class="bone-widget bone-widget-spatial bone-widget-spatial-default"
+    :class="([`bone-widget-spatial-${name}`], [`bone-widget-spatial-${name}-long`])"
     index="lng"
     type="number"
     :name="name"
@@ -46,11 +46,11 @@ import { reactive, onMounted, inject, computed } from "vue"
  *
  * @displayName SpatialBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-spatial - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-spatial-default - Standard-Variante
- * @cssClass widget-bone-spatial-{name}-lat - Dynamisch gesetzt für das Breiten­grad-Feld
- * @cssClass widget-bone-spatial-{name}-long - Dynamisch gesetzt für das Längen­grad-Feld
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-spatial - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-spatial-default - Standard-Variante
+ * @cssClass bone-widget-spatial-{name}-lat - Dynamisch gesetzt für das Breiten­grad-Feld
+ * @cssClass bone-widget-spatial-{name}-long - Dynamisch gesetzt für das Längen­grad-Feld
  */
 defineOptions({
   inheritAttrs: false,
@@ -107,8 +107,7 @@ onMounted(() => {
   emit("change", props.name, [state.valueLat, state.valueLng], props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
+<!--<style scoped>
 wa-input {
   width: 100%;
 
@@ -134,3 +133,4 @@ wa-input {
   }
 }
 </style>
+-->

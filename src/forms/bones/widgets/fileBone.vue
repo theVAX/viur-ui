@@ -1,6 +1,6 @@
 <template>
   <div
-    class="file-wrapper"
+    class="bone-widget-file-wrapper"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @dragover.prevent="state.droparea = true"
     @dragleave="state.droparea = false"
@@ -8,14 +8,14 @@
   >
     <div
       v-if="state.loading"
-      class="loader"
+      class="bone-widget-loader"
     >
       <wa-spinner slot="end"></wa-spinner>
     </div>
 
     <div
       v-if="state.droparea"
-      class="droparea"
+      class="bone-widget-droparea"
     >
       Dateien hier hinziehen
     </div>
@@ -23,7 +23,7 @@
       v-if="!boneState.readonly && (!value || state.loading)"
       :title="$t('bone.upload')"
       appearance="outlined"
-      class="upload-btn"
+      class="bone-upload-button"
       @click="uploadinput.click()"
     >
       <wa-icon name="upload"></wa-icon>
@@ -39,25 +39,25 @@
       v-if="value"
       :title="$t('bone.download')"
       appearance="outlined"
-      class="download-btn"
+      class="bone-download-button"
       @click="downloadFile"
     >
       <wa-icon name="download"></wa-icon>
     </wa-button>
-    <div class="box">
+    <div class="bone-widget-box">
       <div
         v-if="value?.['dest']?.['mimetype'].includes('image')"
-        class="preview has-preview"
+        class="bone-widget-preview has-preview"
         @click="state.previewopen = !state.previewopen"
       >
         <img
-          class="preview-img"
+          class="bone-widget-preview-img"
           :src="createBackgroundImage()"
           alt=""
         />
         <wa-dialog
           :label="decodeURIComponent(value?.['dest']?.['name'])"
-          class="preview-overlay"
+          class="bone-widget-preview-overlay"
           :open="state.previewopen"
         >
           <img
@@ -68,7 +68,7 @@
       </div>
       <div
         v-else
-        class="preview"
+        class="bone-widget-preview"
       >
         <wa-icon
           v-if="value?.['dest']?.['name']"
@@ -84,7 +84,7 @@
       variant="danger"
       appearance="outlined"
       :title="$t('bone.del')"
-      class="delete-btn"
+      class="bone-delete-button"
       @click="$emit('change', name, '', lang, index)"
     >
       <wa-icon name="xmark"></wa-icon>
@@ -104,13 +104,13 @@ import { downloadUrlFor, uploadFile } from "../../request/index.js"
  *
  * @displayName FileBone
  *
- * @cssClass file-wrapper - Äußerer Container des Widgets
- * @cssClass droparea - Eingeblendet während eines aktiven Drag-over
- * @cssClass box - Anzeige-Box mit Dateiname und optionaler Vorschau
- * @cssClass preview - Container für das Vorschaubild oder das Datei-Icon
+ * @cssClass bone-widget-file-wrapper - Äußerer Container des Widgets
+ * @cssClass bone-widget-droparea - Eingeblendet während eines aktiven Drag-over
+ * @cssClass bone-widget-box - Anzeige-Box mit Dateiname und optionaler Vorschau
+ * @cssClass bone-widget-preview - Container für das Vorschaubild oder das Datei-Icon
  * @cssClass has-preview - Zusatzklasse wenn ein Bild-Vorschau vorliegt
- * @cssClass upload-btn - Upload-Schaltfläche (nur sichtbar wenn kein Wert gesetzt)
- * @cssClass delete-btn - Löschen-Schaltfläche (nur bei `multiple: false`)
+ * @cssClass bone-upload-button - Upload-Schaltfläche (nur sichtbar wenn kein Wert gesetzt)
+ * @cssClass bone-delete-button - Löschen-Schaltfläche (nur bei `multiple: false`)
  */
 defineOptions({
   inheritAttrs: false,
@@ -192,9 +192,9 @@ async function handleDrop(event) {
   }
 }
 </script>
-
+<!--
 <style scoped>
-.box {
+.bone-widget-box {
   display: flex;
   align-items: center;
   padding: 0 var(--sl-spacing-small) 0 0;
@@ -208,7 +208,7 @@ async function handleDrop(event) {
   background-color: transparent;
 }
 
-.preview {
+.bone-widget-preview {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -233,21 +233,21 @@ async function handleDrop(event) {
     color: var(--sl-color-gray-400);
   }
 
-  .preview-img {
+  .bone-widget-preview-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
   }
 }
 
-.file-wrapper {
+.bone-widget-file-wrapper {
   width: 100%;
   display: flex;
   gap: var(--sl-spacing-x-small);
   position: relative;
 }
 
-.droparea {
+.bone-widget-droparea {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -262,25 +262,25 @@ async function handleDrop(event) {
   justify-content: center;
 }
 
-.delete-btn {
+.bone-delete-button {
   &::part(base) {
     aspect-ratio: 1;
   }
 }
 
-.delete-btn {
+.bone-delete-button {
   &::part(base) {
     aspect-ratio: 1;
   }
 }
 
-.upload-btn {
+.bone-upload-button {
   &::part(base) {
     aspect-ratio: 1;
   }
 }
 
-.loader {
+.bone-widget-loader {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -292,7 +292,7 @@ async function handleDrop(event) {
   background-color: rgba(255, 255, 255, 0.7);
 }
 
-.preview-overlay {
+.bone-widget-preview-overlay {
   &::part(panel) {
     width: auto;
     max-width: 1200px;
@@ -317,3 +317,4 @@ async function handleDrop(event) {
   }
 }
 </style>
+-->

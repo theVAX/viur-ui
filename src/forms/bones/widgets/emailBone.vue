@@ -1,8 +1,8 @@
 <template>
   <wa-input
     ref="emailBone"
-    class="widget-bone widget-bone-email widget-bone-email-default"
-    :class="[`widget-bone-email-${name}`]"
+    class="bone-widget bone-widget-email bone-widget-email-default"
+    :class="[`bone-widget-email-${name}`]"
     :name="name"
     :disabled="boneState.readonly"
     type="email"
@@ -30,10 +30,10 @@ import { useTimeoutFn } from "@vueuse/core"
  *
  * @displayName EmailBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-email - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-email-default - Standard-Variante
- * @cssClass widget-bone-email-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-email-email`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-email - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-email-default - Standard-Variante
+ * @cssClass bone-widget-email-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-email-email`
  */
 defineOptions({
   inheritAttrs: false,
@@ -98,7 +98,7 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
+<!--
 <style scoped>
 wa-input {
   width: 100%;
@@ -116,3 +116,4 @@ wa-input {
   }
 }
 </style>
+-->

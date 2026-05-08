@@ -1,44 +1,3 @@
-<script setup>
-import { ref } from "vue"
-import BoneStoryWrapper from "../BoneStoryWrapper.vue"
-import { hints } from "../fixtures/controlHints.js"
-
-function src(structure, skel) {
-  const name = Object.keys(structure)[0]
-  return [
-    `<Bone`,
-    `  name="${name}"`,
-    `  :structure="structure"`,
-    `  :skel="skel"`,
-    `/>`,
-    ``,
-    `<!-- structure -->`,
-    JSON.stringify(structure, null, 2),
-    ``,
-    `<!-- skel -->`,
-    JSON.stringify(skel, null, 2),
-  ].join("\n")
-}
-
-const pgSourceRef = ref("")
-
-function syncPgSource(state) {
-  const structure = {
-    [state.boneName]: {
-      type: "key",
-      descr: state.descr,
-      readonly: state.readonly,
-      multiple: false,
-      languages: null,
-      params: {},
-    },
-  }
-  const skel = { [state.boneName]: "ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM" }
-  pgSourceRef.value = src(structure, skel)
-  return ""
-}
-</script>
-
 <template>
   <Story title="Bones/KeyBone">
     <Variant
@@ -49,7 +8,12 @@ function syncPgSource(state) {
         () => ({
           boneName: 'key',
           descr: 'Schlüssel',
+          boneType: 'key',
+          required: false,
           readonly: true,
+          multiple: false,
+          multilang: false,
+          languages: 'de, en',
           label: 'normal',
         })
       "
@@ -59,29 +23,48 @@ function syncPgSource(state) {
         <BoneStoryWrapper
           :bone-name="state.boneName"
           bone-type="key"
-          :structure="{
-            [state.boneName]: {
-              type: 'key',
-              descr: state.descr,
-              readonly: state.readonly,
-              multiple: false,
-              languages: null,
-              params: {},
-            },
-          }"
-          :skel="{ [state.boneName]: 'ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM' }"
+          :structure="makeStructure(state, { languages: parseLangs(state) })"
+          :skel="
+            parseLangs(state)
+              ? { [state.boneName]: Object.fromEntries(parseLangs(state).map((l) => [l, KEY_EXAMPLE])) }
+              : { [state.boneName]: KEY_EXAMPLE }
+          "
           :label="state.label"
+          :languages="parseLangs(state)"
         />
       </template>
       <template #controls="{ state }">
-        <HstText v-model="state.boneName" title="Bone-Name" />
+        <HstText
+          v-model="state.boneName"
+          title="Bone-Name"
+        />
         <div class="hst-hint">{{ hints.boneName }}</div>
 
-        <HstText v-model="state.descr" title="Description (Label)" />
+        <HstText
+          v-model="state.descr"
+          title="Description (Label)"
+        />
         <div class="hst-hint">{{ hints.descr }}</div>
 
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox
+          v-model="state.readonly"
+          title="Readonly"
+        />
         <div class="hst-hint">{{ hints.readonly }}</div>
+
+        <HstCheckbox
+          v-model="state.multilang"
+          title="Multilang"
+        />
+        <div class="hst-hint">{{ hints.multilang }}</div>
+
+        <template v-if="state.multilang">
+          <HstText
+            v-model="state.languages"
+            title="Sprachen"
+          />
+          <div class="hst-hint">{{ hints.languages }}</div>
+        </template>
 
         <HstSelect
           v-model="state.label"
@@ -98,6 +81,26 @@ function syncPgSource(state) {
     </Variant>
   </Story>
 </template>
+
+<script setup>
+import { ref } from "vue"
+import BoneStoryWrapper from "../BoneStoryWrapper.vue"
+import { hints } from "../fixtures/controlHints.js"
+import { src, makeStructure, parseLangs } from "../fixtures/storyUtils.js"
+
+const KEY_EXAMPLE = "ag9zfnZpdXItdGVzdHIRCxIHQXJ0aWNsZRiAgICAgICAgAoM"
+
+const pgSourceRef = ref("")
+
+function syncPgSource(state) {
+  const langs = parseLangs(state)
+  const skel = langs
+    ? { [state.boneName]: Object.fromEntries(langs.map((l) => [l, KEY_EXAMPLE])) }
+    : { [state.boneName]: KEY_EXAMPLE }
+  pgSourceRef.value = src(makeStructure(state, { languages: langs }), skel, langs ? { languages: langs } : {})
+  return ""
+}
+</script>
 
 <style>
 .hst-hint {

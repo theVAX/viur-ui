@@ -6,6 +6,7 @@
       :structure="structure"
       :skel="skel"
       :errors="errors"
+      :languages="languages"
       @change="logEvent('change', $event)"
       @change-internal="logEvent('change-internal', $event)"
       @handle-click="logEvent('handleClick', $event)"
@@ -36,6 +37,10 @@ const props = defineProps({
   errors: {
     type: Array,
     default: () => [],
+  },
+  languages: {
+    type: Array,
+    default: null,
   },
 })
 

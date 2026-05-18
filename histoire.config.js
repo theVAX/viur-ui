@@ -77,7 +77,7 @@ const vueDocgenDocsPlugin = {
 
     const storyName = path.basename(id, ".story.vue")
     const boneName = storyName.charAt(0).toLowerCase() + storyName.slice(1) + ".vue"
-    const bonePath = path.resolve(__dirname, "src/forms/bones", boneName)
+    const bonePath = path.resolve(__dirname, "src/forms/bones/widgets", boneName)
     if (!existsSync(bonePath)) return null
 
     this.addWatchFile(bonePath)
@@ -95,7 +95,7 @@ const vueDocgenDocsPlugin = {
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./stories/setup.js",
-  storyMatch: ["stories/bones/**/*.story.vue", "stories/legacy/**/*.story.vue"],
+  storyMatch: ["stories/bones/**/*.story.vue"],
   vite: {
     publicDir: "stories/public",
     plugins: [
@@ -134,7 +134,20 @@ export default defineConfig({
         { find: "@viur/webawesome", replacement: path.resolve(__dirname, "example/node_modules/@viur/webawesome") },
         { find: "logics-js", replacement: path.resolve(__dirname, "example/node_modules/logics-js") },
       ],
-      dedupe: ["vue", "pinia", "vue-i18n", "@vueuse/core", "vue-draggable-plus"],
+      dedupe: [
+        "vue",
+        "pinia",
+        "vue-i18n",
+        "@vueuse/core",
+        "vue-draggable-plus",
+        "codemirror",
+        "@codemirror/state",
+        "@codemirror/view",
+        "@codemirror/language",
+        "@codemirror/language-data",
+        "ckeditor5",
+        "@ckeditor/ckeditor5-vue",
+      ],
     },
     optimizeDeps: {
       exclude: [],

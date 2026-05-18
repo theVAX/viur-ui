@@ -16,6 +16,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npx histoire dev --config histoire.legacy.config.js',
+    cwd: '../..',
     port: 6007,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

@@ -1,0 +1,78 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [develop]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    continue-on-error: true # 241 pre-existing errors; separate backlog tracks cleanup
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+      - run: npm run lint
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    continue-on-error: true # 3 pre-existing failures in tests/request/request.test.js; separate backlog tracks cleanup
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+      - run: npm run test:run
+
+  coverage-gate:
+    name: Bone Coverage Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node (minimal, no install needed)
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+      - run: node scripts/check-bone-coverage.js
+
+  contract:
+    name: Contract Tests (Playwright)
+    runs-on: ubuntu-latest
+    continue-on-error: true # 17 pre-existing [legacy]-panel mount-event failures; separate backlog tracks cleanup
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install system deps only (cached browsers)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run contract tests
+        run: npm run test:contract
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

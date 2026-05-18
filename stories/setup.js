@@ -1,4 +1,5 @@
 import "../src/webawesomeConfig.js"
+import "./histoire-global.css"
 import "../src/legacy/shoelaceConfig.js"
 import { defineSetupVue3 } from "@histoire/plugin-vue"
 import { createPinia } from "pinia"

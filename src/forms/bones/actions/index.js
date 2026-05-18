@@ -60,6 +60,8 @@ const defaultActions = {
     title: "bone.del",
     position: "end",
     variant: "danger",
+    // Nur bei relationalen Single-Bones sichtbar (nicht multiple).
+    when: (ctx) => prefixMatches("relational", ctx?.bone?.type) && !ctx?.bone?.multiple,
   },
 }
 
@@ -170,23 +172,27 @@ function entryArg(entry) {
  *   Action für relationale Bones immer verfügbar, auch wenn das Backend eine
  *   `params.actions`-Liste schickt.
  * - Strings werden via Default-Lookup aufgelöst, Inline-Objekte durchgereicht.
+ * - Actions mit `when(ctx)` werden ausgefiltert, wenn das Prädikat falsy liefert.
  *
  * Jede zurückgegebene Action ist eine flache Kopie, damit `_opened`-Mutationen
  * den Source nicht verändern. Sortiert: Actions mit `position: "end"` ans Ende.
  *
- * @param {string} boneType
+ * @param {object} bone - vollständige Bone-Definition (mit type, multiple, params)
  * @param {Array<string|object>|undefined} configured
+ * @param {object} [boneState] - reactive Bone-State (für when/disabled-Predicates)
  * @returns {object[]}
  */
-export function resolveActions(boneType, configured) {
-  const defaults = collectTypeDefaults(boneType)
+export function resolveActions(bone, configured, boneState) {
+  const defaults = collectTypeDefaults(bone?.type)
   const names = Array.isArray(configured) ? [...configured] : []
   for (const d of defaults) {
     if (!names.some((e) => entryArg(e) === d)) names.push(d)
   }
+  const ctx = { bone, boneState }
   return names
     .map((entry) => (typeof entry === "string" ? defaultActions[entry] : entry))
     .filter(Boolean)
     .map((a) => ({ ...a }))
+    .filter((a) => (typeof a.when === "function" ? !!a.when(ctx) : true))
     .sort((a, b) => (a.position === "end" ? 1 : 0) - (b.position === "end" ? 1 : 0))
 }

@@ -423,7 +423,7 @@ const state = reactive({
   boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")), // Eindeutige DOM-ID für den Bone-Tooltip-Anker
   // Ob für diesen Bone überhaupt Actions auflösbar sind (für UI-Wrapper-Sichtbarkeit).
   hasActions: computed(
-    () => resolveActions(state.bonestructure?.type, state.bonestructure?.params?.actions).length > 0
+    () => resolveActions(state.bonestructure, state.bonestructure?.params?.actions, state).length > 0
   ),
 })
 provide("boneState", state)

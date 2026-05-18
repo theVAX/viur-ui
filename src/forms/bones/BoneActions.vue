@@ -59,7 +59,7 @@ const ctx = computed(() => ({
 }))
 
 onMounted(() => {
-  state.actions = resolveActions(props.bone?.type, props.bone?.params?.actions)
+  state.actions = resolveActions(props.bone, props.bone?.params?.actions, boneState)
 })
 
 function onClick(action) {

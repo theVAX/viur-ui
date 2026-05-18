@@ -11,9 +11,9 @@
       <div class="value">
         <slot></slot>
       </div>
-      <div>
+      <div class="wa-cluster wa-gap-xs">
         <bone-actions
-          v-if="boneState.boneactions"
+          v-if="boneState.boneactions && boneState.hasActions"
           :value="state.value"
           :name="name"
           :lang="lang"

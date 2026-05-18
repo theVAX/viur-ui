@@ -58,21 +58,3 @@ onMounted(() => {
   emit("change", props.name, val, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-wa-switch {
-  border: 1px solid var(--sl-color-neutral-300);
-  padding: 0.4em 0.1em 0.4em 0.4em;
-  border-top-right-radius: var(--wa-input-border-radius-medium);
-  border-bottom-right-radius: var(--wa-input-border-radius-medium);
-  --height: calc(var(--wa-input-height-medium) - 1em);
-  --width: calc(1.7 * (var(--wa-input-height-medium) - 0.8em));
-  --thumb-size: calc(var(--wa-input-height-medium) - 1em);
-
-  @media (max-width: 900px) {
-    border-top-right-radius: 0;
-    border-bottom-left-radius: var(--sl-border-radius-medium);
-  }
-}
-</style>
--->

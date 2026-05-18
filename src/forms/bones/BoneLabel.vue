@@ -1,18 +1,33 @@
 <template>
   <label class="bone-label">
     <slot v-if="!debug"></slot>
-    <wa-tooltip v-else :for="tooltipTargetId" :content="name"></wa-tooltip>
-    <span v-if="debug" :id="tooltipTargetId">
+    <wa-tooltip
+      v-else
+      :for="tooltipTargetId"
+      :content="name"
+    ></wa-tooltip>
+    <span
+      v-if="debug"
+      :id="tooltipTargetId"
+    >
       <slot></slot>
     </span>
     <template v-if="debug">
-      <div class="debug" @click="state.debug = !state.debug">
+      <div
+        class="debug"
+        @click="state.debug = !state.debug"
+      >
         <wa-icon name="bug"></wa-icon>
       </div>
     </template>
   </label>
 
-  <wa-dialog v-if="state.debug" open :label="name" @wa-after-hide="state.debug = false">
+  <wa-dialog
+    v-if="state.debug"
+    open
+    :label="name"
+    @wa-after-hide="state.debug = false"
+  >
     <pre>
         {{ boneState }}
       </pre
@@ -47,8 +62,10 @@ const state = reactive({
 </script>
 <style scoped>
 @layer foundation.form {
-  .bone-label{
+  .bone-label {
     display: flex;
+    width: 100%;
+    box-sizing: border-box;
     padding: var(--wa-space-xs) var(--wa-space-xs);
     background-color: var(--wa-color-fill-quiet);
     color: var(--wa-color-text-normal);
@@ -57,11 +74,9 @@ const state = reactive({
     align-self: flex-start;
     min-height: var(--wa-form-control-height);
     align-items: center;
-
   }
 }
 </style>
-
 
 <!--
 <style scoped>

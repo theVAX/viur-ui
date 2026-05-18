@@ -190,51 +190,8 @@ watch(
   }
 )
 </script>
-<!--
+
 <style scoped>
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(base) {
-      border-top-right-radius: 0;
-    }
-  }
-}
-
-.has-check {
-  &::part(base) {
-    border-bottom-right-radius: 0;
-  }
-}
-
-.bone-widget-password-check {
-  margin-top: var(--sl-spacing-x-small);
-
-  &::part(base) {
-    border-top-right-radius: 0;
-    border-bottom-left-radius: var(--sl-border-radius-medium);
-  }
-}
-.bone-widget-password-legend {
-  display: flex;
-  justify-content: space-between;
-  align-content: flex-start;
-  align-items: flex-start;
-  gap: 0rem;
-  font-size: 0.75rem;
-  padding: 0.25em;
-}
-span {
-  margin: 0;
-  padding: 0;
-  font-style: italic;
-}
 .bone-widget-errors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -248,4 +205,3 @@ span {
   color: var(--sl-color-danger-500);
 }
 </style>
--->

@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 1rem; max-width: 800px">
+  <div style="padding: 1rem; max-width: 100%">
     <Bone
       :is="recordBone"
       :name="boneName"
@@ -18,7 +18,7 @@ import { provide, markRaw } from "vue"
 import { logEvent } from "histoire/client"
 import { createMainformState } from "./mocks/mainformState.js"
 import Bone from "../src/forms/bones/bone.vue"
-import recordBone from "../src/forms/bones/recordBone.vue"
+import recordBone from "../src/forms/bones/widgets/recordBone.vue"
 
 const props = defineProps({
   boneName: {

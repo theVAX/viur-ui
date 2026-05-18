@@ -120,34 +120,3 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-wa-select {
-  width: 100%;
-
-  &::part(combobox) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(combobox) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-
-wa-option {
-  &::part(base) {
-    transition: background-color ease 0.3s;
-  }
-
-  &:hover {
-    &::part(base) {
-      background-color: var(--sl-color-gray-200);
-    }
-  }
-}
-</style>
--->

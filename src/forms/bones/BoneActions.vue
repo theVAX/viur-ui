@@ -1,56 +1,38 @@
 <template>
-  <template v-if="bone?.params?.actions">
-    <template v-if="bone.params.actions.length >= 1">
-      <template v-for="action in state.actions" :key="action['arg'] + '_' + name + '_' + lang">
-        <wa-button
-          :disabled="disabled(action)"
-          size="medium"
-          variant="brand"
-          appearance="outlined"
-          :title="action['title']"
-          @click="openPopup(action)"
-        >
-          <wa-icon slot="start" :name="action['icon']"></wa-icon>
-        </wa-button>
+  <template
+    v-for="(action, i) in state.actions"
+    :key="action.arg + '_' + name + '_' + lang + '_' + i"
+  >
+    <wa-button
+      :disabled="isActionDisabled(action, ctx)"
+      size="medium"
+      appearance="outlined"
+      :variant="action.variant ?? 'neutral'"
+      :title="action.title"
+      @click="onClick(action)"
+    >
+      <wa-icon :name="action.icon"></wa-icon>
+    </wa-button>
 
-        <assistant-window
-          :open="action['_opened']"
-          :name="bone['descr']"
-          :module="bone?.['module']"
-          :action="action"
-          :params="{ name, value, index, lang, bone, boneState }"
-          @close="closeAssistant"
-          @next="nextAssistant"
-        ></assistant-window>
-      </template>
-    </template>
+    <action-dialog
+      v-if="action.type === 'assistant'"
+      :open="action._opened"
+      :name="bone?.descr"
+      :module="bone?.module"
+      :action="action"
+      :params="{ name, value, index, lang, bone, boneState }"
+      @close="onClose"
+      @next="onNext"
+    ></action-dialog>
   </template>
 </template>
 
 <script setup>
-import { reactive, inject, computed, onMounted } from "vue"
-import assistantWindow from "./assistant/assistantWindow.vue"
+import { reactive, computed, onMounted, inject } from "vue"
+import { resolveActions, isActionDisabled, getActionHandler } from "./actions"
+import ActionDialog from "./actions/ActionDialog.vue"
 
 const emit = defineEmits(["change"])
-
-const defaultActions = {
-  translate: {
-    type: "assistant",
-    arg: "translate",
-    name: "Übersetzen",
-    icon: "translate",
-    library: "default",
-    title: "Übersetzen",
-  },
-  describe_image: {
-    type: "assistant",
-    arg: "describe_image",
-    name: "Bildbeschreibung erstellen",
-    icon: "file-richtext",
-    library: "default",
-    title: "Bild beschreiben",
-  },
-}
 
 const props = defineProps({
   name: String,
@@ -66,47 +48,35 @@ const state = reactive({
   actions: [],
 })
 
-function disabled(action) {
-  if (action["type"] === "assistant") {
-    if (action["arg"] === "describe_image") {
-      return !props.value?.dest?.key
-    }
-    if (action["arg"] === "translate") {
-      return !props.bone.languages
-    }
-  }
-}
-
-function collectActions() {
-  let data = []
-  if (!props?.bone?.params?.actions) return data
-  for (const entry of props.bone.params.actions) {
-    if (Object.keys(defaultActions).includes(entry)) {
-      data.push({ ...defaultActions[entry] })
-    } else {
-      data.push(entry)
-    }
-  }
-  return data
-}
+const ctx = computed(() => ({
+  name: props.name,
+  value: props.value,
+  index: props.index,
+  lang: props.lang,
+  bone: props.bone,
+  boneState,
+  update: (val) => emit("change", props.name, val, props.lang, props.index),
+}))
 
 onMounted(() => {
-  state.actions = collectActions()
+  state.actions = resolveActions(props.bone?.type, props.bone?.params?.actions)
 })
 
-function openPopup(action) {
-  action["_opened"] = true
+function onClick(action) {
+  if (action.type === "assistant") {
+    action._opened = true
+  } else if (action.type === "callback") {
+    const handler = getActionHandler(action.arg)
+    handler?.(ctx.value)
+  }
 }
 
-function closeAssistant(val, lang, action) {
-  action["_opened"] = false
-  if (val) {
-    emit("change", props.name, val, lang, props.index)
-  }
+function onClose(val, lang, action) {
+  action._opened = false
+  if (val) emit("change", props.name, val, lang, props.index)
 }
-function nextAssistant(val, lang, action) {
-  if (val) {
-    emit("change", props.name, val, lang, props.index)
-  }
+
+function onNext(val, lang, action) {
+  if (val) emit("change", props.name, val, lang, props.index)
 }
 </script>

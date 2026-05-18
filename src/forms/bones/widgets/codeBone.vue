@@ -20,7 +20,7 @@
 
   <input
     type="text"
-    class="vi-textbone-hidden"
+    class="bone-widget-raw-hidden"
     :value="state.value"
     :required="
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
@@ -176,9 +176,8 @@ onMounted(async () => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-<!--
 <style scoped>
-.vi-textbone-hidden {
+.bone-widget-raw-hidden {
   max-height: 0;
   display: block;
   visibility: hidden;
@@ -193,21 +192,6 @@ onMounted(async () => {
   z-index: 1;
 }
 
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(base) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
 .bone-widget-wrapper {
   position: relative;
   display: flex;
@@ -228,4 +212,3 @@ wa-input {
   max-height: none;
 }
 </style>
--->

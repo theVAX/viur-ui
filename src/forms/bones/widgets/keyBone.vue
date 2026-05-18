@@ -69,10 +69,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-wa-input {
-  width: 100%;
-}
-</style>
--->

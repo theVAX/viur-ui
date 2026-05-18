@@ -45,7 +45,7 @@ watch(value_ref, (newVal, oldVal) => {
   }
 })
 </script>
-<!--
+
 <style scoped>
 .bone-widget-box {
   width: 100%;
@@ -61,4 +61,3 @@ watch(value_ref, (newVal, oldVal) => {
   --jse-theme-color-highlight: var(--sl-color-neutral-200);
 }
 </style>
--->

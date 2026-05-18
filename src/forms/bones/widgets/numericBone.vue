@@ -123,30 +123,3 @@ onMounted(() => {
   emit("change", props.name, "" + props.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(base) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-
-.bone-widget-info {
-  display: flex;
-  gap: 2px 7px;
-  margin-top: var(--sl-spacing-x-small);
-  font-size: 0.7em;
-  font-weight: bold;
-}
-</style>
--->

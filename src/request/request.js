@@ -402,7 +402,10 @@ export async function uploadFile(file, { target = undefined, publicUpload = fals
 }
 
 function _absolute(url) {
-  if (url && !(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//"))) {
+  if (
+    url &&
+    !(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//") || url.startsWith("data:"))
+  ) {
     return (import.meta.env.VITE_API_URL ?? window.location.origin) + url
   }
   return url
@@ -417,13 +420,15 @@ function _absolute(url) {
  */
 export function downloadUrlFor(bone, thumbnail = false, renderer = import.meta.env.VITE_DEFAULT_RENDERER ?? "json") {
   if (bone && typeof bone === "object" && "dest" in bone) {
+    let url
     if (thumbnail && "thumbnail" in bone["dest"]) {
-      return _absolute(`/${renderer}${bone["dest"]["thumbnail"]}`)
+      url = bone["dest"]["thumbnail"]
+    } else if ("downloadUrl" in bone["dest"]) {
+      url = bone["dest"]["downloadUrl"]
+    } else {
+      return null
     }
-    if ("downloadUrl" in bone["dest"]) {
-      return _absolute(`/${renderer}${bone["dest"]["downloadUrl"]}`)
-    }
-    return null
+    return url.startsWith("data:") ? url : _absolute(`/${renderer}${url}`)
   }
   return _absolute(bone)
 }

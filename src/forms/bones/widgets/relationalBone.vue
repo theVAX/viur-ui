@@ -17,25 +17,6 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       ></wa-combobox>
-
-      <wa-button
-        v-if="!boneState.multiple && !boneState.isEmpty"
-        variant="danger"
-        appearance="outlined"
-        :title="$t('bone.del')"
-        class="bone-delete-button bone-square-button"
-        @click="
-          () => {
-            $emit('change', name, '', lang, index)
-            state.selection = null
-          }
-        "
-      >
-        <wa-icon
-          slot="start"
-          name="xmark"
-        ></wa-icon>
-      </wa-button>
     </div>
     <Wrapper_nested
       v-if="bone['using']"
@@ -51,7 +32,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, inject, computed } from "vue"
+import { reactive, onMounted, inject, computed, watch } from "vue"
 import { useListFetch } from "../../../request/index.js"
 import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
@@ -71,9 +52,7 @@ import Wrapper_nested from "../BoneNestedWrapper.vue"
  * @cssClass bone-widget-relational - Kennzeichnet den Bone-Typ
  * @cssClass bone-widget-relational-default - Standard-Variante
  * @cssClass bone-widget-relational-{name} - Dynamisch gesetzt auf den Bone-Namen
- * @cssClass bone-widget-single-entry - Zeile mit Combobox/Input und Löschen-Button
- * @cssClass bone-delete-button - Löschen-Schaltfläche (nur bei `multiple: false` und gesetztem Wert)
- * @cssClass bone-square-button - Quadratische Schaltflächen-Variante
+ * @cssClass bone-widget-single-entry - Zeile mit Combobox/Input
  */
 defineOptions({
   inheritAttrs: false,
@@ -169,48 +148,17 @@ function changeEventNested(data) {
   }
 }
 
+// Halte state.selection synchron mit props.value — wichtig, wenn der Wert
+// von außen geleert wird (z.B. via Delete-Action).
+watch(
+  () => props.value,
+  (newVal) => {
+    state.selection = newVal || null
+  }
+)
+
 onMounted(() => {
   state.selection = props.value
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-.bone-widget-single-entry {
-  display: flex;
-  gap: var(--sl-spacing-x-small);
-
-  :deep(wa-combobox) {
-    &::part(input__base) {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-  }
-}
-
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  &::part(base) {
-    background-color: var(--sl-color-neutral-0);
-  }
-}
-wa-combobox {
-  width: 100%;
-
-  &::part(input) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-
-    & :deep(&::part(base)) {
-      border: 1px solid red;
-    }
-  }
-}
-</style>
--->

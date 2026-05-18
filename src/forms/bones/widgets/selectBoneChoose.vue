@@ -100,20 +100,3 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-.bone-widget-multiple-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-wa-checkbox::part(control--checked) {
-  background-color: var(--sl-color-success-600);
-  border: 1px solid var(--sl-color-primary-600);
-}
-wa-checkbox::part(control--indeterminate) {
-  background-color: var(--sl-color-success-600);
-  border: 1px solid var(--sl-color-success-600);
-}
-</style>
--->

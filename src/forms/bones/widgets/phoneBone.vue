@@ -167,43 +167,7 @@ onMounted(() => {
 })
 </script>
 <style scoped>
-wa-select{
+wa-select {
   width: 6rem;
 }
-
 </style>
-
-<!--
-<style scoped>
-wa-input {
-  width: 100%;
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(base) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-wa-select {
-  max-width: 100px;
-
-  &&::part(listbox) {
-    height: auto;
-    max-height: 300px;
-    z-index: 9999;
-  }
-}
-
-wa-option {
-}
-.bone-widget-input-wrapper {
-  display: flex;
-  gap: 0.5em;
-}
-</style>
--->

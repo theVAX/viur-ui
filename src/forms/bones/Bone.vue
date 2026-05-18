@@ -65,7 +65,7 @@
       <!-- Multilanguage: Tab per Sprache -->
       <div
         v-if="state.multilanguage"
-        class="bone-row"
+        class="bone-row wa-flank:end wa-gap-xs wa-align-items-start"
       >
         <wa-tab-group
           class="bone-lang-tabs"
@@ -89,8 +89,8 @@
               :active="state.currentLanguage === lang"
             >
               <bone-multiple-list
-                v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
                 :is="is"
+                v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
                 :name="name"
                 :lang="lang"
                 :entries="state.bonevalue?.[lang]"
@@ -100,31 +100,36 @@
                 @delete="removeMultipleEntry($event, lang)"
               />
               <bone-single-entry
-                v-else
                 :is="is"
+                v-else
                 :name="name"
                 :lang="lang"
                 :bonevalue="state.bonevalue?.[lang]"
                 :bonestructure="state.bonestructure"
+                :boneactions="false"
               />
             </wa-tab-panel>
           </template>
         </wa-tab-group>
-        <bone-actions
-          v-if="state.boneactions && !state.multiple"
-          :value="state.bonevalue"
-          :name="name"
-          :index="null"
-          :bone="state.bonestructure"
-          @change="updateValue"
-        ></bone-actions>
+        <div
+          v-if="state.boneactions && !state.multiple && state.hasActions"
+          class="wa-cluster wa-gap-xs"
+        >
+          <bone-actions
+            :value="state.bonevalue"
+            :name="name"
+            :index="null"
+            :bone="state.bonestructure"
+            @change="updateValue"
+          ></bone-actions>
+        </div>
       </div>
 
       <!-- Einsprachig -->
       <template v-else>
         <bone-multiple-list
-          v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
           :is="is"
+          v-if="state.multiple && !BoneHasMultipleHandling(state.bonestructure['type'])"
           :name="name"
           :entries="state.bonevalue"
           :bonestructure="state.bonestructure"
@@ -133,8 +138,8 @@
           @delete="removeMultipleEntry"
         />
         <bone-single-entry
-          v-else
           :is="is"
+          v-else
           :name="name"
           :bonevalue="state.bonevalue"
           :bonestructure="state.bonestructure"
@@ -183,6 +188,7 @@ import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
 import rawBone from "./widgets/rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils"
 import BoneActions from "./BoneActions.vue"
+import { resolveActions } from "./actions"
 import BoneMultipleList from "./BoneMultipleList.vue"
 import BoneSingleEntry from "./BoneSingleEntry.vue"
 import { useI18n } from "vue-i18n"
@@ -248,7 +254,7 @@ const props = defineProps({
   },
   boneactions: {
     type: Boolean,
-    default: false, // Aktiviert BoneActions-Schaltflächen neben dem Input
+    default: true, // Aktiviert BoneActions (Defaults pro Bone-Type + bone.params.actions). Explizit false um Actions zu unterdrücken.
   },
   showLabelInfo: {
     type: Boolean,
@@ -415,6 +421,10 @@ const state = reactive({
   debug: computed(() => props.debug), // Debug-Modus (gespiegelt von props.debug)
   labelTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "label-tooltip")), // Eindeutige DOM-ID für den Label-Tooltip-Anker
   boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")), // Eindeutige DOM-ID für den Bone-Tooltip-Anker
+  // Ob für diesen Bone überhaupt Actions auflösbar sind (für UI-Wrapper-Sichtbarkeit).
+  hasActions: computed(
+    () => resolveActions(state.bonestructure?.type, state.bonestructure?.params?.actions).length > 0
+  ),
 })
 provide("boneState", state)
 
@@ -615,7 +625,7 @@ provide("formatString", formatString)
       grid-template-columns: 1fr;
     }
   }
-  .bone-label-required{
+  .bone-label-required {
     color: var(--wa-color-brand-50);
     font-weight: 700;
   }
@@ -656,7 +666,6 @@ provide("formatString", formatString)
 
       &:hover::part(base) {
         background-color: var(--wa-color-neutral-90);
-        
       }
 
       &[aria-selected="true"] {
@@ -684,7 +693,11 @@ provide("formatString", formatString)
   }
 }
 </style>
-
+<style>
+* {
+  box-sizing: border-box;
+}
+</style>
 <!--
 <style scoped>
 @layer foundation.form {

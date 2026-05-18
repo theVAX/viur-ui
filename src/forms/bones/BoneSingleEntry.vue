@@ -1,5 +1,5 @@
 <template>
-  <div class="bone-row">
+  <div class="wa-flank:end bone-row wa-gap-xs wa-align-items-start">
     <div class="bone-block">
       <component
         :is="is"
@@ -11,16 +11,20 @@
         :autofocus="autofocus"
         @change="updateValue"
         @keypress.enter="updateValue"
-      />
+      ></component>
     </div>
-    <bone-actions
-      v-if="boneactions"
-      :value="bonevalue"
-      :name="name"
-      :index="null"
-      :bone="bonestructure"
-      @change="updateValue"
-    />
+    <div
+      v-if="boneactions && boneState?.hasActions"
+      class="wa-cluster wa-gap-xs"
+    >
+      <bone-actions
+        :value="bonevalue"
+        :name="name"
+        :index="null"
+        :bone="bonestructure"
+        @change="updateValue"
+      ></bone-actions>
+    </div>
   </div>
 </template>
 
@@ -34,9 +38,10 @@ const props = defineProps({
   lang: { type: String, default: null },
   bonevalue: { default: null },
   bonestructure: { type: Object, required: true },
-  boneactions: { type: Boolean, default: false },
+  boneactions: { type: Boolean, default: true },
   autofocus: { type: Boolean, default: false },
 })
 
 const updateValue = inject("updateValue")
+const boneState = inject("boneState")
 </script>

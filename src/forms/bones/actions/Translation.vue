@@ -81,7 +81,7 @@ const props = defineProps({
   name: String,
   module: String,
   tabId: String,
-  assistant: String,
+  action: Object,
   params: Object,
 })
 
@@ -92,11 +92,11 @@ const state = reactive({
   result: null,
   currentLang: null,
   rawLang: computed(() => state.currentLang?.split("_")[0]),
-  simple: computed(() => state.currentLang?.split("-x-")?.length === 2), //every private space will be validated to simple
+  simple: computed(() => state.currentLang?.split("-x-")?.length === 2),
   value_de: null,
   loading: false,
   nextlang: computed(() => {
-    let val = getValue()
+    const val = getValue()
     if (!val) return "de"
     for (const [l, v] of Object.entries(val)) {
       if ((!v || (Array.isArray(v) && (v.length === 0 || !v?.[props.params.index]))) && state.currentLang !== l) {
@@ -118,13 +118,10 @@ async function translate() {
         language: state.rawLang,
         characteristic: state.simple ? "simple" : null,
       },
-      {
-        immediate: false,
-      }
+      { immediate: false }
     )
     await fetchResult.execute()
     state.result = fetchResult.data.value
-  } catch (error) {
   } finally {
     state.loading = false
   }
@@ -154,7 +151,7 @@ onMounted(() => {
 
 watch(
   () => getValue("de"),
-  (newVal, oldVal) => {
+  (newVal) => {
     state.value_de = newVal
   }
 )

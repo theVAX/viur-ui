@@ -11,11 +11,11 @@
       <div class="image-description-flex">
         <wa-tab-group
           v-if="state.value"
-          class="lang-tab"
+          class="bone-lang-tabs"
           placement="bottom"
         >
           <template
-            v-for="(val, lang) in state.value"
+            v-for="(_val, lang) in state.value"
             :key="lang + '_tab'"
           >
             <wa-tab
@@ -89,7 +89,7 @@ const props = defineProps({
   name: String,
   module: String,
   tabId: String,
-  assistant: String,
+  action: Object,
   params: Object,
 })
 const viform = inject("viform")
@@ -100,9 +100,7 @@ const state = reactive({
   value: null,
   currentLang: null,
   url: computed(
-    () =>
-      (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : window.location.origin) +
-      props.params.value?.dest?.downloadUrl
+    () => (import.meta.env.VITE_API_URL ?? window.location.origin) + (props.params.value?.dest?.downloadUrl ?? "")
   ),
   prompt: null,
   loading: false,
@@ -120,13 +118,10 @@ async function describe() {
         prompt: state.prompt,
         language: state.currentLang,
       },
-      {
-        immediate: false,
-      }
+      { immediate: false }
     )
     await fetchResult.execute()
     state.value[state.currentLang] = fetchResult.data.value
-  } catch (error) {
   } finally {
     state.loading = false
   }
@@ -135,13 +130,13 @@ async function describe() {
 onMounted(() => {
   state.value = props.params.value?.rel?.alt
   if (!state.value) {
-    let langs = {}
-    for (const l of props.params.bone.using.alt.languages) {
+    const langs = {}
+    for (const l of props.params.bone?.using?.alt?.languages ?? []) {
       langs[l] = ""
     }
     state.value = langs
   }
-  state.currentLang = props.params.bone.using.alt.languages[0]
+  state.currentLang = props.params.bone?.using?.alt?.languages?.[0]
 })
 
 function updateValue(e, lang) {
@@ -149,16 +144,17 @@ function updateValue(e, lang) {
 }
 
 function CloseAction() {
-  emit("close", props.params.value)
+  emit("close")
 }
 
 function ApplySelection() {
-  if (!props.params.value.rel) {
-    props.params.value["rel"] = { alt: state.value }
+  const val = { ...(props.params.value ?? {}) }
+  if (!val.rel) {
+    val.rel = { alt: state.value }
   } else {
-    props.params.value.rel.alt = state.value
+    val.rel = { ...val.rel, alt: state.value }
   }
-  emit("close", props.params.value)
+  emit("close", val, props.params.lang ?? null)
 }
 </script>
 
@@ -195,74 +191,6 @@ wa-textarea {
   &::part(form-control-label) {
     margin-bottom: var(--sl-spacing-x-small);
     font-weight: 600;
-  }
-}
-
-wa-tab-panel::part(base) {
-  padding: 0;
-}
-
-.lang-tab {
-  --track-width: 0;
-  --indicator-color: var(--vi-background-color);
-  --track-color: var(--vi-border-color);
-
-  &::part(body) {
-    padding-bottom: var(--sl-spacing-x-small);
-    overflow-x: hidden;
-  }
-
-  &::part(tabs) {
-    border-top: 1px solid var(--vi-border-color);
-  }
-
-  & wa-tab {
-    margin-top: -1px;
-
-    &[aria-selected="true"] {
-      z-index: 1;
-
-      &::part(base) {
-        background-color: var(--vi-background-color);
-        border: 1px solid var(--vi-border-color);
-        border-top: 1px solid var(--vi-background-color) !important;
-        border-bottom: 2px solid var(--sl-color-primary-500) !important;
-      }
-    }
-
-    &::part(base) {
-      background-color: var(--sl-color-neutral-200);
-      border: 1px solid var(--sl-color-neutral-400);
-      border-top: 1px solid var(--vi-border-color);
-      border-radius: 0;
-      padding: var(--sl-spacing-x-small);
-      transition: all ease 0.3s;
-    }
-
-    &:hover {
-      &::part(base) {
-        background-color: var(--vi-background-color);
-        border: 1px solid var(--vi-border-color);
-      }
-    }
-
-    &:first-child {
-      &::part(base) {
-        border-bottom-left-radius: 5px;
-      }
-    }
-
-    &:nth-last-child(2) {
-      &::part(base) {
-        border-bottom-right-radius: 5px;
-      }
-    }
-
-    &:not(:first-child) {
-      &::part(base) {
-        margin-left: -1px;
-      }
-    }
   }
 }
 </style>

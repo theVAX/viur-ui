@@ -7,6 +7,7 @@ export default {
     download: "Download",
     chooseFile: "Choose file",
     dragFile: "Drag files here",
+    dropzone: "Select a file or drag it here",
     editFile: "Edit file",
     list: "List",
     addEmpty: "New entry",

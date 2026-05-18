@@ -12,7 +12,10 @@
       @change="changeEvent"
     ></wa-color-picker>
     <span>{{ value || "-" }}</span>
-    <wa-copy-button :disabled="!value" :value="value"></wa-copy-button>
+    <wa-copy-button
+      :disabled="!value"
+      :value="value"
+    ></wa-copy-button>
   </div>
 </template>
 
@@ -70,12 +73,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-<!--
-<style scoped>
-wa-color-picker {
-  &::part(trigger) {
-    border-radius: 0;
-  }
-}
-</style>
--->

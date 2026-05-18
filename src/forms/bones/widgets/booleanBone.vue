@@ -1,6 +1,5 @@
 <template>
   <wa-switch
-  
     class="bone-widget bone-widget-boolean bone-widget-boolean-default"
     :class="[`bone-widget-boolean-${name}`]"
     :disabled="boneState.readonly"
@@ -75,12 +74,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-  wa-switch{
-    padding: calc(var(--wa-form-control-height)/2 - var(--wa-form-control-toggle-size)/2 - 1px) ;
-    border:1px solid var(--wa-color-border-quiet);
-    border-radius: var(--wa-border-radius-m);
-    background-color: var(--wa-color-neutral-on-loud);
-  }
-
-
+wa-switch {
+  padding: calc(var(--wa-form-control-height) / 2 - var(--wa-form-control-toggle-size) / 2 - 1px);
+  border: 1px solid var(--wa-color-border-quiet);
+  border-radius: var(--wa-border-radius-m);
+  background-color: var(--wa-color-neutral-on-loud);
+}
 </style>

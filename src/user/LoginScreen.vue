@@ -5,164 +5,57 @@
         <h1 class="viur-login__title">{{ title }}</h1>
       </slot>
 
-      <sl-alert
-        v-if="store.state.errorMessage"
-        variant="danger"
-        open
-        class="viur-login__alert"
-      >
-        <wa-icon
-          slot="icon"
-          name="triangle-exclamation"
-        ></wa-icon>
-        {{ store.state.errorMessage }}
-      </sl-alert>
-
-      <!-- loading -->
+      <!-- checking for an existing session -->
       <div
-        v-if="store.state.step === 'loading'"
+        v-if="checking"
         class="viur-login__loading"
       >
         <wa-spinner></wa-spinner>
         <span>{{ tr("waiting", "lade...") }}</span>
       </div>
 
-      <!-- primary provider chooser -->
-      <div
-        v-else-if="store.state.step === 'provider'"
-        class="viur-login__providers"
-      >
-        <p class="viur-login__hint">{{ tr("choose_method", "Anmeldemethode wählen") }}</p>
-        <wa-button
-          v-for="(name, url) in store.passwordProviders"
-          :key="url"
-          variant="brand"
-          appearance="filled"
-          @click="store.chooseProvider(url)"
-        >
-          {{ name }}
-        </wa-button>
+      <template v-else-if="!store.isLoggedIn">
+        <!-- The login flow is driven generically by the multistep form: it
+             GET-renders /user/login and walks the v2 status/follow chain
+             (chooser → userpassword → 2FA → success). -->
+        <ViForm
+          ref="viform"
+          module="user"
+          action="login"
+          :secure="true"
+          multistep
+          :renderer="renderer ?? undefined"
+          :version="version ?? undefined"
+          :show-steps="showSteps"
+          :submit-label="tr('login', 'Anmelden')"
+          @success="onFormSuccess"
+          @failed="onFailed"
+        />
 
-        <template v-if="showGoogle">
-          <div
-            v-if="Object.keys(store.passwordProviders).length"
-            class="viur-login__sep"
-          >
-            {{ tr("or", "oder") }}
-          </div>
+        <!-- Google is the one provider that isn't a form step (Identity SDK
+             token), so it lives beside the form. -->
+        <template v-if="googleClientId">
+          <div class="viur-login__sep">{{ tr("or", "oder") }}</div>
           <div
             ref="googleBtn"
             class="viur-login__google"
           ></div>
+          <p
+            v-if="googleError"
+            class="viur-login__error"
+          >
+            {{ googleError }}
+          </p>
         </template>
-      </div>
-
-      <!-- username / password -->
-      <form
-        v-else-if="store.state.step === 'userpassword'"
-        class="viur-login__form"
-        @submit.prevent="submitPassword"
-      >
-        <wa-input
-          :label="tr('email', 'E-Mail Adresse')"
-          type="email"
-          name="name"
-          autocomplete="username"
-          autofocus
-          required
-          :value="creds.name"
-          :help-text="fieldError('name')"
-          @input="creds.name = $event.target.value"
-        ></wa-input>
-        <wa-input
-          :label="tr('password', 'Passwort')"
-          type="password"
-          name="password"
-          autocomplete="current-password"
-          password-toggle
-          required
-          :value="creds.password"
-          :help-text="fieldError('password')"
-          @input="creds.password = $event.target.value"
-        ></wa-input>
-        <wa-button
-          type="submit"
-          variant="brand"
-          appearance="filled"
-          :loading="busy"
-        >
-          {{ tr("login", "Anmelden") }}
-        </wa-button>
-        <a
-          v-if="canGoBack"
-          class="viur-login__back"
-          @click="store.backToProviders"
-        >
-          {{ tr("back", "zurück") }}
-        </a>
-      </form>
-
-      <!-- second-factor chooser -->
-      <div
-        v-else-if="store.state.step === 'secondfactor_choice'"
-        class="viur-login__providers"
-      >
-        <p class="viur-login__hint">{{ tr("choose_second_factor", "Zweiten Faktor wählen") }}</p>
-        <wa-button
-          v-for="(name, url) in store.state.secondFactors"
-          :key="url"
-          variant="brand"
-          appearance="filled"
-          @click="store.chooseSecondFactor(url)"
-        >
-          {{ name }}
-        </wa-button>
-      </div>
-
-      <!-- second-factor OTP -->
-      <form
-        v-else-if="store.state.step === 'secondfactor'"
-        class="viur-login__form"
-        @submit.prevent="submitOtp"
-      >
-        <p class="viur-login__hint">{{ tr("second_factor", "Zwei-Faktor-Bestätigung") }}</p>
-        <wa-input
-          :label="tr('otp_label', 'Einmal-Code')"
-          name="otptoken"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          autofocus
-          required
-          :value="otp"
-          :help-text="fieldError('otptoken')"
-          @input="otp = $event.target.value"
-        ></wa-input>
-        <wa-button
-          type="submit"
-          variant="brand"
-          appearance="filled"
-          :loading="busy"
-        >
-          {{ tr("otp", "Bestätigen") }}
-        </wa-button>
-      </form>
-
-      <!-- done -->
-      <div
-        v-else-if="store.state.step === 'done'"
-        class="viur-login__done"
-      >
-        <slot name="done">
-          <wa-icon name="circle-check"></wa-icon>
-        </slot>
-      </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch, nextTick } from "vue"
+import { ref, onMounted, nextTick } from "vue"
 import { useI18n } from "vue-i18n"
+import ViForm from "../forms/ViForm.vue"
 import { useUserStore } from "./store.js"
 import { renderGoogleButton } from "./google.js"
 
@@ -170,9 +63,14 @@ const props = defineProps({
   title: { type: String, default: "Login" },
   // override the request renderer (default: VITE_DEFAULT_RENDERER || "json")
   renderer: { type: String, default: null },
+  // optionally pin the protocol version (default null → unversioned, server
+  // aliases to the newest wire format / envelope v2)
+  version: { type: [String, Number, null], default: null },
   // OAuth client id for "Sign in with Google"; omit to hide the Google button
   googleClientId: { type: String, default: null },
-  // start the login flow (GET /user/login) on mount
+  // render the multistep progress bar
+  showSteps: { type: Boolean, default: false },
+  // check for an existing session on mount (and skip login if authenticated)
   autoStart: { type: Boolean, default: true },
 })
 const emit = defineEmits(["success", "error"])
@@ -187,59 +85,65 @@ function tr(key, fallback) {
   return value === full ? fallback : value
 }
 
-const creds = reactive({ name: "", password: "" })
-const otp = ref("")
+const viform = ref(null)
 const googleBtn = ref(null)
+const checking = ref(true)
+const googleError = ref("")
 
-const busy = computed(() => store.state.step === "loading")
-const showGoogle = computed(() => store.hasGoogle && !!store.state.googleClientId)
-const canGoBack = computed(() => Object.keys(store.passwordProviders).length + (store.hasGoogle ? 1 : 0) > 1)
-
-function fieldError(path) {
-  const err = (store.state.fieldErrors || []).find(
-    (e) => e.fieldPath === path || (typeof e.fieldPath === "string" && e.fieldPath.endsWith(path))
-  )
-  return err?.errorMessage || ""
+async function onFormSuccess() {
+  await store.fetchSelf()
+  emit("success", store.state.user)
 }
 
-function submitPassword() {
-  store.loginWithPassword({ name: creds.name, password: creds.password })
-}
-function submitOtp() {
-  store.submitSecondFactor({ otptoken: otp.value })
+function onFailed(error) {
+  emit("error", error)
 }
 
-watch(
-  () => store.state.step,
-  (step) => {
-    if (step === "done") emit("success", store.state.user)
+async function onGoogleToken(token) {
+  googleError.value = ""
+  const body = await store.loginWithGoogle(token)
+  if (!body) {
+    googleError.value = tr("google_error", "Ein Fehler ist beim Login aufgetreten.")
+    emit("error", "google")
+    return
   }
-)
-watch(
-  () => store.state.errorMessage,
-  (message) => {
-    if (message) emit("error", message)
+  if (body.status === "success" || body.action === "login_success") {
+    emit("success", store.state.user)
+    return
   }
-)
+  // Google login needs a second factor → continue in the generic form flow.
+  // loadStep manages its own loading/error state, so it need not be awaited.
+  if (body.follow && viform.value?.loadStep) {
+    viform.value.loadStep(body.follow)
+  }
+}
 
-// (re)render the Google button whenever the provider step shows it
-watch(
-  [() => store.state.step, showGoogle],
-  async ([step, visible]) => {
-    if (step !== "provider" || !visible) return
-    try {
-      await nextTick()
-      await renderGoogleButton(googleBtn.value, store.state.googleClientId, (token) => store.loginWithGoogle(token))
-    } catch {
-      /* SDK failed to load — password login still works */
-    }
-  },
-  { immediate: true }
-)
+async function mountGoogleButton() {
+  if (checking.value || store.isLoggedIn || !props.googleClientId) return
+  try {
+    await nextTick()
+    await renderGoogleButton(googleBtn.value, props.googleClientId, onGoogleToken)
+  } catch {
+    /* SDK failed to load — the form login still works */
+  }
+}
 
-onMounted(() => {
+onMounted(async () => {
   store.configure({ renderer: props.renderer ?? undefined, googleClientId: props.googleClientId })
-  if (props.autoStart) store.loadLogin()
+  try {
+    if (props.autoStart) {
+      await store.fetchSelf()
+      if (store.isLoggedIn) {
+        emit("success", store.state.user)
+        return
+      }
+    }
+    await mountGoogleButton()
+  } finally {
+    checking.value = false
+    // button lives behind v-else-if; (re)mount it now that `checking` is false
+    if (!store.isLoggedIn) mountGoogleButton()
+  }
 })
 </script>
 
@@ -270,21 +174,7 @@ onMounted(() => {
   font-size: 1.25rem;
 }
 
-.viur-login__providers,
-.viur-login__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--wa-space-m, 1rem);
-}
-
-.viur-login__hint {
-  margin: 0;
-  color: var(--wa-color-text-quiet, #6b7280);
-  font-size: 0.9rem;
-}
-
-.viur-login__loading,
-.viur-login__done {
+.viur-login__loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,14 +194,10 @@ onMounted(() => {
   justify-content: center;
 }
 
-.viur-login__back {
-  align-self: center;
-  cursor: pointer;
+.viur-login__error {
+  margin: 0;
+  color: var(--wa-color-danger-fill-loud, #dc2626);
   font-size: 0.85rem;
-  color: var(--wa-color-text-quiet, #6b7280);
-}
-
-.viur-login__back:hover {
-  text-decoration: underline;
+  text-align: center;
 }
 </style>

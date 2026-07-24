@@ -1,6 +1,7 @@
 import { ref, watch } from "vue"
 import { createFetch } from "@vueuse/core"
 import { getCached, setCached, invalidateByKey, clearCache } from "./cache.js"
+import { normalizeEnvelope } from "./envelope.js"
 
 export class HTTPError extends Error {
   constructor(statusCode, statusText, message, response = null) {
@@ -11,6 +12,14 @@ export class HTTPError extends Error {
   }
 }
 
+/**
+ * Build a ViUR request URL: `[/lang]/<renderer>[/<version>]/<controller>/<endpoint>`.
+ *
+ * `version` is optional and orthogonal to `renderer`. Omit it to hit the
+ * unversioned endpoint (e.g. `/json/…`), which the server aliases to the newest
+ * wire format (envelope v2). Pass `2`/`"v2"` or `1`/`"v1"` to pin a version
+ * (`/json/v2/…`, `/json/v1/…`). A numeric version is rendered as `v<n>`.
+ */
 function create_url({ controller, endpoint, renderer = "json", version = null, lang = null } = {}) {
   if (!controller) {
     throw new Error("Parameter 'controller' is required")
@@ -21,10 +30,12 @@ function create_url({ controller, endpoint, renderer = "json", version = null, l
 
   let url = ""
 
-  if (version) url += `/${version}`
   if (lang) url += `/${lang}`
 
   url += `/${renderer}`
+
+  const versionSegment = version == null ? null : typeof version === "number" ? `v${version}` : version
+  if (versionSegment) url += `/${versionSegment}`
 
   if (Array.isArray(controller)) {
     url += "/" + controller.join("/")
@@ -82,6 +93,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       group = null,
       url = null,
       renderer = import.meta.env.VITE_DEFAULT_RENDERER ?? "json",
+      version = null,
       immediate = true,
       cached = false,
       ttl = 0,
@@ -95,7 +107,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     let _isNext = false
 
     function _buildUrl() {
-      const base = url ?? create_url({ controller, endpoint: group ? `list/${group}` : "list", renderer })
+      const base = url ?? create_url({ controller, endpoint: group ? `list/${group}` : "list", renderer, version })
       const qs = new URLSearchParams()
       for (const [k, v] of Object.entries(params.value)) {
         Array.isArray(v) ? v.forEach((item) => qs.append(k, item)) : qs.append(k, v)
@@ -104,7 +116,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     }
 
     async function _fetchStructure() {
-      const url = create_url({ controller, endpoint: "structure", renderer })
+      const url = create_url({ controller, endpoint: "structure", renderer, version })
       const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
       if (!resp.ok) return
       const structureData = await resp.json()
@@ -130,9 +142,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           if (cached && !_isNext) {
             const hit = await getCached(url, ttl)
             if (hit) {
-              data.value = hit.skellist ?? hit
-              cursor.value = hit.cursor ?? ""
-              orders.value = hit.orders ?? []
+              data.value = hit.data ?? hit.skellist ?? hit
+              cursor.value = hit.meta?.cursor ?? hit.cursor ?? ""
+              orders.value = hit.meta?.orders ?? hit.orders ?? []
               cancel()
               return { options, url }
             }
@@ -143,15 +155,18 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           return { url: `${url}${separator}skey=${skey}`, options }
         },
         async afterFetch(ctx) {
-          const responseData = ctx.data
+          // Normalize v1/v2 up to the canonical v2 envelope, then read the list
+          // payload from `data` and pagination from `meta`.
+          const responseData = normalizeEnvelope(ctx.data)
           if (!_isNext) {
             await _fetchStructure()
           }
-          cursor.value = responseData.cursor ?? ""
-          orders.value = responseData.orders ?? []
-          data.value = _isNext ? data.value.concat(responseData.skellist) : responseData.skellist
+          const list = responseData.data ?? []
+          cursor.value = responseData.meta?.cursor ?? ""
+          orders.value = responseData.meta?.orders ?? []
+          data.value = _isNext ? data.value.concat(list) : list
           if (cached && !_isNext) {
-            const entityKeys = (responseData.skellist ?? []).map((s) => s.key).filter(Boolean)
+            const entityKeys = list.map((s) => s.key).filter(Boolean)
             await setCached(ctx.url ?? listUrl.value, responseData, entityKeys)
           }
           ctx.data = data.value
@@ -225,7 +240,7 @@ export function createControllerFetch({
   invalidates = false,
   invalidatesAll = false,
 } = {}) {
-  return (controller, data = {}, args = "/", ctx = {}) => {
+  return (controller, args = "/", data = {}, ctx = {}) => {
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
     const {
       version = null,
@@ -236,6 +251,9 @@ export function createControllerFetch({
       cached = false,
       ttl = 0,
       immediate = true,
+      // extra URL query string/params, appended to the request URL for GET and
+      // POST alike (e.g. query carried on a server-provided `follow` URL)
+      query = null,
     } = ctx
 
     // Stable cache key: base URL + data params, skey excluded so it stays consistent across requests
@@ -252,13 +270,15 @@ export function createControllerFetch({
         async beforeFetch({ options, url, cancel }) {
           const skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
           const base = create_url({ controller, endpoint, renderer, version, lang })
+          const extraQs = query ? (typeof query === "string" ? query : new URLSearchParams(query).toString()) : ""
 
           options.method = method
           options.headers = { ...options.headers, ...headers }
           if (mode) options.mode = mode
 
           if (method.toUpperCase() === "GET") {
-            const qs = new URLSearchParams(data).toString()
+            const dataQs = new URLSearchParams(data).toString()
+            const qs = [dataQs, extraQs].filter(Boolean).join("&")
             _cacheKey = qs ? `${base}?${qs}` : base
 
             if (cached) {
@@ -294,21 +314,25 @@ export function createControllerFetch({
                 })()
           if (skeyToken) formData.append("skey", skeyToken)
           options.body = formData
-          return { url: base, options }
+          const postUrl = extraQs ? `${base}${base.includes("?") ? "&" : "?"}${extraQs}` : base
+          return { url: postUrl, options }
         },
         onFetchError(ctx) {
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
           return ctx
         },
         async afterFetch(ctx) {
+          // Normalize v1/v2 up to the canonical v2 envelope so downstream
+          // consumers (and cache/invalidation below) read the entity from `data`.
+          ctx.data = normalizeEnvelope(ctx.data)
           if (cached && method.toUpperCase() === "GET" && _cacheKey) {
-            const entityKey = ctx.data?.values?.key
+            const entityKey = ctx.data?.data?.key
             await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : [])
           }
           if (invalidates) {
             const keys = []
             if (data.key) keys.push(data.key)
-            if (ctx.data?.values?.key) keys.push(ctx.data.values.key)
+            if (ctx.data?.data?.key) keys.push(ctx.data.data.key)
             if (keys.length) await invalidateByKey(keys)
           }
           if (invalidatesAll) {
@@ -360,7 +384,10 @@ function _toFormData(obj) {
   return fd
 }
 
-export async function uploadFile(file, { target = undefined, publicUpload = false, renderer = null } = {}) {
+export async function uploadFile(
+  file,
+  { target = undefined, publicUpload = false, renderer = null, version = null } = {}
+) {
   const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
   const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
 
@@ -375,14 +402,17 @@ export async function uploadFile(file, { target = undefined, publicUpload = fals
   const fd1 = _toFormData(filedata)
   fd1.append("skey", await fetchSkeyToken(_renderer))
 
-  const getUrlResp = await fetch(create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer }), {
-    ...fetchOpts,
-    body: fd1,
-  })
+  const getUrlResp = await fetch(
+    create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer, version }),
+    {
+      ...fetchOpts,
+      body: fd1,
+    }
+  )
   if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
-  const {
-    values: { uploadUrl, uploadKey },
-  } = await getUrlResp.json()
+  // Envelope-agnostic: v2 carries the payload in `data`, v1 in `values`.
+  const getUrlData = normalizeEnvelope(await getUrlResp.json())
+  const { uploadUrl, uploadKey } = getUrlData.data ?? getUrlData.values ?? {}
 
   // Step 2: upload raw bytes to external storage (no-cors, no credentials)
   await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
@@ -391,14 +421,14 @@ export async function uploadFile(file, { target = undefined, publicUpload = fals
   const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
   fd3.append("skey", await fetchSkeyToken(_renderer))
 
-  const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer }), {
+  const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer, version }), {
     ...fetchOpts,
     body: fd3,
   })
   if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
-  const addData = await addResp.json()
-  if (addData.action !== "addSuccess") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
-  return addData.values
+  const addData = normalizeEnvelope(await addResp.json())
+  if (addData.status !== "success") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
+  return addData.data ?? addData.values
 }
 
 function _absolute(url) {

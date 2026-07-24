@@ -361,13 +361,15 @@ describe("useViewFetch", () => {
 
     const r1 = useViewFetch("items", "/", { key: "cv1" }, { cached: true, ttl: 3600 })
     await waitUntilFinished(r1)
-    expect(r1.data.value).toEqual({ values: { key: "cv1" } })
+    // body is normalized to the canonical v2 envelope: entity payload in `data`
+    expect(r1.data.value.data).toEqual({ key: "cv1" })
+    expect(r1.data.value.version).toBe(2)
 
     const callCountAfterFirst = fetchMock.mock.calls.length
 
     const r2 = useViewFetch("items", "/", { key: "cv1" }, { cached: true, ttl: 3600 })
     await waitUntilFinished(r2)
-    expect(r2.data.value).toEqual({ values: { key: "cv1" } })
+    expect(r2.data.value.data).toEqual({ key: "cv1" })
     expect(fetchMock.mock.calls.length).toBe(callCountAfterFirst) // no new fetch
   })
 
@@ -561,6 +563,35 @@ describe("createControllerFetch options", () => {
 
     const [url] = fetchMock.mock.calls[0]
     expect(url).toContain("/v2/")
+  })
+
+  it("query: appends extra query string to a GET url", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: {} }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const useFetch = createControllerFetch({ endpoint: "view" })
+    const result = useFetch("items", "/", {}, { query: "token=abc&foo=bar" })
+    await waitUntilFinished(result)
+
+    const [url] = fetchMock.mock.calls[0]
+    expect(url).toContain("token=abc")
+    expect(url).toContain("foo=bar")
+  })
+
+  it("query: appends to a POST url without leaking into the body", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ action: "editSuccess", values: {} }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    // secure defaults to false here → no skey fetch
+    const useFetch = createControllerFetch({ endpoint: "edit", method: "POST" })
+    const result = useFetch("items", "/", { name: "x" }, { query: "token=abc" })
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => u.includes("/edit"))
+    expect(url).toContain("token=abc")
+    expect(options.body).toBeInstanceOf(FormData)
+    expect(options.body.get("name")).toBe("x")
+    expect(options.body.get("token")).toBeNull() // query stays in the URL, not the body
   })
 
   it("lang: adds lang segment to URL", async () => {

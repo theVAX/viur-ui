@@ -121,7 +121,10 @@ async function translate() {
       { immediate: false }
     )
     await fetchResult.execute()
-    state.result = fetchResult.data.value
+    // v2 envelope carries the payload in `data`; fall back to the raw body for
+    // non-envelope responses.
+    const result = fetchResult.data.value
+    state.result = result?.data ?? result
   } finally {
     state.loading = false
   }

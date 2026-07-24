@@ -121,7 +121,10 @@ async function describe() {
       { immediate: false }
     )
     await fetchResult.execute()
-    state.value[state.currentLang] = fetchResult.data.value
+    // v2 envelope carries the payload in `data`; fall back to the raw body for
+    // non-envelope responses.
+    const result = fetchResult.data.value
+    state.value[state.currentLang] = result?.data ?? result
   } finally {
     state.loading = false
   }

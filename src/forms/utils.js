@@ -1,4 +1,4 @@
-import { createControllerFetch } from "../request/index.js"
+import { createControllerFetch, normalizeEnvelope } from "../request/index.js"
 import Logics from "logics-js"
 import { inject, toRaw, reactive } from "vue"
 import Utils from "./bones/utils"
@@ -36,6 +36,9 @@ export function useFormUtils(props, state) {
       renderer,
       controller: requestSegments.slice(0, -1),
       endpoint: requestSegments.at(-1),
+      // preserve any query string from a server-provided url (e.g. a `follow`
+      // step url) so it is passed through to the request
+      query: parsedUrl.search ? parsedUrl.search.slice(1) : "",
     }
   }
 
@@ -50,6 +53,108 @@ export function useFormUtils(props, state) {
     } else {
       return structure
     }
+  }
+
+  async function _envelopeFromResponse(response) {
+    // A cloned Response bypasses the request layer's .json() normalization, so
+    // lift it to the canonical v2 shape here too.
+    try {
+      return normalizeEnvelope(await response.clone().json())
+    } catch {
+      return null
+    }
+  }
+
+  // Apply a (normalized v2) envelope to the form state. Central place that maps
+  // the envelope onto skel / structure / errors and the multi-step fields.
+  function applyResponseState(data, { updateStructure = false } = {}) {
+    data = data ?? {}
+
+    state.datatype = data["datatype"] ?? null
+
+    if (data["datatype"] === "list") {
+      // List envelope: structure is null — don't build a form. Expose the items
+      // for custom rendering via the `list` slot instead, and never crash on the
+      // null structure a list carries.
+      const items = data["data"] !== undefined ? data["data"] : data["skellist"]
+      state.list = Array.isArray(items) ? items : []
+      state.cursor = data["meta"]?.["cursor"] ?? data["cursor"] ?? null
+      state.orders = data["meta"]?.["orders"] ?? data["orders"] ?? []
+      state.structure = {}
+      state.skel = {}
+    } else {
+      // Entity: payload lives in `data` (v1 `values` is lifted to `data` by
+      // normalizeEnvelope; accept `values` too for a raw body).
+      const values = data["data"] !== undefined ? data["data"] : data["values"]
+      if (updateStructure && data["structure"] != null) {
+        initForm(values, data["structure"], state.values)
+      } else if (values !== undefined) {
+        state.skel = values
+      }
+      state.list = null
+    }
+
+    state.errors = data["errors"]
+    state.actionparams = data["params"]
+    state.actionname = data["action"]
+
+    // Envelope-v2 multi-step fields. Absent on classic v1 bodies → reset to null
+    // (harmless for single-step forms). `follow` becomes the POST target for the
+    // *current* step; on a POST response it is the *next* step's URL.
+    state.step = data["step"] ?? null
+    state.stepStatus = data["step_status"] ?? null
+    state.steps = data["steps"] ?? null
+    state.status = data["status"] ?? null
+    if (data["follow"] !== undefined) {
+      state.postUrl = data["follow"]
+    }
+    state.loading = false
+  }
+
+  // GET-render a step of a follow-driven multi-step action. Unlike fetchData
+  // (which POSTs — a submit), this renders the step's *initial* form. `url` is
+  // the envelope `follow` / `steps[key].url`; omit it to build the entry URL
+  // from props.
+  async function loadStep(url = null) {
+    state.loading = true
+    state.failed = null
+    const requestSpec = buildRequestSpec(url)
+    const request = createControllerFetch({ endpoint: requestSpec.endpoint, method: "GET" })
+    const fetchResult = request(
+      requestSpec.controller,
+      "/",
+      {},
+      {
+        renderer: requestSpec.renderer,
+        version: props.version,
+        query: requestSpec.query,
+        immediate: false,
+      }
+    )
+    try {
+      await fetchResult.execute()
+      applyResponseState(fetchResult.data.value, { updateStructure: true })
+      return fetchResult
+    } catch (error) {
+      state.failed = error
+      state.loading = false
+      throw error
+    }
+  }
+
+  // Back one step in a multi-step flow. The target is the previous step's
+  // backend-provided endpoint URL (`steps[prevKey].url`) — no client-side
+  // history. GET-rendering it prefills from the server session. No-op on the
+  // first step or when the previous step carries no url.
+  async function back() {
+    if (!state.steps || !state.step) return
+    const keys = Object.keys(state.steps)
+    const idx = keys.indexOf(state.step)
+    if (idx <= 0) return
+    const prev = state.steps[keys[idx - 1]]
+    const url = prev && (prev.url || prev.endpoint)
+    if (!url) return
+    return loadStep(url)
   }
 
   function toFormData() {
@@ -135,7 +240,8 @@ export function useFormUtils(props, state) {
 
   function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
     state.loading = true
-    let isValid = state.viformelement.reportValidity()
+    // No <form> element in list mode — nothing to validate.
+    let isValid = state.viformelement ? state.viformelement.reportValidity() : true
     if (!isValid) {
       state.loading = false
       return new Promise((resolve, reject) => reject("Form is not valid"))
@@ -170,20 +276,35 @@ export function useFormUtils(props, state) {
 
     const fetchResult = request(requestSpec.controller, "/", data, {
       renderer: requestSpec.renderer,
+      version: props.version,
+      query: requestSpec.query,
       headers,
       immediate: false,
     })
 
-    return fetchResult.execute().then(async () => {
-      let responseData = fetchResult.data.value
-      state.skel = responseData["values"]
-      //state.structure = normalizeStructure(data["structure"])
-      state.errors = responseData["errors"]
-      state.actionparams = responseData["params"]
-      state.actionname = responseData["action"]
-      state.loading = false
-      return fetchResult
-    })
+    return fetchResult
+      .execute()
+      .then(async () => {
+        // Apply the (normalized v2) envelope — updates skel / errors / action
+        // and, for multi-step flows, step / steps / status / follow. Re-init the
+        // form when the response carries a structure (e.g. the next step's form).
+        const responseData = fetchResult.data.value
+        applyResponseState(responseData, { updateStructure: responseData?.["structure"] != null })
+        return fetchResult
+      })
+      .catch(async (error) => {
+        // A rejected/failed submit may still carry a form body (errors +
+        // structure) on the error response — re-apply it so the form comes back
+        // populated. Otherwise just surface the failure.
+        const body = error?.response ? await _envelopeFromResponse(error.response).catch(() => null) : null
+        if (body) {
+          applyResponseState(body, { updateStructure: true })
+        } else {
+          state.loading = false
+        }
+        state.failed = error
+        throw error
+      })
   }
 
   function fetchData(alternativUrl = null, additionalData = null, headers = null) {
@@ -203,6 +324,8 @@ export function useFormUtils(props, state) {
     state.failed = null
     const fetchResult = request(requestSpec.controller, "/", data, {
       renderer: requestSpec.renderer,
+      version: props.version,
+      query: requestSpec.query,
       headers,
       immediate: false,
     })
@@ -210,8 +333,10 @@ export function useFormUtils(props, state) {
     return fetchResult
       .execute()
       .then(async () => {
+        // Canonical v2 envelope: entity payload is in `data`, bone definitions
+        // in `structure` (both present for v1 too after normalizeEnvelope).
         let responseData = fetchResult.data.value
-        initForm(responseData["values"], responseData["structure"], state.values)
+        initForm(responseData["data"], responseData["structure"], state.values)
 
         state.errors = responseData["errors"]
         state.actionparams = responseData["params"]
@@ -227,7 +352,17 @@ export function useFormUtils(props, state) {
 
   function reload() {
     state.loading = true
-    if (props.structure) {
+    if (props.multistep && props.module && props.action) {
+      // Follow-driven multi-step: GET-render the entry step. The submit chain
+      // (POST → follow → GET next) is driven by ViForm via loadStep/sendData.
+      loadStep()
+        .then(() => {
+          state.loading = false
+        })
+        .catch(() => {
+          state.loading = false
+        })
+    } else if (props.structure) {
       initForm(props.skel, props.structure, state.values)
       state.loading = false
     } else if (props.module && props.action) {
@@ -412,6 +547,8 @@ export function useFormUtils(props, state) {
   return {
     fetchData,
     sendData,
+    loadStep,
+    back,
     buildRequestUrl: () => {
       const requestSpec = buildRequestSpec()
       return `/${requestSpec.renderer}/${requestSpec.controller.join("/")}/${requestSpec.endpoint}`

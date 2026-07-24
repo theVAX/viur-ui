@@ -15,3 +15,4 @@ export {
 } from "./request.js"
 export { getCached, setCached, invalidateByKey, clearCache } from "./cache.js"
 export { skelDataToFormData } from "./skel.js"
+export { normalizeEnvelope, isEnvelopeV2 } from "./envelope.js"

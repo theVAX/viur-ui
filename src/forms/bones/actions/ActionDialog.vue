@@ -60,7 +60,7 @@ const component = computed(() => getActionComponent(props.action?.arg))
   }
 
   &::part(footer) {
-    padding: var(--sl-spacing-small);
+    padding: var(--wa-space-s);
   }
 
   &::part(overlay) {

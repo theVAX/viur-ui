@@ -30,6 +30,69 @@
  * plus a list-only `meta: { cursor, orders }`.
  */
 
+/** v1 actions whose selected value IS the url of the next step. */
+const SELECTION_ACTIONS = ["select_authentication_provider", "select_secondfactor_provider"]
+
+/**
+ * Target url of the next step in the CLASSIC v1 login.
+ *
+ * v2 (viur-actions) drives a multi-step action itself: every response carries
+ * the `follow` url of the next step. v1 has no such field — there the target IS
+ * the value the user picked: `/user/login` renders a single select whose option
+ * KEYS are the provider urls ("/vi/user/auth_userpassword/login", …), and a POST
+ * echoes the chosen key back in the body. So the selection doubles as the
+ * follow.
+ *
+ * The same shape appears twice in the flow: choosing the PRIMARY provider
+ * (`select_authentication_provider`) and choosing the SECOND FACTOR
+ * (`select_secondfactor_provider`).
+ *
+ * Only applied to a body that really is such a selection: one of those actions,
+ * a select bone, and a chosen value that is one of that bone's own option keys.
+ * Returns null otherwise.
+ *
+ * @param {*} body normalized (v2-shaped) body
+ * @returns {string|null}
+ */
+export function v1SelectionFollow(body) {
+  if (!body || typeof body !== "object" || !SELECTION_ACTIONS.includes(body["action"])) {
+    return null
+  }
+  const values = body["data"] ?? body["values"] ?? {}
+  const structure = body["structure"] ?? {}
+  for (const [name, bone] of Object.entries(structure)) {
+    if (!String(bone?.["type"] ?? "").startsWith("select")) continue
+    const chosen = values?.[name]
+    if (typeof chosen !== "string" || !/^(\/|https?:\/\/)/.test(chosen)) continue
+    // Nur wenn der Wert tatsächlich eine der angebotenen Ziel-URLs ist.
+    if (bone?.["values"] && Object.prototype.hasOwnProperty.call(bone["values"], chosen)) return chosen
+  }
+  return null
+}
+
+/**
+ * Normalize the `errors` array so consumers can rely on `fieldPath` being a
+ * LIST of path segments (that is how viur-core declares it and how the bones
+ * match errors to fields: `fieldPath[0] === boneName`).
+ *
+ * Some server paths hand a plain string instead — viur-core's userpassword
+ * login, for example, builds its "Invalid username or password provided" error
+ * with the bare bone name. A string would then be indexed character-wise and
+ * the error would silently never reach any field.
+ *
+ * @param {*} errors
+ * @returns {Array}
+ */
+function normalizeErrors(errors) {
+  if (!Array.isArray(errors)) return []
+  return errors.map((error) => {
+    if (!error || typeof error !== "object") return error
+    const fieldPath = error["fieldPath"]
+    if (fieldPath == null || Array.isArray(fieldPath)) return error
+    return { ...error, fieldPath: String(fieldPath).split(".").filter(Boolean) }
+  })
+}
+
 /**
  * True if `data` is an already-parsed viur-actions envelope-v2 body.
  * The wire carries `version` as the JSON number `2`; we also tolerate the
@@ -47,7 +110,7 @@ export function isEnvelopeV2(data) {
  * Map a classic v1 `action` string (+ errors) to a v2 `(action, status)` pair.
  * Inverse of vi-vue-utils' `v1ActionString`.
  *
- * - `addSuccess` / `editSuccess` / `cloneSuccess` / `deleteSuccess` → the plain
+ * - `addSuccess` / `editSuccess` / `cloneSuccess` / `deleteSuccess` / `moveSuccess` → the plain
  *   verb with `status: "success"`.
  * - `view` / `list` → the verb with `status: "success"` (a completed read).
  * - any other verb (`add` / `edit` / `clone` / custom): `status: "rejected"`
@@ -68,6 +131,8 @@ function v2ActionStatus(action, errors) {
       return { action: "clone", status: "success" }
     case "deleteSuccess":
       return { action: "delete", status: "success" }
+    case "moveSuccess":
+      return { action: "move", status: "success" }
   }
 
   if (action === "view" || action === "list") {
@@ -102,7 +167,7 @@ export function normalizeEnvelope(data) {
   if (isEnvelopeV2(data)) {
     const out = { ...data }
     out["version"] = 2
-    out["errors"] = data["errors"] || []
+    out["errors"] = normalizeErrors(data["errors"])
     if (data["datatype"] === "list" && !data["meta"]) {
       out["meta"] = { cursor: data["cursor"] ?? null, orders: data["orders"] || [] }
     }
@@ -124,8 +189,13 @@ export function normalizeEnvelope(data) {
   const { action, status } = v2ActionStatus(data["action"], data["errors"])
   out["action"] = action
   out["status"] = status
-  out["errors"] = data["errors"] || []
-  out["follow"] = data["follow"] ?? data["next_url"] ?? null
+  out["errors"] = normalizeErrors(data["errors"])
+  // Ziel des Schritts. v1 legt es je nach Stufe anderswo ab:
+  //   next_url          – vom Server gesetzt (z. B. Auswahl des zweiten Faktors)
+  //   params.action_url  – bei einem gerenderten Schritt, der selbst ein Ziel
+  //                        mitbringt (viur-core: der OTP-Schritt des zweiten
+  //                        Faktors kommt als `edit` mit action_url)
+  out["follow"] = data["follow"] ?? data["next_url"] ?? data["params"]?.["action_url"] ?? null
   out["structure"] = data["structure"] ?? null
 
   if (isList) {

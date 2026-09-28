@@ -426,50 +426,50 @@ watch(
     --ck-font-size-base: 14px;
 
     /* Helper variables to avoid duplication in the colors. */
-    --ck-custom-background: var(--sl-color-neutral-200);
-    --ck-custom-foreground: var(--sl-color-neutral-900);
-    --ck-custom-border: var(--sl-color-neutral-100);
-    --ck-custom-white: var(--sl-color-neutral-50);
+    --ck-custom-background: var(--wa-color-neutral-90);
+    --ck-custom-foreground: var(--wa-color-neutral-10);
+    --ck-custom-border: var(--wa-color-neutral-95);
+    --ck-custom-white: var(--wa-color-neutral-95);
 
     /* -- Overrides generic colors. ------------------------------------------------------------- */
     --ck-color-base-foreground: var(--ck-custom-background);
     --ck-color-base-background: var(--ck-custom-background);
-    --ck-color-base-border: var(--sl-color-neutral-300);
-    --ck-color-focus-border: var(--sl-color-neutral-700);
-    --ck-color-text: var(--sl-color-neutral-900);
+    --ck-color-base-border: var(--wa-color-neutral-80);
+    --ck-color-focus-border: var(--wa-color-neutral-40);
+    --ck-color-text: var(--wa-color-neutral-10);
     --ck-color-shadow-drop: hsla(0, 0%, 0%, 0.2);
     --ck-color-shadow-inner: hsla(0, 0%, 0%, 0.1);
 
     /* -- Overrides the default .ck-button class colors. ---------------------------------------- */
     --ck-color-button-default-background: var(--ck-custom-background);
-    --ck-color-button-default-hover-background: var(--sl-color-neutral-50);
-    --ck-color-button-default-active-background: var(--sl-color-neutral-50);
+    --ck-color-button-default-hover-background: var(--wa-color-neutral-95);
+    --ck-color-button-default-active-background: var(--wa-color-neutral-95);
     --ck-color-button-default-active-shadow: hsl(270, 2%, 23%);
     --ck-color-button-default-disabled-background: var(--ck-custom-background);
 
-    --ck-color-button-on-hover-background: var(--sl-color-neutral-50);
+    --ck-color-button-on-hover-background: var(--wa-color-neutral-95);
     --ck-color-button-on-active-background: hsl(255, 4%, 14%);
     --ck-color-button-on-active-shadow: hsl(240, 3%, 19%);
     --ck-color-button-on-disabled-background: var(--ck-custom-foreground);
 
-    --ck-color-button-on-color: var(--sl-color-primary-500);
-    --ck-color-button-on-background: var(--sl-color-neutral-100);
-    --ck-focus-ring: 1px solid var(--sl-color-primary-500);
+    --ck-color-button-on-color: var(--wa-color-brand-50);
+    --ck-color-button-on-background: var(--wa-color-neutral-95);
+    --ck-focus-ring: 1px solid var(--wa-color-brand-50);
     --ck-focus-outer-shadow: none;
 
     --ck-powered-by-text-color: var(--ck-custom-foreground);
     --ck-powered-by-background: var(--ck-custom-background);
 
-    --ck-color-button-action-background: var(--sl-color-primary-600);
-    --ck-color-button-action-hover-background: var(--sl-color-primary-500);
-    --ck-color-button-action-active-background: var(--sl-color-primary-500);
-    --ck-color-button-action-active-shadow: var(--sl-color-primary-500);
-    --ck-color-button-action-disabled-background: var(--sl-color-primary-600);
+    --ck-color-button-action-background: var(--wa-color-brand-60);
+    --ck-color-button-action-hover-background: var(--wa-color-brand-50);
+    --ck-color-button-action-active-background: var(--wa-color-brand-50);
+    --ck-color-button-action-active-shadow: var(--wa-color-brand-50);
+    --ck-color-button-action-disabled-background: var(--wa-color-brand-60);
     --ck-color-button-action-text: var(--ck-custom-white);
 
     /* -- Overrides the default .ck-dropdown class colors. -------------------------------------- */
     --ck-color-dropdown-panel-background: var(--ck-custom-background);
-    --ck-color-dropdown-panel-border: var(--sl-color-neutral-400);
+    --ck-color-dropdown-panel-border: var(--wa-color-neutral-70);
 
     /* -- Overrides the default .ck-splitbutton class colors. ----------------------------------- */
     --ck-color-split-button-hover-background: var(--ck-color-button-default-hover-background);
@@ -480,9 +480,9 @@ watch(
 
     /* -- Overrides the default .ck-list class colors. ------------------------------------------ */
     --ck-color-list-background: var(--ck-custom-background);
-    --ck-color-list-button-hover-background: var(--sl-color-neutral-50);
-    --ck-color-list-button-on-background: var(--sl-color-primary-500);
-    --ck-color-list-button-on-background-focus: var(--sl-color-primary-500);
+    --ck-color-list-button-hover-background: var(--wa-color-neutral-95);
+    --ck-color-list-button-on-background: var(--wa-color-brand-50);
+    --ck-color-list-button-on-background-focus: var(--wa-color-brand-50);
     --ck-color-list-button-on-text: var(--ck-color-base-background);
 
     /* -- Overrides the default .ck-balloon-panel class colors. --------------------------------- */
@@ -502,7 +502,7 @@ watch(
     --ck-color-image-caption-text: var(--ck-custom-foreground);
 
     /* -- Overrides the default colors used by the ckeditor5-link package. ---------------------- */
-    --ck-color-link-default: var(--sl-color-primary-500);
+    --ck-color-link-default: var(--wa-color-brand-50);
 
     width: 100% !important;
 
@@ -511,16 +511,16 @@ watch(
       border: 1px solid var(--vi-border-color) !important;
       width: 100%;
       /*height: 250px;*/
-      border-bottom-left-radius: var(--sl-border-radius-medium) !important;
-      border-bottom-right-radius: var(--sl-border-radius-medium) !important;
+      border-bottom-left-radius: var(--wa-border-radius-m) !important;
+      border-bottom-right-radius: var(--wa-border-radius-m) !important;
 
       &.ck-focused {
-        border: 1px solid var(--sl-color-neutral-600) !important;
+        border: 1px solid var(--wa-color-neutral-50) !important;
 
         .ck-source-editing-area {
           & textarea,
           & td {
-            border: 1px solid var(--sl-color-neutral-600) !important;
+            border: 1px solid var(--wa-color-neutral-50) !important;
           }
         }
       }
@@ -561,18 +561,18 @@ watch(
 
       ul {
         list-style: disc;
-        padding-left: var(--sl-spacing-medium);
+        padding-left: var(--wa-space-m);
         list-style-position: inside;
       }
 
       ol {
-        padding-left: var(--sl-spacing-medium);
+        padding-left: var(--wa-space-m);
         list-style-position: inside;
       }
     }
 
     .ck-toolbar {
-      height: var(--sl-input-height-medium);
+      height: var(--wa-form-control-height);
       border-color: var(--vi-border-color);
       background-color: var(--vi-background-color);
     }
@@ -583,13 +583,13 @@ watch(
       cursor: pointer;
 
       &:hover {
-        background-color: var(--sl-color-neutral-200) !important;
+        background-color: var(--wa-color-neutral-90) !important;
       }
 
       &.ck-on {
         background-color: var(--vi-background-color) !important;
-        border: 1px solid var(--sl-color-primary-500) !important;
-        color: var(--sl-color-primary-500) !important;
+        border: 1px solid var(--wa-color-brand-50) !important;
+        color: var(--wa-color-brand-50) !important;
       }
     }
 
@@ -601,8 +601,8 @@ watch(
         background-color: transparent;
         color: var(--ck-custom-foreground);
         border: 1px solid var(--vi-border-color) !important;
-        border-bottom-left-radius: var(--sl-border-radius-medium) !important;
-        border-bottom-right-radius: var(--sl-border-radius-medium) !important;
+        border-bottom-left-radius: var(--wa-border-radius-m) !important;
+        border-bottom-right-radius: var(--wa-border-radius-m) !important;
       }
     }
   }
@@ -620,7 +620,7 @@ watch(
   }
 }
 
-sl-textarea {
+wa-textarea {
   &::part(base) {
     box-shadow: none !important;
     background-color: transparent;
@@ -629,7 +629,7 @@ sl-textarea {
   &::part(textarea) {
     background-color: transparent;
     border: 1px solid var(--vi-border-color);
-    border-radius: var(--sl-border-radius-medium);
+    border-radius: var(--wa-border-radius-m);
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }

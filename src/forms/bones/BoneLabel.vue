@@ -89,8 +89,8 @@ const state = reactive({
     font-size: var(--wa-input-font-size-medium);
     min-height: var(--wa-input-height-medium);
     padding: 0.4em 0.7em;
-    color: var(--sl-color-neutral-900);
-    background-color: var(--sl-color-neutral-200);
+    color: var(--wa-color-neutral-10);
+    background-color: var(--wa-color-neutral-90);
     border: none;
     border-top-left-radius: var(--wa-input-border-radius-medium);
     border-bottom-left-radius: var(--wa-input-border-radius-medium);
@@ -110,7 +110,7 @@ const state = reactive({
     padding-left: 0.4em;
 
     & wa-icon {
-      background-color: var(--sl-color-danger-500);
+      background-color: var(--wa-color-danger-50);
       color: #fff;
       padding: 0.4em;
       border-radius: 50%;

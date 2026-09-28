@@ -11,7 +11,7 @@
         class="viur-login__loading"
       >
         <wa-spinner></wa-spinner>
-        <span>{{ tr("waiting", "lade...") }}</span>
+        <span>{{ t("login.waiting") }}</span>
       </div>
 
       <template v-else-if="!store.isLoggedIn">
@@ -21,21 +21,35 @@
         <ViForm
           ref="viform"
           module="user"
-          action="login"
+          :action="action"
           :secure="true"
           multistep
           :renderer="renderer ?? undefined"
           :version="version ?? undefined"
           :show-steps="showSteps"
-          :submit-label="tr('login', 'Anmelden')"
+          :submit-label="t('login.login')"
           @success="onFormSuccess"
           @failed="onFailed"
-        />
+        >
+          <!-- Pass the form's own slots through so an app can supply its own
+               chrome (the default action bar is Shoelace; a WebAwesome app
+               replaces it here). Only forwarded when the consumer provides the
+               slot, otherwise ViForm keeps its default. -->
+          <template
+            v-if="$slots.actions"
+            #actions="actionProps"
+          >
+            <slot
+              name="actions"
+              v-bind="actionProps"
+            />
+          </template>
+        </ViForm>
 
         <!-- Google is the one provider that isn't a form step (Identity SDK
              token), so it lives beside the form. -->
-        <template v-if="googleClientId">
-          <div class="viur-login__sep">{{ tr("or", "oder") }}</div>
+        <template v-if="effectiveGoogleClientId">
+          <div class="viur-login__sep">{{ t("login.or") }}</div>
           <div
             ref="googleBtn"
             class="viur-login__google"
@@ -53,62 +67,107 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue"
+import { ref, computed, onMounted, nextTick } from "vue"
 import { useI18n } from "vue-i18n"
 import ViForm from "../forms/ViForm.vue"
+import { useRouter } from "vue-router"
 import { useUserStore } from "./store.js"
+import { useConfigStore } from "../request/configStore.js"
 import { renderGoogleButton } from "./google.js"
 
 const props = defineProps({
   title: { type: String, default: "Login" },
+  // Endpoint below the `user` module that starts the flow. Envelope v2 drives
+  // the whole chain from "login" (chooser → provider → 2FA). A classic v1
+  // backend answers the chooser with the SAME step and no `follow`, so there
+  // the provider is addressed directly, e.g. "auth_userpassword/login".
+  action: { type: String, default: "login" },
   // override the request renderer (default: VITE_DEFAULT_RENDERER || "json")
   renderer: { type: String, default: null },
   // optionally pin the protocol version (default null → unversioned, server
   // aliases to the newest wire format / envelope v2)
   version: { type: [String, Number, null], default: null },
-  // OAuth client id for "Sign in with Google"; omit to hide the Google button
-  googleClientId: { type: String, default: null },
+  // OAuth client id for "Sign in with Google". Omit to take the one the server
+  // advertises via /vi/config ("admin.user.google.clientID"); pass `false` to
+  // never show the Google button.
+  googleClientId: { type: [String, Boolean], default: null },
   // render the multistep progress bar
   showSteps: { type: Boolean, default: false },
   // check for an existing session on mount (and skip login if authenticated)
   autoStart: { type: Boolean, default: true },
+  // Where to go once the session stands (also when `autoStart` finds an
+  // existing one). Routed through vue-router when the app has one, otherwise a
+  // plain location change. Omit to stay put and handle it in `@success`.
+  redirect: { type: String, default: null },
 })
 const emit = defineEmits(["success", "error"])
 
 const store = useUserStore()
+const configStore = useConfigStore()
 const { t } = useI18n()
+// Optional: ohne installierten Router ist das undefined — dann wird per
+// location navigiert.
+const router = useRouter()
 
-// use a translation when present, else the German fallback
-function tr(key, fallback) {
-  const full = `login.${key}`
-  const value = t(full)
-  return value === full ? fallback : value
-}
+// explicit prop wins; `false` disables; otherwise the server config decides
+const effectiveGoogleClientId = computed(() => {
+  if (props.googleClientId === false) return null
+  return props.googleClientId || configStore.googleClientId
+})
 
 const viform = ref(null)
 const googleBtn = ref(null)
 const checking = ref(true)
 const googleError = ref("")
 
+// after a login: admin/root unlock the module part of /vi/config, so refresh
+// it for them (skipped for everyone else). Config is optional for the login
+// itself, so a failure is swallowed.
+function loadAdminConfig() {
+  return configStore.fetchConfig({ user: store.state.user }).catch(() => null)
+}
+
 async function onFormSuccess() {
-  await store.fetchSelf()
-  emit("success", store.state.user)
+  try {
+    await store.fetchSelf()
+    await loadAdminConfig()
+  } finally {
+    emit("success", store.state.user)
+  }
+  await goRedirect().catch(() => null)
 }
 
 function onFailed(error) {
   emit("error", error)
 }
 
+/**
+ * Nach dem Anmelden weiterleiten, wenn `redirect` gesetzt ist. Läuft NACH dem
+ * success-Emit, damit der Aufrufer den Benutzer noch in seinen eigenen Zustand
+ * übernehmen kann (Rechte, Persona-Sichtbarkeit), bevor das Ziel rendert.
+ */
+async function goRedirect() {
+  if (!props.redirect) return
+  if (router) {
+    await router.replace(props.redirect).catch(() => null)
+    return
+  }
+  window.location.assign(props.redirect)
+}
+
 async function onGoogleToken(token) {
   googleError.value = ""
-  const body = await store.loginWithGoogle(token)
+  // loginWithGoogle resolves null on a transport error and never rejects
+  const body = await store.loginWithGoogle(token).catch(() => null)
   if (!body) {
-    googleError.value = tr("google_error", "Ein Fehler ist beim Login aufgetreten.")
+    googleError.value = t("login.google_error")
     emit("error", "google")
     return
   }
   if (body.status === "success" || body.action === "login_success") {
+    await configStore.fetchConfig({ user: store.state.user }).catch(() => null)
     emit("success", store.state.user)
+    await goRedirect().catch(() => null)
     return
   }
   // Google login needs a second factor → continue in the generic form flow.
@@ -119,22 +178,28 @@ async function onGoogleToken(token) {
 }
 
 async function mountGoogleButton() {
-  if (checking.value || store.isLoggedIn || !props.googleClientId) return
+  if (checking.value || store.isLoggedIn || !effectiveGoogleClientId.value) return
   try {
     await nextTick()
-    await renderGoogleButton(googleBtn.value, props.googleClientId, onGoogleToken)
+    await renderGoogleButton(googleBtn.value, effectiveGoogleClientId.value, onGoogleToken)
   } catch {
     /* SDK failed to load — the form login still works */
   }
 }
 
 onMounted(async () => {
-  store.configure({ renderer: props.renderer ?? undefined, googleClientId: props.googleClientId })
+  store.configure({ renderer: props.renderer ?? undefined })
   try {
+    // public settings (google client id, languages) BEFORE anything renders;
+    // without config the form login still works
+    if (!configStore.isLoaded) await configStore.fetchConfig().catch(() => null)
+    store.configure({ googleClientId: effectiveGoogleClientId.value })
     if (props.autoStart) {
       await store.fetchSelf()
       if (store.isLoggedIn) {
+        await loadAdminConfig()
         emit("success", store.state.user)
+        await goRedirect()
         return
       }
     }

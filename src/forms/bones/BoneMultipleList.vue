@@ -16,7 +16,6 @@
           :index="index"
           :lang="lang"
           :name="name"
-          @delete="emit('delete', index)"
         >
           <component
             :is="is"
@@ -67,7 +66,6 @@ const props = defineProps({
   actionbar: { type: Object, default: null },
 })
 
-const emit = defineEmits(["delete"])
 const updateValue = inject("updateValue")
 
 const localEntries = computed({
@@ -84,11 +82,10 @@ function resolveValue(val, index) {
 }
 </script>
 <style scoped>
-.bone-multiple-list{
+.bone-multiple-list {
   background-color: var(--wa-color-surface-lowered);
-  padding:var(--wa-space-xs);
+  padding: var(--wa-space-xs);
   border-radius: var(--wa-border-radius-m);
   border: 1px solid var(--wa-color-surface-border);
 }
-
 </style>

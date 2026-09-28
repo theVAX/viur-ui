@@ -1,4 +1,4 @@
-import type { DefineComponent } from 'vue'
+import type { DefineComponent } from "vue"
 
 export interface BoneProps {
   /** Das Bone-Widget-Component-Objekt (z.B. StringBone). Typischerweise von ViForm gesetzt. */
@@ -24,7 +24,7 @@ export interface BoneProps {
   /** Fehler-Array aus der Server-Antwort. Einträge mit passendem fieldPath werden angezeigt. */
   errors?: unknown[]
   /** Label-Modus. */
-  label?: 'normal' | 'top' | 'hide' | 'placeholder'
+  label?: "normal" | "top" | "hide" | "placeholder"
   /** Aktiviert BoneActions-Schaltflächen neben dem Input. */
   boneactions?: boolean
   /** Zeigt Tooltip-Inhalt als wa-alert statt als Tooltip. */
@@ -36,7 +36,7 @@ export interface BoneProps {
   /** Erzwingt den Tooltip auf dem Input-Bereich unabhängig vom Label-Modus. */
   showBoneTooltip?: boolean
   /** Fehler-Darstellungsstil. */
-  errorStyle?: 'default' | 'decent'
+  errorStyle?: "default" | "decent"
   /** Aktiviert Debug-Modus: Bone-Name als Tooltip am Label. */
   debug?: boolean
 }

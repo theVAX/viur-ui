@@ -198,7 +198,109 @@ describe("multi-step form flow", () => {
 
     expect(state.status).toBe("rejected")
     expect(state.errors).toHaveLength(1)
-    expect(state.errors[0].fieldPath).toBe("password")
+    // fieldPath erreicht die Bones immer als Pfad-Liste — der Bone vergleicht
+    // fieldPath[0] mit seinem Namen. Server, die (wie viur-cores
+    // userpassword-Login) einen bloßen String schicken, werden beim
+    // Normalisieren aufgelöst.
+    expect(state.errors[0].fieldPath).toEqual(["password"])
+  })
+
+  it("splits a dotted fieldPath string into segments", async () => {
+    const rejected = {
+      version: 2,
+      action: "edit",
+      status: "rejected",
+      datatype: "entity",
+      module: "user",
+      structure: STEP1.structure,
+      data: {},
+      errors: [{ severity: 2, fieldPath: "address.0.street", errorMessage: "wrong" }],
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(rejected)))
+
+    const state = makeState()
+    state.structure = { name: { type: "str", visible: true } }
+    state.skel = {}
+    state.postUrl = "/json/v2/user/edit"
+
+    const { sendData } = useFormUtils(makeProps(), state)
+    await sendData(state.postUrl)
+
+    expect(state.errors[0].fieldPath).toEqual(["address", "0", "street"])
+  })
+
+  it("resetForm stellt den Server-Stand ohne neuen Request wieder her", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          action: "edit",
+          values: { name: "Atlas" },
+          structure: { name: { type: "str", visible: true } },
+          errors: [],
+        })
+      )
+    )
+
+    const state = makeState()
+    const { fetchData, resetForm } = useFormUtils(makeProps({ module: "appconf", action: "edit" }), state)
+    await fetchData()
+    expect(state.skel["name"]).toBe("Atlas")
+
+    // Eingabe des Benutzers
+    state.skel["name"] = "geändert"
+    const requests = vi.mocked(fetch).mock.calls.length
+
+    resetForm()
+
+    expect(state.skel["name"]).toBe("Atlas")
+    expect(state.errors).toEqual([])
+    // ohne weiteren Request
+    expect(vi.mocked(fetch).mock.calls.length).toBe(requests)
+  })
+
+  it("baut die URL eines Singletons ohne Key (edit ohne skelkey)", async () => {
+    // Ein Singleton hat genau einen Datensatz; /<modul>/edit nimmt keinen Key.
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ action: "edit", values: {}, structure: { name: { type: "str" } }, errors: [] })
+        )
+    )
+
+    const state = makeState()
+    const { fetchData } = useFormUtils(makeProps({ module: "appconf", action: "edit", skelkey: null }), state)
+    await fetchData()
+
+    const url = String(vi.mocked(fetch).mock.calls[0][0])
+    expect(url).toContain("/appconf/edit")
+    expect(url).not.toContain("undefined")
+  })
+
+  it("leaves an existing fieldPath list untouched", async () => {
+    const rejected = {
+      version: 2,
+      action: "edit",
+      status: "rejected",
+      datatype: "entity",
+      module: "user",
+      structure: STEP1.structure,
+      data: {},
+      errors: [{ severity: 2, fieldPath: ["password"], errorMessage: "wrong" }],
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(rejected)))
+
+    const state = makeState()
+    state.structure = { name: { type: "str", visible: true } }
+    state.skel = {}
+    state.postUrl = "/json/v2/user/edit"
+
+    const { sendData } = useFormUtils(makeProps(), state)
+    await sendData(state.postUrl)
+
+    expect(state.errors[0].fieldPath).toEqual(["password"])
   })
 })
 

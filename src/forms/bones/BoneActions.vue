@@ -3,12 +3,14 @@
     v-for="(action, i) in state.actions"
     :key="action.arg + '_' + name + '_' + lang + '_' + i"
   >
+    <!-- title darf ein i18n-Key sein (z.B. "bone.del") — Klartext bleibt
+         Klartext ($te-Prüfung, keine missing-Key-Warnungen). -->
     <wa-button
       :disabled="isActionDisabled(action, ctx)"
       size="medium"
       appearance="outlined"
       :variant="action.variant ?? 'neutral'"
-      :title="action.title"
+      :title="action.title && $te(action.title) ? $t(action.title) : action.title"
       @click="onClick(action)"
     >
       <wa-icon :name="action.icon"></wa-icon>
@@ -29,7 +31,7 @@
 
 <script setup>
 import { reactive, computed, onMounted, inject } from "vue"
-import { resolveActions, isActionDisabled, getActionHandler } from "./actions"
+import { resolveActions, isActionDisabled, getActionHandler, formConfiguredActions } from "./actions"
 import ActionDialog from "./actions/ActionDialog.vue"
 
 const emit = defineEmits(["change"])
@@ -43,10 +45,23 @@ const props = defineProps({
 })
 
 const boneState = inject("boneState")
+// Vom HOST bereitgestellte Auswahl für relationale Bones (z.B. ein Admin, der
+// einen Listen-Dialog öffnet): `(request) => Promise<Row[]|null>`. Ohne
+// Provider existiert die zugehörige Action schlicht nicht (`when`-Prädikat).
+const relationSelector = inject("viurRelationSelector", null)
+// Für Mehrfach-Übernahme in multiple-Bones (hängt weitere Einträge an) und
+// die Pflicht-Action "Zeile entfernen".
+const addMultipleEntry = inject("addMultipleEntry", null)
+const removeMultipleEntry = inject("removeMultipleEntry", null)
+// Formular-weite Action-Konfiguration (ViForm `actions`-Prop).
+const boneActionsConfig = inject("boneActionsConfig", null)
 
 const state = reactive({
   actions: [],
 })
+
+/** Steckt diese Action-Leiste in einer ZEILE eines multiple-Bones? */
+const multipleRow = props.index !== null && props.index !== undefined
 
 const ctx = computed(() => ({
   name: props.name,
@@ -55,11 +70,23 @@ const ctx = computed(() => ({
   lang: props.lang,
   bone: props.bone,
   boneState,
+  relationSelector,
+  multipleRow,
   update: (val) => emit("change", props.name, val, props.lang, props.index),
+  /** Weiteren Eintrag ans Multiple-Array hängen (Mehrfach-Auswahl). */
+  appendEntry: (val) => addMultipleEntry?.(props.lang ?? null, val),
+  /** DIESE Zeile aus dem Multiple-Array entfernen (Pflicht-Action). */
+  removeEntry: () => removeMultipleEntry?.(props.index, props.lang ?? null),
 }))
 
 onMounted(() => {
-  state.actions = resolveActions(props.bone, props.bone?.params?.actions, boneState)
+  // Formular-Konfiguration VOR den Bone-eigenen params.actions (Bone-Lokales
+  // ist spezifischer); Minus-Einträge gewinnen quellenunabhängig immer.
+  const configured = [...formConfiguredActions(boneActionsConfig, props.name), ...(props.bone?.params?.actions ?? [])]
+  const all = resolveActions(props.bone, configured, boneState, { relationSelector, multipleRow })
+  // Ohne `boneactions` bleiben nur die PFLICHT-Actions (Gerüst, z.B. das
+  // Zeilen-X) — die Leiste als Ganzes ist Opt-in, das Gerüst nicht.
+  state.actions = boneState?.boneactions ? all : all.filter((action) => action.required)
 })
 
 function onClick(action) {

@@ -97,7 +97,6 @@
                 :bonestructure="state.bonestructure"
                 :readonly="state.readonly"
                 :actionbar="state.actionbar"
-                @delete="removeMultipleEntry($event, lang)"
               />
               <bone-single-entry
                 :is="is"
@@ -135,7 +134,6 @@
           :bonestructure="state.bonestructure"
           :readonly="state.readonly"
           :actionbar="state.actionbar"
-          @delete="removeMultipleEntry"
         />
         <bone-single-entry
           :is="is"
@@ -188,7 +186,7 @@ import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
 import rawBone from "./widgets/rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils"
 import BoneActions from "./BoneActions.vue"
-import { resolveActions } from "./actions"
+import { formConfiguredActions, resolveActions } from "./actions"
 import BoneMultipleList from "./BoneMultipleList.vue"
 import BoneSingleEntry from "./BoneSingleEntry.vue"
 import { useI18n } from "vue-i18n"
@@ -287,6 +285,10 @@ const props = defineProps({
 const { t } = useI18n()
 
 const parentBonePath = inject("bonePath", [])
+// Für die Sichtbarkeit der Relations-Auswahl (Action-`when` prüft darauf).
+const relationSelector = inject("viurRelationSelector", null)
+// Formular-weite Action-Konfiguration (ViForm `actions`-Prop).
+const boneActionsConfig = inject("boneActionsConfig", null)
 /** Vollständiger Bone-Pfad als Array für verschachtelte Bone-DOM-IDs. @returns {ComputedRef<string[]>} */
 const bonePath = computed(() => [...(unref(parentBonePath) ?? []), props.name])
 provide("bonePath", bonePath)
@@ -347,7 +349,9 @@ const state = reactive({
   }),
   // Ob ein Tooltip-Text in bonestructure.params vorhanden ist
   hasTooltip: computed(() => {
-    return state.bonestructure && Object.keys(state.bonestructure["params"]).includes("tooltip") ? true : false
+    // `params` kommt von viur-core immer als Objekt; fehlt es (eigener Renderer,
+    // handgebaute Struktur), darf das Formular davon nicht sterben.
+    return state.bonestructure && Object.keys(state.bonestructure["params"] ?? {}).includes("tooltip") ? true : false
   }),
   // Multiple-Status: props.multiple hat Vorrang vor bonestructure.multiple
   multiple: computed(() => {
@@ -422,8 +426,18 @@ const state = reactive({
   labelTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "label-tooltip")), // Eindeutige DOM-ID für den Label-Tooltip-Anker
   boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")), // Eindeutige DOM-ID für den Bone-Tooltip-Anker
   // Ob für diesen Bone überhaupt Actions auflösbar sind (für UI-Wrapper-Sichtbarkeit).
+  // MIT demselben Extra-Kontext und derselben Konfigurations-Merge-Reihenfolge
+  // wie BoneActions selbst — sonst fällt z.B. die Relations-Auswahl
+  // (when: relationSelector) hier raus und der Wrapper versteckt eine real
+  // vorhandene Action, oder eine per ViForm abgewählte bleibt "sichtbar".
   hasActions: computed(
-    () => resolveActions(state.bonestructure, state.bonestructure?.params?.actions, state).length > 0
+    () =>
+      resolveActions(
+        state.bonestructure,
+        [...formConfiguredActions(boneActionsConfig, props.name), ...(state.bonestructure?.params?.actions ?? [])],
+        state,
+        { relationSelector }
+      ).length > 0
   ),
 })
 provide("boneState", state)
@@ -590,10 +604,17 @@ watch(
   }
 )
 
+// Sprach-Tab wählen: die gewünschte Sprache — führt der Bone sie nicht,
+// die erste seiner Sprachen (sonst wäre KEIN Tab aktiv).
+function pickLanguage(wanted) {
+  if (!state.languages?.length || state.languages.includes(wanted)) return wanted
+  return state.languages[0]
+}
+
 watch(
   () => state.defaultLanguage,
   (newVal) => {
-    state.currentLanguage = newVal
+    state.currentLanguage = pickLanguage(newVal)
   }
 )
 
@@ -603,11 +624,13 @@ onBeforeMount(() => {
   } else {
     state.bonevalue = props.skel?.[props.name]
   }
-  state.currentLanguage = state.defaultLanguage
+  state.currentLanguage = pickLanguage(state.defaultLanguage)
 })
 
 provide("updateValue", updateValue)
 provide("addMultipleEntry", addMultipleEntry)
+// Für die Pflicht-Action "removeEntry" (Zeilen-X der Multiple-Listen).
+provide("removeMultipleEntry", removeMultipleEntry)
 provide("removeMultipleEntries", removeMultipleEntries)
 provide("formatString", formatString)
 </script>
@@ -618,7 +641,7 @@ provide("formatString", formatString)
   .bone {
     display: grid;
     grid-template-columns: 235px 1fr;
-    grid-gap: var(--sl-spacing-small);
+    grid-gap: var(--wa-space-s);
     margin-bottom: 20px;
 
     @media (max-width: 900px) {
@@ -704,7 +727,7 @@ provide("formatString", formatString)
   .bone-wrapper {
     display: grid;
     grid-template-columns: 235px 1fr;
-    grid-gap: var(--sl-spacing-small);
+    grid-gap: var(--wa-space-s);
     margin-bottom: 20px;
 
     &.bone-wrapper-record,
@@ -716,20 +739,20 @@ provide("formatString", formatString)
 
       & > :deep(.bone-name) {
         border-bottom-left-radius: 0;
-        border-top-right-radius: var(--sl-border-radius-medium);
+        border-top-right-radius: var(--wa-border-radius-m);
         min-width: 235px;
       }
 
       & > .bone-inner-wrap {
-        padding-top: var(--sl-spacing-small);
-        border-top: 2px solid var(--sl-color-neutral-300);
+        padding-top: var(--wa-space-s);
+        border-top: 2px solid var(--wa-color-neutral-80);
         margin-bottom: 5px;
       }
 
       & .multiple-bone {
-        border-bottom: 1px solid var(--sl-color-neutral-300);
-        padding-bottom: var(--sl-spacing-small);
-        margin-bottom: var(--sl-spacing-small);
+        border-bottom: 1px solid var(--wa-color-neutral-80);
+        padding-bottom: var(--wa-space-s);
+        margin-bottom: var(--wa-space-s);
 
         &:deep(wa-details) {
           &:last-child {
@@ -763,7 +786,7 @@ provide("formatString", formatString)
     --track-color: var(--vi-border-color);
 
     &::part(body) {
-      padding-bottom: var(--sl-spacing-x-small);
+      padding-bottom: var(--wa-space-xs);
       overflow-x: hidden;
     }
 
@@ -781,16 +804,16 @@ provide("formatString", formatString)
           background-color: var(--vi-background-color);
           border: 1px solid var(--vi-border-color);
           border-top: 1px solid var(--vi-background-color) !important;
-          border-bottom: 2px solid var(--sl-color-primary-500) !important;
+          border-bottom: 2px solid var(--wa-color-brand-50) !important;
         }
       }
 
       &::part(base) {
-        background-color: var(--sl-color-neutral-200);
-        border: 1px solid var(--sl-color-neutral-400);
+        background-color: var(--wa-color-neutral-90);
+        border: 1px solid var(--wa-color-neutral-70);
         border-top: 1px solid var(--vi-border-color);
         border-radius: 0;
-        padding: var(--sl-spacing-x-small);
+        padding: var(--wa-space-xs);
         transition: all ease 0.3s;
       }
 
@@ -823,7 +846,7 @@ provide("formatString", formatString)
 
   .multiple-placeholder {
     &:not(.readonly) {
-      margin-bottom: var(--sl-spacing-x-small);
+      margin-bottom: var(--wa-space-xs);
     }
 
     & wa-input {
@@ -838,21 +861,21 @@ provide("formatString", formatString)
       & wa-input {
         &::part(base) {
           border-top-right-radius: 0;
-          border-bottom-left-radius: var(--sl-border-radius-medium);
+          border-bottom-left-radius: var(--wa-border-radius-m);
         }
       }
     }
   }
 
   .multiple-bone {
-    margin-bottom: var(--sl-spacing-x-small);
+    margin-bottom: var(--wa-space-xs);
 
     &:first-child {
-      padding-top: var(--sl-spacing-x-small);
+      padding-top: var(--wa-space-xs);
     }
 
     & .bone-wrapper {
-      margin-bottom: var(--sl-spacing-x-small);
+      margin-bottom: var(--wa-space-xs);
     }
 
     &:first-child {
@@ -865,15 +888,15 @@ provide("formatString", formatString)
     min-width: 1px;
 
     & wa-alert {
-      margin-top: var(--sl-spacing-x-small);
+      margin-top: var(--wa-space-xs);
       background-color: transparent;
 
       &::part(message) {
-        padding: var(--sl-spacing-x-small) var(--sl-spacing-small);
+        padding: var(--wa-space-xs) var(--wa-space-s);
       }
 
       &::part(icon) {
-        padding-left: var(--sl-spacing-small);
+        padding-left: var(--wa-space-s);
       }
     }
   }
@@ -882,13 +905,13 @@ provide("formatString", formatString)
     &::part(base) {
       align-items: center;
       margin-left: 0.5em;
-      background-color: var(--sl-color-info-50);
+      background-color: var(--wa-color-info-95);
       border: none;
       overflow: visible;
     }
 
     &::part(message) {
-      padding: var(--sl-spacing-small);
+      padding: var(--wa-space-s);
     }
 
     &::part(icon) {
@@ -896,7 +919,7 @@ provide("formatString", formatString)
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background-color: var(--sl-color-neutral-0);
+      background-color: var(--wa-color-surface-default);
       width: 1em;
       height: 1em;
       margin-left: -0.5em;
@@ -912,7 +935,7 @@ provide("formatString", formatString)
     padding-left: 0.4em;
 
     & wa-icon {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
       color: #fff;
       padding: 0.4em;
       border-radius: 50%;
@@ -922,16 +945,16 @@ provide("formatString", formatString)
 
   wa-tooltip {
     &::part(body) {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
     }
 
     &::part(base__arrow) {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
     }
   }
 
   .required {
-    color: var(--sl-color-primary-500);
+    color: var(--wa-color-brand-50);
     font-weight: 700;
   }
 
@@ -952,24 +975,24 @@ provide("formatString", formatString)
 
   wa-tooltip.bone-tooltip {
     &::part(body) {
-      background-color: var(--sl-color-primary-500);
+      background-color: var(--wa-color-brand-50);
     }
 
     &::part(base__arrow) {
-      background-color: var(--sl-color-primary-500);
+      background-color: var(--wa-color-brand-50);
     }
   }
 }
 
 .error-msg::part(base) {
   background-color: #ffecec;
-  color: var(--sl-color-danger-700);
+  color: var(--wa-color-danger-30);
 }
 
 .wrapper-bone-row {
   display: flex;
   flex-direction: row;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
 }
 
 .wrapper-bone-block {
@@ -982,7 +1005,7 @@ provide("formatString", formatString)
 wa-input[data-user-invalid]::part(base),
 wa-select[data-user-invalid]::part(combobox),
 wa-checkbox[data-user-invalid]::part(control) {
-  border-color: var(--sl-color-danger-500);
+  border-color: var(--wa-color-danger-50);
 }
 </style>
 -->

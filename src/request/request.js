@@ -1,7 +1,11 @@
-import { ref, watch } from "vue"
+import { ref, computed, watch } from "vue"
 import { createFetch } from "@vueuse/core"
 import { getCached, setCached, invalidateByKey, clearCache } from "./cache.js"
+import { normalizeStructure } from "./skel.js"
 import { normalizeEnvelope } from "./envelope.js"
+import { notify, requestMessage } from "./messageStore.js"
+
+const controllerPath = (controller) => (Array.isArray(controller) ? controller.join(".") : controller)
 
 export class HTTPError extends Error {
   constructor(statusCode, statusText, message, response = null) {
@@ -97,6 +101,12 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       immediate = true,
       cached = false,
       ttl = 0,
+      // push failures to the message store (when one exists)
+      messages = true,
+      // extra request headers for the LIST requests (not the structure fetch):
+      // object or function returning one — e.g. X-VIUR-BONELIST, evaluated per
+      // request so the caller can react to state changes.
+      headers = null,
     } = {}
   ) => {
     const data = ref([]) // skellist
@@ -115,18 +125,32 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       return qs.toString() ? `${base}?${qs}` : base
     }
 
+    /**
+     * Struktur der Liste holen.
+     *
+     * Zwei Antwortformen sind unterwegs:
+     *   • aktuell:  `/<modul>/structure` rendert wie jede andere Aktion, also
+     *     `{ action: "structure.view", values, structure }`
+     *   • historisch (getStructure): `{ viewSkel: {…}, editSkel: {…} }`
+     * Zusätzlich kann die Struktur eine PAAR-LISTE sein
+     * (`json.bone.structure.keytuples`) — normalizeStructure glättet das.
+     */
     async function _fetchStructure() {
-      const url = create_url({ controller, endpoint: "structure", renderer, version })
-      const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
-      if (!resp.ok) return
-      const structureData = await resp.json()
       const skeltype =
         params.value.skelType === "node"
           ? "viewNodeSkel"
           : params.value.skelType === "leaf"
             ? "viewLeafSkel"
             : "viewSkel"
-      if (structureData[skeltype]) structure.value = structureData[skeltype]
+      let url = create_url({ controller, endpoint: "structure", renderer, version })
+      if (params.value.skelType) {
+        url += `${url.includes("?") ? "&" : "?"}skelType=${encodeURIComponent(params.value.skelType)}`
+      }
+      const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
+      if (!resp.ok) return
+      const body = normalizeEnvelope(await resp.json())
+      const raw = body?.["structure"] ?? body?.[skeltype]
+      if (raw) structure.value = normalizeStructure(raw)
     }
 
     const listUrl = ref(_buildUrl())
@@ -139,6 +163,8 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       },
       options: {
         async beforeFetch({ options, url, cancel }) {
+          const extraHeaders = typeof headers === "function" ? headers() : headers
+          if (extraHeaders) options.headers = { ...options.headers, ...extraHeaders }
           if (cached && !_isNext) {
             const hit = await getCached(url, ttl)
             if (hit) {
@@ -162,6 +188,12 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
             await _fetchStructure()
           }
           const list = responseData.data ?? []
+          // Manche Installationen liefern die Struktur in der Liste mit
+          // (Kompatibilitäts-Flag `json.bone.structure.inlists`) — dann ist der
+          // separate Aufruf oben umsonst gewesen, aber diese hier ist aktueller.
+          if (responseData.structure) {
+            structure.value = normalizeStructure(responseData.structure)
+          }
           cursor.value = responseData.meta?.cursor ?? ""
           orders.value = responseData.meta?.orders ?? []
           data.value = _isNext ? data.value.concat(list) : list
@@ -174,6 +206,11 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
         },
         onFetchError(ctx) {
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
+          if (messages) {
+            notify(
+              requestMessage({ method: "GET", endpoint: "list", module: controllerPath(controller), error: ctx.error })
+            )
+          }
           return ctx
         },
       },
@@ -181,7 +218,26 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 
     const { isFetching, isFinished, error, execute: _execute, abort } = useViurFetch(listUrl, { immediate }).json()
 
-    const fetchResult = { data, structure, orders, cursor, isFetching, isFinished, error, execute, next, filter, reset }
+    /** Alles geladen: letzte Antwort da und kein Cursor mehr offen. Ab hier
+     *  dürfen Sortierung/Filter lokal auf dem Datensatz laufen. */
+    const complete = computed(() => isFinished.value && !cursor.value)
+
+    const fetchResult = {
+      data,
+      structure,
+      orders,
+      cursor,
+      params,
+      complete,
+      isFetching,
+      isFinished,
+      error,
+      execute,
+      next,
+      nextAll,
+      filter,
+      reset,
+    }
 
     // when all=true: automatically fetch next pages until cursor is empty
     watch(isFinished, async (finished) => {
@@ -206,12 +262,38 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       return executeAndThrow(fetchResult, _execute)
     }
 
-    function next() {
-      if (!cursor.value) return Promise.resolve()
+    /** Eine Seite nachladen; erkennt das ViUR-Ende (leere Seite mit derselben
+     *  Cursor-Marke) und löscht dann den Cursor. Liefert true bei Fortschritt. */
+    async function _advance() {
+      if (!cursor.value) return false
+      const before = data.value.length
+      const cursorBefore = cursor.value
       params.value = { ...params.value, cursor: cursor.value }
       _isNext = true
       listUrl.value = _buildUrl()
-      return executeAndThrow(fetchResult, _execute)
+      await executeAndThrow(fetchResult, _execute)
+      if (data.value.length === before && cursor.value === cursorBefore) {
+        cursor.value = ""
+        return false
+      }
+      return true
+    }
+
+    /** Die nächsten `pages` Seiten laden (Standard: eine) — z. B. direkt als
+     *  Handler der DataTable-Cursor-Leiste: `@load-more="({ pages }) =>
+     *  pages === 'all' ? list.nextAll() : list.next(pages)"`. */
+    async function next(pages = 1) {
+      let remaining = pages
+      while (remaining-- > 0) {
+        if (!(await _advance())) return
+      }
+    }
+
+    /** Alle restlichen Seiten laden ("Alles laden"). */
+    async function nextAll() {
+      while (await _advance()) {
+        /* bis zum Ende */
+      }
     }
 
     function filter(newParams) {
@@ -230,6 +312,112 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     }
 
     return fetchResult
+  }
+}
+
+/**
+ * Convenience fetch for Tree prototypes: loads nodes and leaves of one parent
+ * node together. Internally composes two list fetches (`skelType=node` and
+ * `skelType=leaf`) that share the same params, so `filter()`/`execute()`/
+ * `reset()` apply to both.
+ *
+ * - `nodes` / `leaves`: the individual skellists
+ * - `data`: nodes followed by leaves, each item enriched with `skelType`
+ * - `structure`: `{ node, leaf }` structures
+ * - `next()`: paginates nodes first, then leaves; `hasMore` tells if there is more
+ * - `open(parententry)`: shortcut for `filter({ ...params, parententry })`
+ *
+ * @param {string|string[]} controller
+ * @param {object} [options] same as `useListFetch` (minus `group`/`url`), plus
+ *   `parententry` (shortcut for `params.parententry`) and `all` (fetch every
+ *   page of both lists automatically)
+ */
+export function useTreeFetch(
+  controller,
+  { params: initialParams = {}, parententry = null, all = false, ...listOptions } = {}
+) {
+  const baseParams = { ...initialParams }
+  if (parententry) baseParams.parententry = parententry
+
+  const listFetch = all ? useListFetchAll : useListFetch
+  const nodes = listFetch(controller, { ...listOptions, params: { ...baseParams, skelType: "node" } })
+  const leaves = listFetch(controller, { ...listOptions, params: { ...baseParams, skelType: "leaf" } })
+
+  const data = computed(() => [
+    ...nodes.data.value.map((skel) => ({ ...skel, skelType: "node" })),
+    ...leaves.data.value.map((skel) => ({ ...skel, skelType: "leaf" })),
+  ])
+  const structure = computed(() => ({ node: nodes.structure.value, leaf: leaves.structure.value }))
+  const isFetching = computed(() => nodes.isFetching.value || leaves.isFetching.value)
+  const isFinished = computed(() => nodes.isFinished.value && leaves.isFinished.value)
+  const error = computed(() => nodes.error.value ?? leaves.error.value)
+  const hasMore = computed(() => !!(nodes.cursor.value || leaves.cursor.value))
+  /** Beide Listen vollständig geladen — Sortierung/Filter dürfen lokal laufen. */
+  const complete = computed(() => isFinished.value && !hasMore.value)
+
+  function _both(fn) {
+    return Promise.all([fn(nodes), fn(leaves)])
+  }
+
+  function execute() {
+    return _both((l) => l.execute())
+  }
+
+  // Eine Seite nachladen: erst Nodes zu Ende, dann Leaves. Das ViUR-Ende
+  // (leere Seite mit derselben Cursor-Marke) erkennt useListFetch.next()
+  // selbst und löscht dann seinen Cursor — hier zählt nur der Fortschritt.
+  async function _nextOf(list) {
+    const before = list.data.value.length
+    await list.next()
+    return list.data.value.length > before
+  }
+
+  async function next() {
+    if (nodes.cursor.value && (await _nextOf(nodes))) return
+    if (leaves.cursor.value) await _nextOf(leaves)
+  }
+
+  /** Alle restlichen Seiten beider Listen laden ("Alles laden"). */
+  async function nextAll() {
+    while (nodes.cursor.value) {
+      if (!(await _nextOf(nodes))) break
+    }
+    while (leaves.cursor.value) {
+      if (!(await _nextOf(leaves))) break
+    }
+  }
+
+  function filter(newParams) {
+    const { skelType: _, ...rest } = newParams
+    return _both((l) => l.filter({ ...rest, skelType: l === nodes ? "node" : "leaf" }))
+  }
+
+  function open(key) {
+    const { skelType: _, cursor: __, ...rest } = nodes.params.value
+    return filter({ ...rest, parententry: key })
+  }
+
+  function reset() {
+    nodes.reset()
+    leaves.reset()
+  }
+
+  return {
+    nodes,
+    leaves,
+    data,
+    structure,
+    isFetching,
+    isFinished,
+    error,
+    hasMore,
+    complete,
+    execute,
+    next,
+    nextAll,
+    filter,
+    open,
+    reset,
   }
 }
 
@@ -254,6 +442,9 @@ export function createControllerFetch({
       // extra URL query string/params, appended to the request URL for GET and
       // POST alike (e.g. query carried on a server-provided `follow` URL)
       query = null,
+      // feed the message store (when one exists): success/rejected on POST,
+      // errors on every method. `false` keeps this request silent.
+      messages = true,
     } = ctx
 
     // Stable cache key: base URL + data params, skey excluded so it stays consistent across requests
@@ -319,12 +510,19 @@ export function createControllerFetch({
         },
         onFetchError(ctx) {
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
+          if (messages) {
+            notify(requestMessage({ method, endpoint, module: controllerPath(controller), error: ctx.error }))
+          }
           return ctx
         },
         async afterFetch(ctx) {
           // Normalize v1/v2 up to the canonical v2 envelope so downstream
           // consumers (and cache/invalidation below) read the entity from `data`.
           ctx.data = normalizeEnvelope(ctx.data)
+          if (messages) {
+            const message = requestMessage({ method, endpoint, module: controllerPath(controller), body: ctx.data })
+            if (message) notify(message)
+          }
           if (cached && method.toUpperCase() === "GET" && _cacheKey) {
             const entityKey = ctx.data?.data?.key
             await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : [])
@@ -512,3 +710,43 @@ export const useAddFetch = createControllerFetch({
   secure: true,
   invalidatesAll: true,
 })
+
+/**
+ * Clone an entry. Works for both prototypes:
+ * - List: `useCloneFetch("items", "/", { key, ...values })`
+ * - Tree: `useCloneFetch("files", "/", { skelType: "node", key, parententry, ...values })`
+ * Pass `bounce: true` to validate without writing (returns the clone form).
+ */
+export const useCloneFetch = createControllerFetch({
+  endpoint: "clone",
+  method: "POST",
+  secure: true,
+  invalidatesAll: true,
+})
+
+/**
+ * Preview an entry without writing it (List prototype only).
+ * `usePreviewFetch("items", "/", { ...values })`
+ */
+export const usePreviewFetch = createControllerFetch({ endpoint: "preview", method: "POST", secure: true })
+
+/**
+ * Move a node or leaf to another node (Tree prototype only).
+ * `useMoveFetch("files", "/", { skelType: "leaf", key, parentNode, sortindex })`
+ * Invalidates the moved entity and all cached lists of the controller, since
+ * both the source and destination node listings change.
+ */
+export const useMoveFetch = createControllerFetch({
+  endpoint: "move",
+  method: "POST",
+  secure: true,
+  invalidates: true,
+  invalidatesAll: true,
+})
+
+/**
+ * List the root nodes (repositories) available to the current user (Tree
+ * prototype only). The response is a plain array of `{ name, key }`.
+ * `useListRootNodesFetch("files")`
+ */
+export const useListRootNodesFetch = createControllerFetch({ endpoint: "listRootNodes" })

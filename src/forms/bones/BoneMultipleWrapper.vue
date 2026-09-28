@@ -12,8 +12,10 @@
         <slot></slot>
       </div>
       <div class="wa-cluster wa-gap-xs">
+        <!-- IMMER gerendert: Das Zeilen-X ist die Pflicht-Action "removeEntry"
+             (actions/index.js) — BoneActions filtert ohne `boneactions` selbst
+             auf die Pflicht-Actions herunter. -->
         <bone-actions
-          v-if="boneState.boneactions && boneState.hasActions"
           :value="state.value"
           :name="name"
           :lang="lang"
@@ -21,16 +23,6 @@
           :bone="boneState.bonestructure"
           @change="updateValue"
         ></bone-actions>
-        <wa-button
-          variant="danger"
-          :disabled="boneState.readonly"
-          appearance="outlined"
-          :title="$t('bone.del')"
-          class="bone-delete-button"
-          @click="emit('delete')"
-        >
-          <wa-icon name="xmark"></wa-icon>
-        </wa-button>
       </div>
     </div>
   </div>
@@ -57,7 +49,6 @@ const state = reactive({
   }),
 })
 
-const emit = defineEmits(["change", "delete"])
 
 const boneState = inject("boneState")
 const updateValue = inject("updateValue")
@@ -66,7 +57,7 @@ const updateValue = inject("updateValue")
 <style scoped>
 .value-line {
   display: flex;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
   align-items: flex-start;
 }
 
@@ -76,8 +67,8 @@ const updateValue = inject("updateValue")
 
   & :deep(wa-input) {
     &::part(base) {
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-      border-top-left-radius: var(--sl-border-radius-medium);
+      border-bottom-left-radius: var(--wa-border-radius-m);
+      border-top-left-radius: var(--wa-border-radius-m);
     }
   }
 
@@ -108,7 +99,7 @@ const updateValue = inject("updateValue")
   width: 100%;
   display: flex;
   flex-direction: row;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
 }
 </style>
 -->

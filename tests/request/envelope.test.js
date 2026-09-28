@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { normalizeEnvelope, isEnvelopeV2 } from "../../src/request/envelope.js"
+import { normalizeEnvelope, isEnvelopeV2, v1SelectionFollow } from "../../src/request/envelope.js"
 
 describe("isEnvelopeV2", () => {
   it("detects the JSON number version 2", () => {
@@ -68,6 +68,12 @@ describe("normalizeEnvelope — v1 → v2 entity", () => {
     expect(out.status).toBe("success")
   })
 
+  it("maps moveSuccess → action move / status success", () => {
+    const out = normalizeEnvelope({ action: "moveSuccess", values: { key: "k" } })
+    expect(out.action).toBe("move")
+    expect(out.status).toBe("success")
+  })
+
   it("maps addSuccess → action add / status success", () => {
     const out = normalizeEnvelope({ action: "addSuccess", values: { key: "k" } })
     expect(out.action).toBe("add")
@@ -114,5 +120,102 @@ describe("normalizeEnvelope — idempotency", () => {
     const once = normalizeEnvelope(v1)
     const twice = normalizeEnvelope(once)
     expect(twice).toEqual(once)
+  })
+})
+
+// --------------------------------------------------------------------------- //
+// Ziel des nächsten Login-Schritts (v1)                                       //
+// --------------------------------------------------------------------------- //
+//
+// v2 liefert `follow`. In v1 wechselt die Stelle je Stufe:
+//   Provider-Auswahl / Zweitfaktor-Auswahl → der gewählte Wert
+//   vom Server gesetzt                     → next_url
+//   gerenderter Schritt mit eigenem Ziel   → params.action_url (OTP)
+
+const providerChooser = (action, chosen) => ({
+  action,
+  values: { provider: chosen },
+  structure: {
+    provider: {
+      type: "select",
+      values: {
+        "/vi/user/auth_userpassword/login": "Username & Password",
+        "/vi/user/auth_googleaccount/login": "Google Account",
+      },
+    },
+  },
+  errors: [],
+})
+
+describe("v1SelectionFollow", () => {
+  it("nimmt den gewählten Provider als Ziel (primäre Auswahl)", () => {
+    const body = normalizeEnvelope(
+      providerChooser("select_authentication_provider", "/vi/user/auth_userpassword/login")
+    )
+    expect(v1SelectionFollow(body)).toBe("/vi/user/auth_userpassword/login")
+  })
+
+  it("gilt genauso für die Auswahl des zweiten Faktors", () => {
+    const body = normalizeEnvelope({
+      action: "select_secondfactor_provider",
+      values: { provider: "/vi/user/f2_timebasedotp/start" },
+      structure: {
+        provider: { type: "select", values: { "/vi/user/f2_timebasedotp/start": "Time based OTP" } },
+      },
+      errors: [],
+    })
+    expect(v1SelectionFollow(body)).toBe("/vi/user/f2_timebasedotp/start")
+  })
+
+  it("ignoriert Werte, die nicht zu den angebotenen Zielen gehören", () => {
+    const body = normalizeEnvelope(providerChooser("select_authentication_provider", "/vi/user/fremd/login"))
+    expect(v1SelectionFollow(body)).toBeNull()
+  })
+
+  it("ignoriert andere Schritte", () => {
+    const body = normalizeEnvelope({
+      action: "login",
+      values: { name: "a@b.c", password: "" },
+      structure: { name: { type: "str.email" } },
+      errors: [],
+    })
+    expect(v1SelectionFollow(body)).toBeNull()
+  })
+})
+
+describe("normalizeEnvelope — Ziel eines v1-Schritts", () => {
+  it("übernimmt next_url als follow", () => {
+    const out = normalizeEnvelope({
+      action: "select_secondfactor_provider_success",
+      values: {},
+      structure: {},
+      next_url: "/vi/user/f2_timebasedotp/start",
+      errors: [],
+    })
+    expect(out.follow).toBe("/vi/user/f2_timebasedotp/start")
+  })
+
+  it("übernimmt params.action_url (OTP-Schritt kommt als edit)", () => {
+    const out = normalizeEnvelope({
+      action: "edit",
+      values: { otptoken: "" },
+      structure: { otptoken: { type: "str" } },
+      params: { action_name: "TimeBasedOTP", action_url: "/vi/user/f2_timebasedotp/otp" },
+      errors: [],
+    })
+    expect(out.follow).toBe("/vi/user/f2_timebasedotp/otp")
+  })
+
+  it("bevorzugt ein echtes follow vor den v1-Quellen", () => {
+    const out = normalizeEnvelope({
+      action: "edit",
+      values: {},
+      structure: {},
+      follow: "/json/v2/user/auth_otp",
+      next_url: "/vi/anders",
+      params: { action_url: "/vi/noch_anders" },
+      errors: [],
+    })
+    expect(out.follow).toBe("/json/v2/user/auth_otp")
   })
 })

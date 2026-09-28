@@ -3,10 +3,15 @@ import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
 import {
   useListFetch,
   useListFetchAll,
+  useTreeFetch,
   useViewFetch,
   useEditFetch,
   useAddFetch,
   useDeleteFetch,
+  useCloneFetch,
+  usePreviewFetch,
+  useMoveFetch,
+  useListRootNodesFetch,
   useStructureFetch,
   createControllerFetch,
   uploadFile,
@@ -200,6 +205,71 @@ describe("useListFetch", () => {
     expect(result.structure.value).toEqual(viewSkel)
   })
 
+  it("liest die Struktur aus der HEUTIGEN Antwort von /structure", async () => {
+    // /<modul>/structure rendert wie jede andere Aktion:
+    // { action: "structure.view", values, structure } — nicht { viewSkel }.
+    const bones = { name: { type: "str" }, age: { type: "numeric" } }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/structure")) {
+          return jsonResponse({ action: "structure.view", values: {}, structure: bones, errors: [] })
+        }
+        return jsonResponse({ skellist: [{ key: "e1" }], cursor: "", orders: [] })
+      })
+    )
+
+    const result = useListFetch("items", { immediate: false })
+    await result.execute()
+    await waitUntilFinished(result)
+
+    expect(result.structure.value).toEqual(bones)
+  })
+
+  it("glättet eine Struktur in Paar-Form (json.bone.structure.keytuples)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/structure")) {
+          return jsonResponse({
+            action: "structure.view",
+            values: {},
+            structure: [
+              ["name", { type: "str" }],
+              ["age", { type: "numeric" }],
+            ],
+            errors: [],
+          })
+        }
+        return jsonResponse({ skellist: [], cursor: "", orders: [] })
+      })
+    )
+
+    const result = useListFetch("items", { immediate: false })
+    await result.execute()
+    await waitUntilFinished(result)
+
+    expect(result.structure.value).toEqual({ name: { type: "str" }, age: { type: "numeric" } })
+  })
+
+  it("nimmt die Struktur aus der Liste, wenn sie mitkommt", async () => {
+    // Mit dem Flag `json.bone.structure.inlists` liefert die Liste sie direkt.
+    const bones = { title: { type: "str" } }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/structure")) return jsonResponse({ viewSkel: { veraltet: {} } })
+        return jsonResponse({ skellist: [{ key: "e1" }], structure: bones, cursor: "", orders: [] })
+      })
+    )
+
+    const result = useListFetch("items", { immediate: false })
+    await result.execute()
+    await waitUntilFinished(result)
+
+    expect(result.structure.value).toEqual(bones)
+  })
+
   it("returns orders from response", async () => {
     vi.stubGlobal("fetch", makeFetch({ orders: ["name asc", "date desc"] }))
 
@@ -337,6 +407,116 @@ describe("useListFetchAll", () => {
     )
 
     expect(result.data.value.map((e) => e.key)).toEqual(["p1", "p2", "p3"])
+  })
+})
+
+// ─── useTreeFetch ─────────────────────────────────────────────────────────────
+
+function makeTreeFetch({ nodeCursor = "", leafCursor = "" } = {}) {
+  let nodePage = 0
+  let leafPage = 0
+  return vi.fn().mockImplementation(async (url) => {
+    if (url.includes("/structure")) return jsonResponse({ viewNodeSkel: { name: {} }, viewLeafSkel: { file: {} } })
+    if (url.includes("skelType=node")) {
+      nodePage++
+      return jsonResponse({
+        skellist: [{ key: `n${nodePage}` }],
+        cursor: nodePage === 1 ? nodeCursor : "",
+        orders: [],
+      })
+    }
+    if (url.includes("skelType=leaf")) {
+      leafPage++
+      return jsonResponse({
+        skellist: [{ key: `l${leafPage}` }],
+        cursor: leafPage === 1 ? leafCursor : "",
+        orders: [],
+      })
+    }
+    throw new Error(`unexpected url ${url}`)
+  })
+}
+
+describe("useTreeFetch", () => {
+  it("fetches nodes and leaves of a parent and combines them", async () => {
+    const fetchMock = makeTreeFetch()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const tree = useTreeFetch("files", { parententry: "root1" })
+    await waitUntilFinished(tree)
+
+    const listUrls = fetchMock.mock.calls.map(([u]) => u).filter((u) => u.includes("/list"))
+    expect(listUrls).toHaveLength(2)
+    expect(listUrls.some((u) => u.includes("skelType=node") && u.includes("parententry=root1"))).toBe(true)
+    expect(listUrls.some((u) => u.includes("skelType=leaf") && u.includes("parententry=root1"))).toBe(true)
+
+    expect(tree.nodes.data.value).toEqual([{ key: "n1" }])
+    expect(tree.leaves.data.value).toEqual([{ key: "l1" }])
+    expect(tree.data.value).toEqual([
+      { key: "n1", skelType: "node" },
+      { key: "l1", skelType: "leaf" },
+    ])
+    expect(tree.structure.value).toEqual({ node: { name: {} }, leaf: { file: {} } })
+    expect(tree.hasMore.value).toBe(false)
+    expect(tree.error.value).toBeNull()
+  })
+
+  it("next() paginates nodes first, then leaves", async () => {
+    vi.stubGlobal("fetch", makeTreeFetch({ nodeCursor: "n-more", leafCursor: "l-more" }))
+
+    const tree = useTreeFetch("files", { parententry: "root1" })
+    await waitUntilFinished(tree)
+    expect(tree.hasMore.value).toBe(true)
+
+    await tree.next()
+    await waitUntilFinished(tree)
+    expect(tree.nodes.data.value.map((e) => e.key)).toEqual(["n1", "n2"])
+    expect(tree.leaves.data.value.map((e) => e.key)).toEqual(["l1"])
+    expect(tree.hasMore.value).toBe(true)
+
+    await tree.next()
+    await waitUntilFinished(tree)
+    expect(tree.leaves.data.value.map((e) => e.key)).toEqual(["l1", "l2"])
+    expect(tree.hasMore.value).toBe(false)
+  })
+
+  it("open() re-fetches both lists for a new parententry, keeping other params", async () => {
+    const fetchMock = makeTreeFetch()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const tree = useTreeFetch("files", { parententry: "root1", params: { orderby: "name" } })
+    await waitUntilFinished(tree)
+
+    await tree.open("sub1")
+    await waitUntilFinished(tree)
+
+    const listUrls = fetchMock.mock.calls.map(([u]) => u).filter((u) => u.includes("parententry=sub1"))
+    expect(listUrls).toHaveLength(2)
+    expect(listUrls.every((u) => u.includes("orderby=name"))).toBe(true)
+    expect(listUrls.some((u) => u.includes("skelType=node"))).toBe(true)
+    expect(listUrls.some((u) => u.includes("skelType=leaf"))).toBe(true)
+    expect(tree.data.value.map((e) => e.key)).toEqual(["n2", "l2"])
+  })
+
+  it("all: true fetches every page of both lists", async () => {
+    vi.stubGlobal("fetch", makeTreeFetch({ nodeCursor: "n-more", leafCursor: "l-more" }))
+
+    const tree = useTreeFetch("files", { parententry: "root1", all: true })
+    await vi.waitFor(() => {
+      if (tree.data.value.length !== 4) throw new Error("not all pages yet")
+    })
+    expect(tree.data.value.map((e) => e.key)).toEqual(["n1", "n2", "l1", "l2"])
+    expect(tree.hasMore.value).toBe(false)
+  })
+
+  it("reset() clears both lists", async () => {
+    vi.stubGlobal("fetch", makeTreeFetch())
+
+    const tree = useTreeFetch("files", { parententry: "root1" })
+    await waitUntilFinished(tree)
+    tree.reset()
+    expect(tree.data.value).toEqual([])
+    expect(tree.structure.value).toEqual({ node: {}, leaf: {} })
   })
 })
 
@@ -550,6 +730,126 @@ describe("useDeleteFetch", () => {
   })
 })
 
+// ─── useCloneFetch ────────────────────────────────────────────────────────────
+
+describe("useCloneFetch", () => {
+  it("List: POSTs key with skey to /json/{controller}/clone and clears controller cache", async () => {
+    const listKey = `${BASE}/json/items/list`
+    await setCached(listKey, { skellist: [] }, [])
+
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk-clone"])
+      return jsonResponse({ action: "cloneSuccess", values: { key: "cloned" } })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = useCloneFetch("items", "/", { key: "src1", name: "Copy" })
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => u.includes("/clone"))
+    expect(url).toContain(`${BASE}/json/items/clone`)
+    expect(options.method).toBe("POST")
+    expect(options.body.get("key")).toBe("src1")
+    expect(options.body.get("skey")).toBe("sk-clone")
+    expect(result.data.value.action).toBe("clone")
+    expect(result.data.value.status).toBe("success")
+
+    const cached = await import("../../src/request/cache.js").then((m) => m.getCached(listKey, 0))
+    expect(cached).toBeNull()
+  })
+
+  it("Tree: passes skelType and parententry in the body", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk-clone"])
+      return jsonResponse({ action: "cloneSuccess", values: { key: "cloned" } })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = useCloneFetch("files", "/", { skelType: "node", key: "n1", parententry: "root1" })
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => u.includes("/clone"))
+    expect(url).toContain(`${BASE}/json/files/clone`)
+    expect(options.body.get("skelType")).toBe("node")
+    expect(options.body.get("parententry")).toBe("root1")
+  })
+})
+
+// ─── usePreviewFetch ──────────────────────────────────────────────────────────
+
+describe("usePreviewFetch", () => {
+  it("POSTs values with skey to /json/{controller}/preview", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk-prev"])
+      return jsonResponse({ action: "view", values: { name: "Draft" } })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = usePreviewFetch("items", "/", { name: "Draft" })
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => u.includes("/preview"))
+    expect(url).toContain(`${BASE}/json/items/preview`)
+    expect(options.method).toBe("POST")
+    expect(options.body.get("name")).toBe("Draft")
+    expect(options.body.get("skey")).toBe("sk-prev")
+    expect(result.data.value.data).toEqual({ name: "Draft" })
+  })
+})
+
+// ─── useMoveFetch ─────────────────────────────────────────────────────────────
+
+describe("useMoveFetch", () => {
+  it("POSTs skelType/key/parentNode with skey and invalidates entity + controller cache", async () => {
+    const viewKey = `${BASE}/json/files/view?key=leaf1&skelType=leaf`
+    const listKey = `${BASE}/json/files/list?skelType=leaf&parententry=old`
+    await setCached(viewKey, { values: { key: "leaf1" } }, ["leaf1"])
+    await setCached(listKey, { skellist: [] }, [])
+
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk-move"])
+      return jsonResponse({ action: "moveSuccess", values: { key: "leaf1", parententry: "new" } })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = useMoveFetch("files", "/", { skelType: "leaf", key: "leaf1", parentNode: "new", sortindex: 5 })
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => u.includes("/move"))
+    expect(url).toContain(`${BASE}/json/files/move`)
+    expect(options.method).toBe("POST")
+    expect(options.body.get("skelType")).toBe("leaf")
+    expect(options.body.get("key")).toBe("leaf1")
+    expect(options.body.get("parentNode")).toBe("new")
+    expect(options.body.get("sortindex")).toBe("5")
+    expect(options.body.get("skey")).toBe("sk-move")
+    expect(result.data.value.action).toBe("move")
+    expect(result.data.value.status).toBe("success")
+
+    const cache = await import("../../src/request/cache.js")
+    expect(await cache.getCached(viewKey, 0)).toBeNull()
+    expect(await cache.getCached(listKey, 0)).toBeNull()
+  })
+})
+
+// ─── useListRootNodesFetch ────────────────────────────────────────────────────
+
+describe("useListRootNodesFetch", () => {
+  it("GETs /json/{controller}/listRootNodes and returns the plain array", async () => {
+    const rootNodes = [{ name: "Default", key: "root1" }]
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(rootNodes))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = useListRootNodesFetch("files")
+    await waitUntilFinished(result)
+
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).toBe(`${BASE}/json/files/listRootNodes`)
+    expect(options.method).toBe("GET")
+    expect(result.data.value).toEqual(rootNodes)
+  })
+})
+
 // ─── createControllerFetch options ───────────────────────────────────────────
 
 describe("createControllerFetch options", () => {
@@ -730,5 +1030,115 @@ describe("uploadFile", () => {
 
     const file = new File(["x"], "x.txt")
     await expect(uploadFile(file)).rejects.toThrow("getUploadURL failed")
+  })
+})
+
+describe("useTreeFetch — parententry bleibt über filter()/next() erhalten", () => {
+  it("filter mit parententry + anschließende next()-Seiten tragen Ort und amount", async () => {
+    let call = 0
+    const urls = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        urls.push(url)
+        if (url.includes("/structure")) return jsonResponse({ viewNodeSkel: {}, viewLeafSkel: {} })
+        call++
+        return jsonResponse({ skellist: [{ key: `e${call}` }], cursor: call < 8 ? `c${call}` : "", orders: [] })
+      })
+    )
+    const tree = useTreeFetch("files", { params: { limit: 10 }, immediate: false })
+    await tree.open("root-1")
+    // Seitengrößen-Wechsel: neues limit, Ort MUSS mitkommen (ViurBrowser currentParams)
+    await tree.filter({ limit: 50, parententry: "root-1" })
+    await tree.next()
+    await tree.next()
+
+    const afterFilter = urls.filter((u) => u.includes("/list") && u.includes("limit=50"))
+    expect(afterFilter.length).toBeGreaterThanOrEqual(3)
+    for (const url of afterFilter) {
+      expect(url, url).toContain("parententry=root-1")
+    }
+  })
+})
+
+describe("useTreeFetch — nextAll lädt beide Listen vollständig", () => {
+  function staleCursorServer(nodePages, leafPages) {
+    let nodeCalls = 0
+    let leafCalls = 0
+    return vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) return jsonResponse({ viewNodeSkel: {}, viewLeafSkel: {} })
+      if (url.includes("skelType=node")) {
+        nodeCalls++
+        // letzte "Seite": leer, aber mit DERSELBEN Cursor-Marke (ViUR-Ende)
+        if (nodeCalls > nodePages) return jsonResponse({ skellist: [], cursor: `n${nodePages}`, orders: [] })
+        return jsonResponse({ skellist: [{ key: `n-${nodeCalls}` }], cursor: `n${nodeCalls}`, orders: [] })
+      }
+      leafCalls++
+      if (leafCalls > leafPages) return jsonResponse({ skellist: [], cursor: `l${leafPages}`, orders: [] })
+      return jsonResponse({ skellist: [{ key: `l-${leafCalls}` }], cursor: `l${leafCalls}`, orders: [] })
+    })
+  }
+
+  it("nextAll() lädt Nodes UND Leaves bis zum Ende (stale-Cursor-Abschluss)", async () => {
+    vi.stubGlobal("fetch", staleCursorServer(3, 2))
+    const tree = useTreeFetch("files", { parententry: "root-1", immediate: false })
+    await tree.execute()
+    await tree.nextAll()
+    expect(tree.data.value.map((e) => e.key)).toEqual(["n-1", "n-2", "n-3", "l-1", "l-2"])
+    expect(tree.hasMore.value).toBe(false)
+    expect(tree.complete.value).toBe(true)
+  })
+
+  it("next() bleibt nicht am Nodes-Ende hängen, sondern lädt danach Leaves", async () => {
+    vi.stubGlobal("fetch", staleCursorServer(1, 2))
+    const tree = useTreeFetch("files", { parententry: "root-1", immediate: false })
+    await tree.execute() // Seite 1 beider Listen
+    await tree.next() // Nodes: leere Seite mit altem Cursor → erschöpft → Leaves Seite 2
+    expect(tree.data.value.map((e) => e.key)).toEqual(["n-1", "l-1", "l-2"])
+    await tree.next()
+    expect(tree.hasMore.value).toBe(false)
+  })
+})
+
+describe("useListFetch — next(pages) / nextAll", () => {
+  function pagedServer(pages) {
+    let calls = 0
+    return vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+      calls++
+      // Ende: leere Seite mit derselben Cursor-Marke (ViUR-Verhalten)
+      if (calls > pages) return jsonResponse({ skellist: [], cursor: `c${pages}`, orders: [] })
+      return jsonResponse({ skellist: [{ key: `e${calls}` }], cursor: `c${calls}`, orders: [] })
+    })
+  }
+
+  it("next(3) lädt drei Seiten", async () => {
+    vi.stubGlobal("fetch", pagedServer(10))
+    const list = useListFetch("items", { immediate: false })
+    await list.execute()
+    await list.next(3)
+    expect(list.data.value.map((e) => e.key)).toEqual(["e1", "e2", "e3", "e4"])
+    expect(list.cursor.value).toBe("c4")
+  })
+
+  it("nextAll() lädt bis zum Stale-Cursor-Ende und löscht den Cursor", async () => {
+    vi.stubGlobal("fetch", pagedServer(4))
+    const list = useListFetch("items", { immediate: false })
+    expect(list.complete.value).toBe(false)
+    await list.execute()
+    expect(list.complete.value).toBe(false) // Cursor offen
+    await list.nextAll()
+    expect(list.data.value.map((e) => e.key)).toEqual(["e1", "e2", "e3", "e4"])
+    expect(list.cursor.value).toBe("")
+    expect(list.complete.value).toBe(true)
+  })
+
+  it("next() über das Ende hinaus bleibt harmlos", async () => {
+    vi.stubGlobal("fetch", pagedServer(1))
+    const list = useListFetch("items", { immediate: false })
+    await list.execute()
+    await list.nextAll()
+    await list.next()
+    expect(list.data.value.map((e) => e.key)).toEqual(["e1"])
   })
 })

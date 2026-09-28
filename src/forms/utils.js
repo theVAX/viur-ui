@@ -1,6 +1,6 @@
-import { createControllerFetch, normalizeEnvelope } from "../request/index.js"
+import { createControllerFetch, normalizeEnvelope, normalizeStructure } from "../request/index.js"
 import Logics from "logics-js"
-import { inject, toRaw, reactive } from "vue"
+import { inject, toRaw, reactive, markRaw } from "vue"
 import Utils from "./bones/utils"
 
 export function useFormUtils(props, state) {
@@ -18,8 +18,12 @@ export function useFormUtils(props, state) {
         path += `/${props.skeltype}`
       }
 
+      // Nur mit Key anhängen: ein SINGLETON hat genau einen Datensatz, sein
+      // `edit` kennt keinen Key. Ohne diese Prüfung entstand `/edit/undefined`.
       if (["edit", "clone"].includes(props.action) || (isTree && props.action === "add")) {
-        path += `/${props.skelkey}`
+        if (props.skelkey) {
+          path += `/${props.skelkey}`
+        }
       }
     }
 
@@ -39,19 +43,6 @@ export function useFormUtils(props, state) {
       // preserve any query string from a server-provided url (e.g. a `follow`
       // step url) so it is passed through to the request
       query: parsedUrl.search ? parsedUrl.search.slice(1) : "",
-    }
-  }
-
-  function normalizeStructure(structure) {
-    //ensure that structure is a Object
-    if (Array.isArray(structure)) {
-      let struct = {}
-      for (const idx in structure) {
-        struct[structure[idx][0]] = structure[idx][1]
-      }
-      return struct
-    } else {
-      return structure
     }
   }
 
@@ -129,11 +120,19 @@ export function useFormUtils(props, state) {
         version: props.version,
         query: requestSpec.query,
         immediate: false,
+        messages: props.useMessageStore !== false,
       }
     )
     try {
       await fetchResult.execute()
       applyResponseState(fetchResult.data.value, { updateStructure: true })
+      // Ein v1-Schritt bringt kein Ziel mit (kein `follow`, kein next_url, kein
+      // params.action_url) — dort wird der Schritt an DIESELBE URL
+      // zurückgeschickt, aus der er gerendert wurde. Ohne das stünde postUrl
+      // nach dem Rendern auf null und der Absenden-Knopf liefe ins Leere.
+      if (!state.postUrl && url) {
+        state.postUrl = url
+      }
       return fetchResult
     } catch (error) {
       state.failed = error
@@ -280,6 +279,7 @@ export function useFormUtils(props, state) {
       query: requestSpec.query,
       headers,
       immediate: false,
+      messages: props.useMessageStore !== false,
     })
 
     return fetchResult
@@ -328,6 +328,7 @@ export function useFormUtils(props, state) {
       query: requestSpec.query,
       headers,
       immediate: false,
+      messages: props.useMessageStore !== false,
     })
 
     return fetchResult
@@ -540,14 +541,31 @@ export function useFormUtils(props, state) {
     }
 
     state.skel = { ...skeldata, ...formvalues }
+    // Stand festhalten, wie er hereinkam: `state.skel` ist die Arbeitskopie und
+    // wird beim Tippen verändert. resetForm() stellt daraus wieder her, ohne
+    // erneut zu laden ("Änderungen verwerfen").
+    // markRaw: reine Lesedaten. Ohne das läge hier ein reaktiver Proxy, den
+    // structuredClone nicht kopieren kann.
+    state.pristine = markRaw(structuredClone(toRaw(state.skel)))
 
     state.categories = updateCategories()
+  }
+
+  /**
+   * Änderungen verwerfen: die Werte des letzten Server-Stands wieder einsetzen,
+   * OHNE neuen Request (dafür ist reload() da). Struktur und Kategorien bleiben.
+   */
+  function resetForm() {
+    if (state.pristine === undefined || state.pristine === null) return
+    initForm(structuredClone(toRaw(state.pristine)), undefined, state.values)
+    state.errors = []
   }
 
   return {
     fetchData,
     sendData,
     loadStep,
+    resetForm,
     back,
     buildRequestUrl: () => {
       const requestSpec = buildRequestSpec()

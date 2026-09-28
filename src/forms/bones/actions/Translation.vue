@@ -4,7 +4,7 @@
       <div class="translate-flex">
         <wa-textarea
           :value="state.value_de"
-          label="Original Sprache (de):"
+          :label="t('actions.translate.original', { lang: 'de' })"
           @change="updateValueDe"
         ></wa-textarea>
       </div>
@@ -16,7 +16,7 @@
       <div class="translate-flex">
         <wa-textarea
           :value="state.result || '-'"
-          :label="`Zielsprache (` + state.currentLang + `):`"
+          :label="t('actions.translate.target', { lang: state.currentLang })"
           @change="updateValue"
         ></wa-textarea>
       </div>
@@ -24,8 +24,7 @@
 
     <div class="translate-footer">
       <span class="translate-small-print">
-        * Bei der Übersetzung kommt künstliche Intelligenz zum Einsatz. Die Ergebnisse können daher fehlerhaft sein.
-        Bitte prüfen Sie daher stets das Ergebnis.
+        {{ t("actions.aiHint") }}
       </span>
       <div></div>
       <wa-button
@@ -34,7 +33,7 @@
         :loading="state.loading"
         @click="translate"
       >
-        Übersetzen
+        {{ t("actions.translate.run") }}
       </wa-button>
     </div>
   </div>
@@ -61,21 +60,24 @@
       :disabled="!state.nextlang"
       @click="nextlang"
     >
-      Übernehmen und nächste leere Sprache
+      {{ t("actions.translate.applyNext") }}
     </wa-button>
     <wa-button
       variant="success"
       size="small"
       @click="ApplySelection"
     >
-      Ziel für {{ state.currentLang }} übernehmen
+      {{ t("actions.translate.apply", { lang: state.currentLang }) }}
     </wa-button>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
 import { reactive, onMounted, computed, watch } from "vue"
 import { createControllerFetch } from "../../../request/index.js"
+
+const { t } = useI18n()
 
 const props = defineProps({
   name: String,
@@ -184,10 +186,10 @@ function ApplySelection() {
 
 <style scoped>
 .translate-wrapper {
-  padding: var(--sl-spacing-large);
+  padding: var(--wa-space-l);
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-small);
+  gap: var(--wa-space-s);
 }
 
 .translate-grid {
@@ -198,7 +200,7 @@ function ApplySelection() {
 .translate-flex {
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
 }
 
 .translate-icon-wrap {
@@ -219,7 +221,7 @@ function ApplySelection() {
 
 wa-textarea {
   &::part(form-control-label) {
-    margin-bottom: var(--sl-spacing-x-small);
+    margin-bottom: var(--wa-space-xs);
     font-weight: 600;
   }
 }
@@ -227,7 +229,7 @@ wa-textarea {
 .translate-dialog-footer {
   display: flex;
   flex-direction: row;
-  gap: var(--sl-spacing-small);
+  gap: var(--wa-space-s);
 }
 
 .translate-dialog-footer-spacer {

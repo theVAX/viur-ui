@@ -8,8 +8,14 @@
       :open="category['open']"
       :hide="!formState.useCategories"
     >
-      <template v-for="bone in category['bones']" :key="bone['name']">
-        <slot :bone-name="bone['name']" :widget="getBoneWidget(formState.structure[bone['name']]['type'])"></slot>
+      <template
+        v-for="bone in category['bones']"
+        :key="bone['name']"
+      >
+        <slot
+          :bone-name="bone['name']"
+          :widget="getBoneWidget(formState.structure[bone['name']]['type'])"
+        ></slot>
       </template>
     </vi-form-category>
   </template>

@@ -30,13 +30,14 @@ function specFromUrl(url) {
 
 /** One request through the viur-ui request layer → normalized (v2) body.
  *  Rejection propagates to the caller. */
-async function apiRequest(url, { method = "GET", data = {}, secure = false } = {}) {
+async function apiRequest(url, { method = "GET", data = {}, secure = false, messages = true } = {}) {
   const spec = specFromUrl(url)
   const request = createControllerFetch({ endpoint: spec.endpoint, method, secure })
   const result = request(spec.controller, "/", data, {
     renderer: spec.renderer,
     query: spec.query,
     immediate: false,
+    messages,
   })
   await result.execute()
   return result.data.value
@@ -76,7 +77,8 @@ export const useUserStore = defineStore("viurUser", () => {
   async function fetchSelf() {
     state.status = "loading"
     try {
-      const body = await apiRequest(userUrl("view/self"), { method: "GET" })
+      // a 401 here is the normal "not logged in" answer — no feedback message
+      const body = await apiRequest(userUrl("view/self"), { method: "GET", messages: false })
       state.user = body?.data ?? null
       state.status = state.user ? "authenticated" : "anonymous"
       return state.user

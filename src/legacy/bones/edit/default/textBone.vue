@@ -342,7 +342,7 @@ watch(
   pointer-events: none;
 }
 </style>
-
+<!--
 <style>
 .viur-txt-align--left {
   text-align: left;
@@ -609,3 +609,4 @@ sl-textarea {
   display: inline !important;
 }
 </style>
+-->

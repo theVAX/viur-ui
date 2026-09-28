@@ -30,12 +30,15 @@
       appearance="outlined"
       @click="CloseAction"
     >
-      Schließen
+      {{ t("actions.close") }}
     </wa-button>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n()
 const props = defineProps({
   name: String,
   module: String,
@@ -78,17 +81,17 @@ function CloseAction() {
 
 <style scoped>
 .debug-wrapper {
-  padding: var(--sl-spacing-large);
+  padding: var(--wa-space-l);
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
 }
 
 pre {
   margin: 0;
-  padding: var(--sl-spacing-small);
-  background-color: var(--sl-color-neutral-100);
-  border-radius: var(--sl-border-radius-medium);
+  padding: var(--wa-space-s);
+  background-color: var(--wa-color-neutral-95);
+  border-radius: var(--wa-border-radius-m);
   font-size: 0.8em;
   font-family: var(--wa-font-family-code, monospace);
   overflow: auto;
@@ -98,6 +101,6 @@ pre {
 .debug-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--sl-spacing-small);
+  gap: var(--wa-space-s);
 }
 </style>

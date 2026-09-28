@@ -4,7 +4,7 @@
       ref="passwordBone"
       v-model="state.value1"
       class="bone-widget bone-widget-password bone-widget-password-default"
-      :class="([`bone-widget-password-${name}`], { 'has-check': !boneState.readonly })"
+      :class="([`bone-widget-password-${name}`], { 'has-check': state.needsConfirm })"
       :disabled="boneState.readonly"
       type="password"
       with-clear
@@ -16,12 +16,13 @@
       @keyup="changeEvent"
     >
       <wa-icon
+        v-if="state.needsConfirm"
         slot="end"
         :name="state.equal && state.value1.length ? 'check' : 'xmark'"
       ></wa-icon>
     </wa-input>
     <wa-input
-      v-if="!boneState.readonly"
+      v-if="state.needsConfirm"
       v-model="state.value2"
       class="bone-widget bone-widget-boolean bone-widget-boolean-default bone-widget-boolean-repeat bone-widget-password-check"
       :class="[`bone-widget-boolean-${name}`]"
@@ -63,8 +64,12 @@ import { useTimeoutFn } from "@vueuse/core"
 /**
  * Passwort-Eingabefeld mit Wiederholung und Stärke-Validierung.
  *
- * Rendert zwei `<wa-input type="password">` Felder (Eingabe + Wiederholung).
- * Das Wiederholungs-Feld wird im Readonly-Modus ausgeblendet. Passwort-Tests
+ * Rendert `<wa-input type="password">` — mit Wiederholungs-Feld, WENN der Bone
+ * überhaupt Passwort-Tests mitbringt (`bonestructure.tests`). Ein Login-Formular
+ * liefert serverseitig einen rohen Passwort-Bone ohne Tests
+ * (`PasswordBone(raw=True, tests=(), test_threshold=0)`); dort wäre eine
+ * Wiederholung falsch — man tippt ein bestehendes Passwort ein, man setzt keins.
+ * Im Readonly-Modus entfällt die Wiederholung ebenfalls. Passwort-Tests
  * werden über `boneState.bonestructure.tests` (Array aus `[regex, message, required]`
  * Tupeln) konfiguriert. `boneState.bonestructure.test_threshold` legt fest,
  * wie viele optionale Tests fehlschlagen dürfen.
@@ -112,6 +117,9 @@ const state = reactive({
   value1: "",
   value2: null,
   equal: false,
+  // Wiederholung nur, wenn der Bone Tests mitbringt (= ein Passwort wird
+  // GESETZT). Beim Login liefert der Server einen rohen Bone ohne Tests.
+  needsConfirm: computed(() => !boneState.readonly && (boneState?.bonestructure?.["tests"]?.length ?? 0) > 0),
   passwordInfo: [],
   requiredPasswordInfo: [],
   placeholder: computed(() => {
@@ -129,7 +137,7 @@ const passwordBone = ref(null)
 function changeEvent(event) {
   testPassword(state.value1)
 
-  if (state.value1 === state.value2) {
+  if (!state.needsConfirm || state.value1 === state.value2) {
     state.equal = true
   } else {
     state.equal = false
@@ -163,7 +171,7 @@ function testPassword(password) {
       }
     }
   }
-  if (!state.equal) {
+  if (state.needsConfirm && !state.equal) {
     state.requiredPasswordInfo.push("Die eingegebenen Passwörter stimmen nicht überein.")
   }
   if (!state.value1) {
@@ -196,12 +204,12 @@ watch(
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-gap: 2px 7px;
-  margin-top: var(--sl-spacing-x-small);
+  margin-top: var(--wa-space-xs);
   font-size: 0.7em;
   font-weight: bold;
 }
 
 .bone-widget-required-info {
-  color: var(--sl-color-danger-500);
+  color: var(--wa-color-danger-50);
 }
 </style>

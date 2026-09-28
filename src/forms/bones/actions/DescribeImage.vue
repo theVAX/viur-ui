@@ -30,7 +30,7 @@
             <wa-tab-panel :name="'lang_' + lang">
               <wa-textarea
                 :value="state.value[lang]"
-                :label="`Beschreibung (` + lang + `):`"
+                :label="t('actions.describeImage.label', { lang })"
                 @change="updateValue($event, lang)"
               ></wa-textarea>
             </wa-tab-panel>
@@ -39,11 +39,10 @@
 
         <wa-input
           v-model="state.prompt"
-          placeholder="weitere Anweisungen"
+          :placeholder="t('actions.describeImage.instructions')"
         ></wa-input>
         <span class="image-description-small-print">
-          * Bei der Beschreibung kommt künstliche Intelligenz zum Einsatz. Die Ergebnisse können daher fehlerhaft sein.
-          Bitte prüfen Sie daher stets das Ergebnis.
+          {{ t("actions.aiHint") }}
         </span>
         <wa-button
           size="small"
@@ -51,7 +50,7 @@
           :loading="state.loading"
           @click="describe"
         >
-          Beschreibung erstellen
+          {{ t("actions.describeImage.run") }}
         </wa-button>
       </div>
     </div>
@@ -75,15 +74,18 @@
       size="small"
       @click="ApplySelection"
     >
-      Beschreibung übernehmen
+      {{ t("actions.describeImage.apply") }}
     </wa-button>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
 import { reactive, onMounted, inject, computed } from "vue"
 import { createControllerFetch } from "../../../request/index.js"
 import viImage from "@viur/vue-utils/generic/Image.vue"
+
+const { t } = useI18n()
 
 const props = defineProps({
   name: String,
@@ -163,16 +165,16 @@ function ApplySelection() {
 
 <style scoped>
 .image-description-wrapper {
-  padding: var(--sl-spacing-large);
+  padding: var(--wa-space-l);
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-small);
+  gap: var(--wa-space-s);
 }
 
 .image-description-grid {
   display: grid;
   grid-template-columns: 15em minmax(0, 1fr);
-  gap: var(--sl-spacing-large);
+  gap: var(--wa-space-l);
 }
 
 .footer {
@@ -187,12 +189,12 @@ function ApplySelection() {
 .image-description-flex {
   display: flex;
   flex-direction: column;
-  gap: var(--sl-spacing-small);
+  gap: var(--wa-space-s);
 }
 
 wa-textarea {
   &::part(form-control-label) {
-    margin-bottom: var(--sl-spacing-x-small);
+    margin-bottom: var(--wa-space-xs);
     font-weight: 600;
   }
 }

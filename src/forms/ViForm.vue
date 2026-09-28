@@ -29,11 +29,11 @@
         :class="{ 'is-active': isStepActive(key), 'is-done': isStepDone(key) }"
       >
         <span class="viform-step__marker">
-          <sl-icon
+          <wa-icon
             v-if="step['icon']"
             :name="step['icon']"
             :library="step['icon_library'] || 'default'"
-          ></sl-icon>
+          ></wa-icon>
         </span>
         <span class="viform-step__label">{{ step["label"] }}</span>
       </div>
@@ -117,40 +117,47 @@
     :loading="state.loading"
     :current="state.step"
     :steps="state.steps"
-    :next-label="nextLabel"
-    :submit-label="submitLabel"
-    :back-label="backLabel"
+    :next-label="effectiveNextLabel"
+    :submit-label="effectiveSubmitLabel"
+    :back-label="effectiveBackLabel"
   >
     <div
       v-if="multistep"
       class="viform-actions"
     >
-      <sl-button
+      <wa-button
         v-if="!state.isFirstStep"
-        variant="default"
+        variant="neutral"
         :disabled="state.loading"
         @click="back"
       >
-        {{ backLabel }}
-      </sl-button>
-      <sl-button
-        variant="primary"
+        {{ effectiveBackLabel }}
+      </wa-button>
+      <wa-button
+        variant="brand"
         :loading="state.loading"
         @click="submitStep"
       >
-        {{ state.isLastStep ? submitLabel : nextLabel }}
-      </sl-button>
+        {{ state.isLastStep ? effectiveSubmitLabel : effectiveNextLabel }}
+      </wa-button>
     </div>
   </slot>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils"
+import { v1SelectionFollow } from "../request/index.js"
 import { reactive, watch, onBeforeMount, computed, provide, ref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 
 const emit = defineEmits(["change", "keypress-enter", "failed", "success", "step-change"])
+
+const { t } = useI18n()
+const effectiveNextLabel = computed(() => props.nextLabel ?? t("form.next"))
+const effectiveSubmitLabel = computed(() => props.submitLabel ?? t("form.submit"))
+const effectiveBackLabel = computed(() => props.backLabel ?? t("form.back"))
 const props = defineProps({
   //modulename
   module: {
@@ -166,6 +173,12 @@ const props = defineProps({
   skeltype: null,
   // use skey or not
   secure: {
+    type: Boolean,
+    default: true,
+  },
+  // feed the message store (feedback after saving, login errors, …) — only
+  // effective when the app installed Pinia; false keeps this form silent
+  useMessageStore: {
     type: Boolean,
     default: true,
   },
@@ -232,6 +245,22 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  /**
+   * Formular-weite Action-Konfiguration für die Bones — dieselben Einträge
+   * wie `bone.params.actions`: Namen/Inline-Objekte AKTIVIEREN zusätzlich,
+   * `"-name"` DEAKTIVIERT explizit (schlägt auch Pflicht-Actions).
+   *
+   *   :actions="['-removeEntry']"                             // ALLE Bones
+   *   :actions="{ '*': ['debug'], tags: ['-removeEntry'] }"   // pro Bone
+   *
+   * Wird per provide("boneActionsConfig") an die Bones gereicht und dort VOR
+   * `bone.params.actions` gemerged (Bone-Lokales ist spezifischer; ein Minus
+   * gewinnt immer, egal aus welcher Quelle).
+   */
+  actions: {
+    type: [Array, Object],
+    default: null,
+  },
   layout: {
     type: Object,
     default: LayoutCategory,
@@ -290,16 +319,16 @@ const props = defineProps({
   },
   // Labels for the built-in multistep action buttons.
   nextLabel: {
-    type: String,
-    default: "Weiter",
+    type: [String, null],
+    default: null,
   },
   submitLabel: {
-    type: String,
-    default: "Absenden",
+    type: [String, null],
+    default: null,
   },
   backLabel: {
-    type: String,
-    default: "Zurück",
+    type: [String, null],
+    default: null,
   },
   // add errors, from the outside (maybe relevant if form is build with slots)
   // errors: []
@@ -307,6 +336,7 @@ const props = defineProps({
 
 const state = reactive({
   skel: {}, // working data
+  pristine: null, // Werte des letzten Server-Stands (für resetForm)
   structure: {}, // working data, use dict!
   errors: [], // working data
   actionparams: {}, //actionskel parameters
@@ -375,11 +405,17 @@ function listLabel(item, i) {
   return `#${i + 1}`
 }
 provide("formState", state)
+// Formular-weite Action-Konfiguration (siehe actions-Prop) — computed, damit
+// eine reaktive Prop-Änderung bei den Bones ankommt.
+provide("boneActionsConfig", computed(() => props.actions))
 if (!props.internal) {
   provide("mainformState", state)
 }
 
-const { fetchData, sendData, loadStep, back, updateSkel, initForm, logics, reload } = useFormUtils(props, state)
+const { fetchData, sendData, loadStep, resetForm, back, updateSkel, initForm, logics, reload } = useFormUtils(
+  props,
+  state
+)
 
 const formUpdateEvent = useDebounceFn((data) => {
   emit("change", data)
@@ -456,10 +492,14 @@ async function submitStep() {
     // the normalized v2 envelope.
     const fetchResult = await sendData(state.postUrl)
     const data = fetchResult?.data?.value
+    // v2 liefert das Ziel des nächsten Schritts als `follow`. In der klassischen
+    // v1-Login-Kette gibt es das nicht — dort ist das Ziel der gewählte Wert
+    // (die Provider-Auswahl listet URLs).
+    const follow = data?.["follow"] ?? v1SelectionFollow(data)
     if (data?.["status"] === "success") {
       emit("success", data)
-    } else if (data?.["status"] !== "rejected" && data?.["follow"]) {
-      await loadStep(data["follow"])
+    } else if (data?.["status"] !== "rejected" && follow) {
+      await loadStep(follow)
       emit("step-change", { step: state.step, steps: state.steps })
     }
     return data
@@ -470,7 +510,7 @@ async function submitStep() {
   }
 }
 
-defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, state })
+defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, reload, resetForm, state })
 </script>
 
 <style scoped>
@@ -480,7 +520,7 @@ defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, stat
   align-items: center;
   margin-block-end: 1.5rem;
   flex-wrap: wrap;
-  padding: var(--sl-spacing-medium);
+  padding: var(--wa-space-m);
 }
 
 .viform-step {
@@ -489,14 +529,14 @@ defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, stat
   gap: 0.5rem;
   flex: 1 1 0;
   min-width: max-content;
-  color: var(--sl-color-neutral-500, #71717a);
+  color: var(--wa-color-neutral-60, #71717a);
 }
 
 .viform-step:not(:last-child)::after {
   content: "";
   flex: 1;
   height: 2px;
-  background: var(--sl-color-neutral-200, #e4e4e7);
+  background: var(--wa-color-neutral-90, #e4e4e7);
   margin-inline-start: 0.5rem;
 }
 
@@ -518,11 +558,11 @@ defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, stat
 }
 
 .viform-step.is-active {
-  color: var(--sl-color-primary-600, #2563eb);
+  color: var(--wa-color-brand-60, #2563eb);
 }
 
 .viform-step.is-done {
-  color: var(--sl-color-success-600, #16a34a);
+  color: var(--wa-color-success-40, #16a34a);
 }
 
 .viform-step.is-done .viform-step__marker,
@@ -547,6 +587,6 @@ defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, stat
 
 .viform-list__item {
   padding: 0.5rem 0.25rem;
-  border-block-end: 1px solid var(--sl-color-neutral-200, #e4e4e7);
+  border-block-end: 1px solid var(--wa-color-neutral-90, #e4e4e7);
 }
 </style>

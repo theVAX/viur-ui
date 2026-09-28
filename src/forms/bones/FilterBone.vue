@@ -443,7 +443,7 @@ watch(
   .bone {
     display: grid;
     grid-template-columns: 235px 1fr;
-    grid-gap: var(--sl-spacing-small);
+    grid-gap: var(--wa-space-s);
     margin-bottom: 20px;
 
     &.is-label-top,
@@ -454,13 +454,13 @@ watch(
 
       & > :deep(.bone-label) {
         border-bottom-left-radius: 0;
-        border-top-right-radius: var(--sl-border-radius-medium);
+        border-top-right-radius: var(--wa-border-radius-m);
         min-width: 235px;
       }
 
       & > .bone-inner {
-        padding-top: var(--sl-spacing-small);
-        border-top: 2px solid var(--sl-color-neutral-300);
+        padding-top: var(--wa-space-s);
+        border-top: 2px solid var(--wa-color-neutral-80);
         margin-bottom: 5px;
       }
     }
@@ -487,7 +487,7 @@ watch(
     --track-color: var(--vi-border-color);
 
     &::part(body) {
-      padding-bottom: var(--sl-spacing-x-small);
+      padding-bottom: var(--wa-space-xs);
       overflow-x: hidden;
     }
 
@@ -505,16 +505,16 @@ watch(
           background-color: var(--vi-background-color);
           border: 1px solid var(--vi-border-color);
           border-top: 1px solid var(--vi-background-color) !important;
-          border-bottom: 2px solid var(--sl-color-primary-500) !important;
+          border-bottom: 2px solid var(--wa-color-brand-50) !important;
         }
       }
 
       &::part(base) {
-        background-color: var(--sl-color-neutral-200);
-        border: 1px solid var(--sl-color-neutral-400);
+        background-color: var(--wa-color-neutral-90);
+        border: 1px solid var(--wa-color-neutral-70);
         border-top: 1px solid var(--vi-border-color);
         border-radius: 0;
-        padding: var(--sl-spacing-x-small);
+        padding: var(--wa-space-xs);
         transition: all ease 0.3s;
       }
 
@@ -547,7 +547,7 @@ watch(
 
   .bone-multiple-placeholder {
     &:not(.is-readonly) {
-      margin-bottom: var(--sl-spacing-x-small);
+      margin-bottom: var(--wa-space-xs);
     }
 
     & wa-input {
@@ -562,7 +562,7 @@ watch(
       & wa-input {
         &::part(base) {
           border-top-right-radius: 0;
-          border-bottom-left-radius: var(--sl-border-radius-medium);
+          border-bottom-left-radius: var(--wa-border-radius-m);
         }
       }
     }
@@ -572,15 +572,15 @@ watch(
     min-width: 1px;
 
     & wa-alert {
-      margin-top: var(--sl-spacing-x-small);
+      margin-top: var(--wa-space-xs);
       background-color: transparent;
 
       &::part(message) {
-        padding: var(--sl-spacing-x-small) var(--sl-spacing-small);
+        padding: var(--wa-space-xs) var(--wa-space-s);
       }
 
       &::part(icon) {
-        padding-left: var(--sl-spacing-small);
+        padding-left: var(--wa-space-s);
       }
     }
   }
@@ -589,13 +589,13 @@ watch(
     &::part(base) {
       align-items: center;
       margin-left: 0.5em;
-      background-color: var(--sl-color-info-50);
+      background-color: var(--wa-color-info-95);
       border: none;
       overflow: visible;
     }
 
     &::part(message) {
-      padding: var(--sl-spacing-small);
+      padding: var(--wa-space-s);
     }
 
     &::part(icon) {
@@ -603,7 +603,7 @@ watch(
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background-color: var(--sl-color-neutral-0);
+      background-color: var(--wa-color-surface-default);
       width: 1em;
       height: 1em;
       margin-left: -0.5em;
@@ -619,7 +619,7 @@ watch(
     padding-left: 0.4em;
 
     & wa-icon {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
       color: #fff;
       padding: 0.4em;
       border-radius: 50%;
@@ -629,16 +629,16 @@ watch(
 
   wa-tooltip {
     &::part(body) {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
     }
 
     &::part(base__arrow) {
-      background-color: var(--sl-color-info-500);
+      background-color: var(--wa-color-info-50);
     }
   }
 
   .bone-label-required {
-    color: var(--sl-color-primary-500);
+    color: var(--wa-color-brand-50);
     font-weight: 700;
   }
 
@@ -659,24 +659,24 @@ watch(
 
   wa-tooltip.bone-tooltip {
     &::part(body) {
-      background-color: var(--sl-color-primary-500);
+      background-color: var(--wa-color-brand-50);
     }
 
     &::part(base__arrow) {
-      background-color: var(--sl-color-primary-500);
+      background-color: var(--wa-color-brand-50);
     }
   }
 }
 
 .bone-error::part(base) {
   background-color: #ffecec;
-  color: var(--sl-color-danger-700);
+  color: var(--wa-color-danger-30);
 }
 
 .bone-row {
   display: flex;
   flex-direction: row;
-  gap: var(--sl-spacing-x-small);
+  gap: var(--wa-space-xs);
 }
 
 .bone-block {
@@ -689,6 +689,6 @@ watch(
 wa-input[data-user-invalid]::part(base),
 wa-select[data-user-invalid]::part(combobox),
 wa-checkbox[data-user-invalid]::part(control) {
-  border-color: var(--sl-color-danger-500);
+  border-color: var(--wa-color-danger-50);
 }
 </style>

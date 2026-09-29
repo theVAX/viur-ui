@@ -42,14 +42,5 @@ export { useColorStore, hexToHsl, BRAND_LIGHTNESS } from "./src/theme/colorStore
 export { default as deTranslations } from "./src/translations/de.js"
 export { default as enTranslations } from "./src/translations/en.js"
 
-// Legacy (@viur/vue-utils)
-export {
-  Request as LegacyRequest,
-  HTTPError as LegacyHTTPError,
-  getRequestStore,
-  ListRequest as LegacyListRequest,
-  destroyStore as legacyDestroyStore,
-  de_translations,
-  en_translations,
-  boneLogic,
-} from "./src/legacy/index.js"
+// Anzeige von Bone-Werten (vormals aus dem Legacy-Paket)
+export { default as boneLogic } from "./src/forms/bones/view/boneLogic.js"

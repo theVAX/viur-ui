@@ -1,7 +1,22 @@
-import { createControllerFetch } from "../request/index.js"
+import { createControllerFetch, normalizeEnvelope, normalizeStructure } from "../request/index.js"
 import Logics from "logics-js"
-import { inject, toRaw, reactive } from "vue"
+import { inject, toRaw, reactive, markRaw } from "vue"
 import Utils from "./bones/utils"
+
+/**
+ * Tiefe Kopie reiner Daten (Skel-Werte), die Vue-Proxies auf JEDER Ebene
+ * auflöst. structuredClone allein scheitert daran: ein Record-/using-Formular
+ * bekommt den reaktiven Wert des Eltern-Bones, und `{ ...proxy }` behält die
+ * verschachtelten Werte als Proxies. Andere Objekte (Date, File) bleiben geteilt.
+ */
+function rawCopy(value) {
+  const raw = toRaw(value)
+  if (Array.isArray(raw)) return raw.map(rawCopy)
+  if (raw && typeof raw === "object" && Object.getPrototypeOf(raw) === Object.prototype) {
+    return Object.fromEntries(Object.entries(raw).map(([key, entry]) => [key, rawCopy(entry)]))
+  }
+  return raw
+}
 
 export function useFormUtils(props, state) {
   function buildRequestSpec(urlOverride = null) {
@@ -18,8 +33,12 @@ export function useFormUtils(props, state) {
         path += `/${props.skeltype}`
       }
 
+      // Nur mit Key anhängen: ein SINGLETON hat genau einen Datensatz, sein
+      // `edit` kennt keinen Key. Ohne diese Prüfung entstand `/edit/undefined`.
       if (["edit", "clone"].includes(props.action) || (isTree && props.action === "add")) {
-        path += `/${props.skelkey}`
+        if (props.skelkey) {
+          path += `/${props.skelkey}`
+        }
       }
     }
 
@@ -36,20 +55,126 @@ export function useFormUtils(props, state) {
       renderer,
       controller: requestSegments.slice(0, -1),
       endpoint: requestSegments.at(-1),
+      // preserve any query string from a server-provided url (e.g. a `follow`
+      // step url) so it is passed through to the request
+      query: parsedUrl.search ? parsedUrl.search.slice(1) : "",
     }
   }
 
-  function normalizeStructure(structure) {
-    //ensure that structure is a Object
-    if (Array.isArray(structure)) {
-      let struct = {}
-      for (const idx in structure) {
-        struct[structure[idx][0]] = structure[idx][1]
-      }
-      return struct
-    } else {
-      return structure
+  async function _envelopeFromResponse(response) {
+    // A cloned Response bypasses the request layer's .json() normalization, so
+    // lift it to the canonical v2 shape here too.
+    try {
+      return normalizeEnvelope(await response.clone().json())
+    } catch {
+      return null
     }
+  }
+
+  // Apply a (normalized v2) envelope to the form state. Central place that maps
+  // the envelope onto skel / structure / errors and the multi-step fields.
+  function applyResponseState(data, { updateStructure = false, presetValues = false } = {}) {
+    data = data ?? {}
+
+    state.datatype = data["datatype"] ?? null
+
+    if (data["datatype"] === "list") {
+      // List envelope: structure is null — don't build a form. Expose the items
+      // for custom rendering via the `list` slot instead, and never crash on the
+      // null structure a list carries.
+      const items = data["data"] !== undefined ? data["data"] : data["skellist"]
+      state.list = Array.isArray(items) ? items : []
+      state.cursor = data["meta"]?.["cursor"] ?? data["cursor"] ?? null
+      state.orders = data["meta"]?.["orders"] ?? data["orders"] ?? []
+      state.structure = {}
+      state.skel = {}
+    } else {
+      // Entity: payload lives in `data` (v1 `values` is lifted to `data` by
+      // normalizeEnvelope; accept `values` too for a raw body).
+      const values = data["data"] !== undefined ? data["data"] : data["values"]
+      if (updateStructure && data["structure"] != null) {
+        // Der `values`-Prop belegt ein frisch GERENDERTES Formular vor. Die
+        // Antwort auf ein Absenden spiegelt, was gesendet wurde — darüber darf
+        // er nicht erneut schreiben.
+        initForm(values, data["structure"], presetValues ? state.values : null)
+        // Neue Struktur = Server-Flags: visibleIf/readonlyIf/requiredIf/evaluate
+        // gleich wieder anwenden, nicht erst bei der nächsten Eingabe.
+        logics()
+      } else if (values !== undefined) {
+        state.skel = values
+      }
+      state.list = null
+    }
+
+    state.errors = data["errors"]
+    state.actionparams = data["params"]
+    state.actionname = data["action"]
+
+    // Envelope-v2 multi-step fields. Absent on classic v1 bodies → reset to null
+    // (harmless for single-step forms). `follow` becomes the POST target for the
+    // *current* step; on a POST response it is the *next* step's URL.
+    state.step = data["step"] ?? null
+    state.stepStatus = data["step_status"] ?? null
+    state.steps = data["steps"] ?? null
+    state.status = data["status"] ?? null
+    if (data["follow"] !== undefined) {
+      state.postUrl = data["follow"]
+    }
+    state.loading = false
+  }
+
+  // GET-render a step of a follow-driven multi-step action. Unlike fetchData
+  // (which POSTs — a submit), this renders the step's *initial* form. `url` is
+  // the envelope `follow` / `steps[key].url`; omit it to build the entry URL
+  // from props.
+  async function loadStep(url = null) {
+    state.loading = true
+    state.failed = null
+    const requestSpec = buildRequestSpec(url)
+    const request = createControllerFetch({ endpoint: requestSpec.endpoint, method: "GET" })
+    const fetchResult = request(
+      requestSpec.controller,
+      "/",
+      {},
+      {
+        renderer: requestSpec.renderer,
+        version: props.version,
+        query: requestSpec.query,
+        immediate: false,
+        messages: props.useMessageStore !== false,
+      }
+    )
+    try {
+      await fetchResult.execute()
+      applyResponseState(fetchResult.data.value, { updateStructure: true, presetValues: true })
+      // Ein v1-Schritt bringt kein Ziel mit (kein `follow`, kein next_url, kein
+      // params.action_url) — dort wird der Schritt an DIESELBE URL
+      // zurückgeschickt, aus der er gerendert wurde. Ohne das stünde postUrl
+      // nach dem Rendern auf null und der Absenden-Knopf liefe ins Leere.
+      if (!state.postUrl && url) {
+        state.postUrl = url
+      }
+      return fetchResult
+    } catch (error) {
+      state.failed = error
+      state.loading = false
+      throw error
+    }
+  }
+
+  // Back one step in a multi-step flow. The target is the previous step's
+  // backend-provided endpoint URL (`steps[prevKey].url`) — no client-side
+  // history. GET-rendering it prefills from the server session. No-op on the
+  // first step or when the previous step carries no url.
+  async function back() {
+    if (!state.steps || !state.step) return
+    const keys = Object.keys(state.steps)
+    const idx = keys.indexOf(state.step)
+    if (idx <= 0) return
+    const prev = state.steps[keys[idx - 1]]
+    const url = prev && (prev.url || prev.endpoint)
+    if (!url) return
+    return loadStep(url)
   }
 
   function toFormData() {
@@ -135,7 +260,8 @@ export function useFormUtils(props, state) {
 
   function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
     state.loading = true
-    let isValid = state.viformelement.reportValidity()
+    // No <form> element in list mode — nothing to validate.
+    let isValid = state.viformelement ? state.viformelement.reportValidity() : true
     if (!isValid) {
       state.loading = false
       return new Promise((resolve, reject) => reject("Form is not valid"))
@@ -170,20 +296,36 @@ export function useFormUtils(props, state) {
 
     const fetchResult = request(requestSpec.controller, "/", data, {
       renderer: requestSpec.renderer,
+      version: props.version,
+      query: requestSpec.query,
       headers,
       immediate: false,
+      messages: props.useMessageStore !== false,
     })
 
-    return fetchResult.execute().then(async () => {
-      let responseData = fetchResult.data.value
-      state.skel = responseData["values"]
-      //state.structure = normalizeStructure(data["structure"])
-      state.errors = responseData["errors"]
-      state.actionparams = responseData["params"]
-      state.actionname = responseData["action"]
-      state.loading = false
-      return fetchResult
-    })
+    return fetchResult
+      .execute()
+      .then(async () => {
+        // Apply the (normalized v2) envelope — updates skel / errors / action
+        // and, for multi-step flows, step / steps / status / follow. Re-init the
+        // form when the response carries a structure (e.g. the next step's form).
+        const responseData = fetchResult.data.value
+        applyResponseState(responseData, { updateStructure: responseData?.["structure"] != null })
+        return fetchResult
+      })
+      .catch(async (error) => {
+        // A rejected/failed submit may still carry a form body (errors +
+        // structure) on the error response — re-apply it so the form comes back
+        // populated. Otherwise just surface the failure.
+        const body = error?.response ? await _envelopeFromResponse(error.response).catch(() => null) : null
+        if (body) {
+          applyResponseState(body, { updateStructure: true })
+        } else {
+          state.loading = false
+        }
+        state.failed = error
+        throw error
+      })
   }
 
   function fetchData(alternativUrl = null, additionalData = null, headers = null) {
@@ -203,15 +345,20 @@ export function useFormUtils(props, state) {
     state.failed = null
     const fetchResult = request(requestSpec.controller, "/", data, {
       renderer: requestSpec.renderer,
+      version: props.version,
+      query: requestSpec.query,
       headers,
       immediate: false,
+      messages: props.useMessageStore !== false,
     })
 
     return fetchResult
       .execute()
       .then(async () => {
+        // Canonical v2 envelope: entity payload is in `data`, bone definitions
+        // in `structure` (both present for v1 too after normalizeEnvelope).
         let responseData = fetchResult.data.value
-        initForm(responseData["values"], responseData["structure"], state.values)
+        initForm(responseData["data"], responseData["structure"], state.values)
 
         state.errors = responseData["errors"]
         state.actionparams = responseData["params"]
@@ -227,7 +374,17 @@ export function useFormUtils(props, state) {
 
   function reload() {
     state.loading = true
-    if (props.structure) {
+    if (props.multistep && props.module && props.action) {
+      // Follow-driven multi-step: GET-render the entry step. The submit chain
+      // (POST → follow → GET next) is driven by ViForm via loadStep/sendData.
+      loadStep()
+        .then(() => {
+          state.loading = false
+        })
+        .catch(() => {
+          state.loading = false
+        })
+    } else if (props.structure) {
       initForm(props.skel, props.structure, state.values)
       state.loading = false
     } else if (props.module && props.action) {
@@ -405,13 +562,31 @@ export function useFormUtils(props, state) {
     }
 
     state.skel = { ...skeldata, ...formvalues }
+    // Stand festhalten, wie er hereinkam: `state.skel` ist die Arbeitskopie und
+    // wird beim Tippen verändert. resetForm() stellt daraus wieder her, ohne
+    // erneut zu laden ("Änderungen verwerfen").
+    // markRaw: reine Lesedaten, kein reaktiver Proxy.
+    state.pristine = markRaw(rawCopy(state.skel))
 
     state.categories = updateCategories()
+  }
+
+  /**
+   * Änderungen verwerfen: die Werte des letzten Server-Stands wieder einsetzen,
+   * OHNE neuen Request (dafür ist reload() da). Struktur und Kategorien bleiben.
+   */
+  function resetForm() {
+    if (state.pristine === undefined || state.pristine === null) return
+    initForm(rawCopy(state.pristine), undefined, state.values)
+    state.errors = []
   }
 
   return {
     fetchData,
     sendData,
+    loadStep,
+    resetForm,
+    back,
     buildRequestUrl: () => {
       const requestSpec = buildRequestSpec()
       return `/${requestSpec.renderer}/${requestSpec.controller.join("/")}/${requestSpec.endpoint}`

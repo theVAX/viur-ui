@@ -1,9 +1,9 @@
 <template>
   <div
-    class="record widget-bone widget-bone-relational widget-bone-relational-select"
-    :class="[`widget-bone-relational-${name}`]"
+    class="bone-widget-record bone-widget bone-widget-relational bone-widget-relational-select"
+    :class="[`bone-widget-relational-${name}`]"
   >
-    <div class="single-entry">
+    <div class="bone-widget-single-entry">
       <wa-select
         :disabled="boneState.readonly"
         :value="state.selection?.['dest']['key']"
@@ -16,7 +16,11 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       >
-        <wa-option v-for="(obj, key) in state.skellistdata" :key="key" :value="key">
+        <wa-option
+          v-for="(obj, key) in state.skellistdata"
+          :key="key"
+          :value="key"
+        >
           {{ formatString(state.format, obj) }}
         </wa-option>
       </wa-select>
@@ -36,7 +40,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 import { useListFetch } from "../../../request/index.js"
-import Wrapper_nested from "../wrapper_nested.vue"
+import Wrapper_nested from "../BoneNestedWrapper.vue"
 defineOptions({
   inheritAttrs: false,
 })
@@ -114,57 +118,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-.single-entry {
-  display: flex;
-  gap: var(--sl-spacing-x-small);
-
-  :deep(wa-combobox) {
-    &::part(input__base) {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-  }
-}
-
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  &::part(base) {
-    background-color: var(--sl-color-neutral-0);
-  }
-}
-wa-select {
-  width: 100%;
-
-  &::part(combobox) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(combobox) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-
-wa-option {
-  &::part(base) {
-    transition: background-color ease 0.3s;
-  }
-
-  &:hover {
-    &::part(base) {
-      background-color: var(--sl-color-gray-200);
-    }
-  }
-}
-</style>

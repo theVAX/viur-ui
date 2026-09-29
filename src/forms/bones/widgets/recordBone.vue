@@ -12,7 +12,7 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed, getCurrentInstance } from "vue"
-import Wrapper_nested from "../wrapper_nested.vue"
+import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
  * Record-Widget für Bones vom Typ `record`.
  *
@@ -62,9 +62,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-wa-input {
-  width: 100%;
-}
-</style>

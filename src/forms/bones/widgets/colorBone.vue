@@ -1,15 +1,22 @@
 <template>
-  <wa-color-picker
-    class="widget-bone widget-bone-color widget-bone-color-default"
-    :class="[`widget-bone-color-${name}`]"
-    :disabled="boneState.readonly"
-    :value="value"
-    :required="
-      boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
-    "
-    :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
-    @change="changeEvent"
-  ></wa-color-picker>
+  <div class="wa-flank wa-align-item-center">
+    <wa-color-picker
+      class="bone-widget bone-widget-color bone-widget-color-default"
+      :class="[`bone-widget-color-${name}`]"
+      :disabled="boneState.readonly"
+      :value="value"
+      :required="
+        boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
+      "
+      :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+      @change="changeEvent"
+    ></wa-color-picker>
+    <span>{{ value || "-" }}</span>
+    <wa-copy-button
+      :disabled="!value"
+      :value="value"
+    ></wa-copy-button>
+  </div>
 </template>
 
 <script setup>
@@ -22,10 +29,10 @@ import { reactive, onMounted, inject } from "vue"
  *
  * @displayName ColorBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-color - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-color-default - Standard-Variante
- * @cssClass widget-bone-color-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-color-color`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-color - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-color-default - Standard-Variante
+ * @cssClass bone-widget-color-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-color-color`
  */
 defineOptions({
   inheritAttrs: false,
@@ -66,11 +73,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-wa-color-picker {
-  &::part(trigger) {
-    border-radius: 0;
-  }
-}
-</style>

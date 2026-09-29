@@ -10,7 +10,10 @@
     :class="[`viform-category-${encodeURI(name.toLowerCase())}`]"
     :open="open"
   >
-    <div slot="summary" v-html="name"></div>
+    <div
+      slot="summary"
+      v-html="name"
+    ></div>
     <slot></slot>
   </wa-details>
 </template>
@@ -46,21 +49,9 @@ const props = defineProps({
 </script>
 
 <style scoped>
-wa-details {
-  &::part(prefix) {
-    display: none;
-  }
-
-  &::part(base) {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    border-bottom: solid 1px var(--sl-color-neutral-300);
-  }
-
-  &::part(summary) {
-    font-weight: 700;
-  }
+/* Intentionally no custom styling: the category is a plain <wa-details>
+   (bordered, rounded, expand arrow at the end) so it follows the app theme. */
+.viform-category + .viform-category {
+  margin-block-start: var(--wa-space-s);
 }
 </style>

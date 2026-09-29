@@ -1,7 +1,88 @@
 <template>
-  <form :ref="(el) => (state.viformelement = el)" @submit.prevent.stop="() => {}">
-    <slot :structure="state.structure" :skel="state.skel" :errors="state.errors" :categories="state.categories">
-      <component :is="layout" v-slot="{ boneName, widget, visible, label }">
+  <!-- Multi-step progress bar. Fully overridable via the `steps` slot — the
+       slot props expose the envelope's step data plus helpers so a consumer can
+       render any custom stepper. The default content is the built-in bar,
+       shown when `showSteps` is set. -->
+  <slot
+    name="steps"
+    :steps="state.steps"
+    :current="state.step"
+    :step-status="state.stepStatus"
+    :status="state.status"
+    :is-last-step="state.isLastStep"
+    :step-index="stepIndex"
+    :is-active="isStepActive"
+    :is-done="isStepDone"
+    :submit="submitStep"
+    :loading="state.loading"
+  >
+    <div
+      v-if="showSteps && state.steps"
+      class="viform-steps"
+      role="list"
+    >
+      <div
+        v-for="(step, key) in state.steps"
+        :key="key"
+        class="viform-step"
+        role="listitem"
+        :class="{ 'is-active': isStepActive(key), 'is-done': isStepDone(key) }"
+      >
+        <span class="viform-step__marker">
+          <wa-icon
+            v-if="step['icon']"
+            :name="step['icon']"
+            :library="step['icon_library'] || 'default'"
+          ></wa-icon>
+        </span>
+        <span class="viform-step__label">{{ step["label"] }}</span>
+      </div>
+    </div>
+  </slot>
+
+  <!-- List envelope (datatype === "list"): no form — expose the items for
+       custom rendering. Slot props carry the list + flow actions. -->
+  <slot
+    v-if="state.datatype === 'list'"
+    name="list"
+    :items="state.list"
+    :cursor="state.cursor"
+    :orders="state.orders"
+    :next="submitStep"
+    :back="back"
+    :is-first-step="state.isFirstStep"
+    :is-last-step="state.isLastStep"
+    :loading="state.loading"
+    :current="state.step"
+    :steps="state.steps"
+    :errors="state.errors"
+  >
+    <ul class="viform-list">
+      <li
+        v-for="(item, i) in state.list || []"
+        :key="item?.['key'] ?? i"
+        class="viform-list__item"
+      >
+        {{ listLabel(item, i) }}
+      </li>
+    </ul>
+  </slot>
+
+  <form
+    v-else
+    :ref="(el) => (state.viformelement = el)"
+    @submit.prevent.stop="() => {}"
+  >
+    <slot
+      :structure="state.structure"
+      :skel="state.skel"
+      :errors="state.errors"
+      :categories="state.categories"
+    >
+      <component
+        :is="layout"
+        v-slot="{ boneName, widget, visible, label }"
+      >
         <bone
           :is="widget"
           v-if="widget !== undefined"
@@ -23,15 +104,60 @@
       </component>
     </slot>
   </form>
+
+  <!-- Footer / action bar for the multi-step flow. Override via the `actions`
+       slot; slot props expose the `next` (submit/advance) and `back` actions
+       plus flow state. The default is a Zurück / Weiter|Absenden bar. -->
+  <slot
+    name="actions"
+    :next="submitStep"
+    :back="back"
+    :is-first-step="state.isFirstStep"
+    :is-last-step="state.isLastStep"
+    :loading="state.loading"
+    :current="state.step"
+    :steps="state.steps"
+    :next-label="effectiveNextLabel"
+    :submit-label="effectiveSubmitLabel"
+    :back-label="effectiveBackLabel"
+  >
+    <div
+      v-if="multistep"
+      class="viform-actions"
+    >
+      <wa-button
+        v-if="!state.isFirstStep"
+        variant="neutral"
+        :disabled="state.loading"
+        @click="back"
+      >
+        {{ effectiveBackLabel }}
+      </wa-button>
+      <wa-button
+        variant="brand"
+        :loading="state.loading"
+        @click="submitStep"
+      >
+        {{ state.isLastStep ? effectiveSubmitLabel : effectiveNextLabel }}
+      </wa-button>
+    </div>
+  </slot>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils"
+import { v1SelectionFollow } from "../request/index.js"
 import { reactive, watch, onBeforeMount, computed, provide, ref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 
-const emit = defineEmits(["change", "keypress-enter", "failed"])
+const emit = defineEmits(["change", "keypress-enter", "failed", "success", "step-change"])
+
+const { t } = useI18n()
+const effectiveNextLabel = computed(() => props.nextLabel ?? t("form.next"))
+const effectiveSubmitLabel = computed(() => props.submitLabel ?? t("form.submit"))
+const effectiveBackLabel = computed(() => props.backLabel ?? t("form.back"))
 const props = defineProps({
   //modulename
   module: {
@@ -47,6 +173,12 @@ const props = defineProps({
   skeltype: null,
   // use skey or not
   secure: {
+    type: Boolean,
+    default: true,
+  },
+  // feed the message store (feedback after saving, login errors, …) — only
+  // effective when the app installed Pinia; false keeps this form silent
+  useMessageStore: {
     type: Boolean,
     default: true,
   },
@@ -82,6 +214,13 @@ const props = defineProps({
     type: String,
     default: import.meta.env.VITE_DEFAULT_RENDERER || "json",
   },
+  // optionally pin the protocol version alongside the renderer (e.g. 2 / "v2"
+  // / "v1"). Default null hits the unversioned endpoint (server aliases to the
+  // newest wire format, envelope v2).
+  version: {
+    type: [String, Number, null],
+    default: null,
+  },
   useCategories: {
     type: Boolean,
     default: true,
@@ -105,6 +244,22 @@ const props = defineProps({
   boneactions: {
     type: Boolean,
     default: false,
+  },
+  /**
+   * Formular-weite Action-Konfiguration für die Bones — dieselben Einträge
+   * wie `bone.params.actions`: Namen/Inline-Objekte AKTIVIEREN zusätzlich,
+   * `"-name"` DEAKTIVIERT explizit (schlägt auch Pflicht-Actions).
+   *
+   *   :actions="['-removeEntry']"                             // ALLE Bones
+   *   :actions="{ '*': ['debug'], tags: ['-removeEntry'] }"   // pro Bone
+   *
+   * Wird per provide("boneActionsConfig") an die Bones gereicht und dort VOR
+   * `bone.params.actions` gemerged (Bone-Lokales ist spezifischer; ein Minus
+   * gewinnt immer, egal aus welcher Quelle).
+   */
+  actions: {
+    type: [Array, Object],
+    default: null,
   },
   layout: {
     type: Object,
@@ -148,12 +303,40 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Follow-driven multi-step mode: GET-render the entry step, then POST each
+  // step to the envelope's `follow` URL and advance until `status: "success"`.
+  multistep: {
+    type: Boolean,
+    default: false,
+  },
+  // Render the built-in progress bar from the envelope's `steps` map. For a
+  // custom stepper use the `steps` slot instead (its slot props expose steps,
+  // current, stepStatus, status, isLastStep, stepIndex, isActive, isDone,
+  // submit, loading); `showSteps` only gates the default built-in bar.
+  showSteps: {
+    type: Boolean,
+    default: false,
+  },
+  // Labels for the built-in multistep action buttons.
+  nextLabel: {
+    type: [String, null],
+    default: null,
+  },
+  submitLabel: {
+    type: [String, null],
+    default: null,
+  },
+  backLabel: {
+    type: [String, null],
+    default: null,
+  },
   // add errors, from the outside (maybe relevant if form is build with slots)
   // errors: []
 })
 
 const state = reactive({
   skel: {}, // working data
+  pristine: null, // Werte des letzten Server-Stands (für resetForm)
   structure: {}, // working data, use dict!
   errors: [], // working data
   actionparams: {}, //actionskel parameters
@@ -183,13 +366,56 @@ const state = reactive({
   readonly: computed(() => props.readonly),
   categoryDefaultname: computed(() => props.categoryDefaultname),
   failed: null,
+  // multi-step envelope state (populated by applyResponseState)
+  step: null, // current step key
+  stepStatus: null, // current step outcome
+  steps: null, // map of all steps {key: {icon, icon_library, label}}
+  status: null, // overall action status
+  postUrl: null, // where the current step submits to (envelope `follow`)
+  datatype: null, // "entity" | "list" — shape of the current response
+  list: null, // list items when datatype === "list" (else null)
+  cursor: null, // list-only pagination cursor
+  orders: [], // list-only ordering hints
+  isLastStep: computed(() => {
+    if (!state.steps) return false
+    const keys = Object.keys(state.steps)
+    return keys.length > 0 && state.step === keys[keys.length - 1]
+  }),
+  isFirstStep: computed(() => {
+    if (!state.steps) return true
+    const keys = Object.keys(state.steps)
+    return keys.length === 0 || state.step === keys[0]
+  }),
 })
+
+function stepIndex(key) {
+  return state.steps ? Object.keys(state.steps).indexOf(key) : -1
+}
+function isStepActive(key) {
+  return key === state.step
+}
+function isStepDone(key) {
+  return stepIndex(key) < stepIndex(state.step)
+}
+// Best-effort label for the default #list rendering (overridden via the slot).
+function listLabel(item, i) {
+  if (item == null || typeof item !== "object") return String(item)
+  if (typeof item["name"] === "string" && item["name"]) return item["name"]
+  if (typeof item["key"] === "string" && item["key"]) return item["key"]
+  return `#${i + 1}`
+}
 provide("formState", state)
+// Formular-weite Action-Konfiguration (siehe actions-Prop) — computed, damit
+// eine reaktive Prop-Änderung bei den Bones ankommt.
+provide("boneActionsConfig", computed(() => props.actions))
 if (!props.internal) {
   provide("mainformState", state)
 }
 
-const { fetchData, sendData, updateSkel, initForm, logics, reload } = useFormUtils(props, state)
+const { fetchData, sendData, loadStep, resetForm, back, updateSkel, initForm, logics, reload } = useFormUtils(
+  props,
+  state
+)
 
 const formUpdateEvent = useDebounceFn((data) => {
   emit("change", data)
@@ -255,7 +481,112 @@ function handlePressEnter(ev, name) {
 }
 provide("formUpdate", formUpdate)
 
-defineExpose({ sendData, fetchData, updateSkel, state })
+// Multi-step driver: POST the current step to its `follow` URL, then advance.
+// - rejected → stay on the step (errors were already applied by sendData)
+// - success  → emit("success")
+// - continue → GET the next step's `follow` and render it
+async function submitStep() {
+  if (state.loading) return
+  try {
+    // sendData returns the request-layer fetch result; its `.data.value` holds
+    // the normalized v2 envelope.
+    const fetchResult = await sendData(state.postUrl)
+    const data = fetchResult?.data?.value
+    // v2 liefert das Ziel des nächsten Schritts als `follow`. In der klassischen
+    // v1-Login-Kette gibt es das nicht — dort ist das Ziel der gewählte Wert
+    // (die Provider-Auswahl listet URLs).
+    const follow = data?.["follow"] ?? v1SelectionFollow(data)
+    if (data?.["status"] === "success") {
+      emit("success", data)
+    } else if (data?.["status"] !== "rejected" && follow) {
+      await loadStep(follow)
+      emit("step-change", { step: state.step, steps: state.steps })
+    }
+    return data
+  } catch (error) {
+    // Invalid form (client-side) or a rejection/network error — sendData has
+    // already surfaced it via state.errors / state.failed. Stay on the step.
+    return
+  }
+}
+
+defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, reload, resetForm, state })
 </script>
 
-<style scoped></style>
+<style scoped>
+.viform-steps {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block-end: 1.5rem;
+  flex-wrap: wrap;
+  padding: var(--wa-space-m);
+}
+
+.viform-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 0;
+  min-width: max-content;
+  color: var(--wa-color-neutral-60, #71717a);
+}
+
+.viform-step:not(:last-child)::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--wa-color-neutral-90, #e4e4e7);
+  margin-inline-start: 0.5rem;
+}
+
+.viform-step__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+.viform-step__label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.viform-step.is-active {
+  color: var(--wa-color-brand-60, #2563eb);
+}
+
+.viform-step.is-done {
+  color: var(--wa-color-success-40, #16a34a);
+}
+
+.viform-step.is-done .viform-step__marker,
+.viform-step.is-active .viform-step__marker {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.viform-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: 1.5rem;
+}
+
+/* Minimal default #list rendering — overridable via the `list` slot. */
+.viform-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.viform-list__item {
+  padding: 0.5rem 0.25rem;
+  border-block-end: 1px solid var(--wa-color-neutral-90, #e4e4e7);
+}
+</style>

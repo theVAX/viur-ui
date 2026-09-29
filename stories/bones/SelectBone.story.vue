@@ -1,56 +1,3 @@
-<script setup>
-import { ref } from "vue"
-import BoneStoryWrapper from "../BoneStoryWrapper.vue"
-import { hints } from "../fixtures/controlHints.js"
-
-function src(structure, skel, extra = {}) {
-  const name = Object.keys(structure)[0]
-  const attrs = [`name="${name}"`]
-  if (extra.languages) attrs.push(`:languages="${JSON.stringify(extra.languages).replace(/"/g, "'")}"`)
-  return [
-    `<Bone`,
-    `  ${attrs.join("\n  ")}`,
-    `  :structure="structure"`,
-    `  :skel="skel"`,
-    `/>`,
-    ``,
-    `<!-- structure -->`,
-    JSON.stringify(structure, null, 2),
-    ``,
-    `<!-- skel -->`,
-    JSON.stringify(skel, null, 2),
-  ].join("\n")
-}
-
-const pgSourceRef = ref("")
-
-function syncPgSource(state) {
-  const langs = state.multilang
-    ? state.languages
-        .split(",")
-        .map((l) => l.trim())
-        .filter(Boolean)
-    : null
-  const structure = {
-    [state.boneName]: {
-      type: state.boneType,
-      descr: state.descr,
-      required: state.required,
-      readonly: state.readonly,
-      multiple: state.multiple,
-      languages: langs,
-      values: { draft: "Entwurf", published: "Veröffentlicht", archived: "Archiviert" },
-      params: {},
-    },
-  }
-  const skel = langs
-    ? { [state.boneName]: Object.fromEntries(langs.map((l) => [l, "draft"])) }
-    : { [state.boneName]: "draft" }
-  pgSourceRef.value = src(structure, skel, langs ? { languages: langs } : {})
-  return ""
-}
-</script>
-
 <template>
   <Story title="Bones/SelectBone">
     <Variant
@@ -76,52 +23,32 @@ function syncPgSource(state) {
         <BoneStoryWrapper
           :bone-name="state.boneName"
           :bone-type="state.boneType"
-          :structure="{
-            [state.boneName]: {
-              type: state.boneType,
-              descr: state.descr,
-              required: state.required,
-              readonly: state.readonly,
-              multiple: state.multiple,
-              languages: state.multilang
-                ? state.languages
-                    .split(',')
-                    .map((l) => l.trim())
-                    .filter(Boolean)
-                : null,
+          :structure="
+            makeStructure(state, {
+              languages: parseLangs(state),
               values: { draft: 'Entwurf', published: 'Veröffentlicht', archived: 'Archiviert' },
-              params: {},
-            },
-          }"
+            })
+          "
           :skel="
-            state.multilang
-              ? {
-                  [state.boneName]: Object.fromEntries(
-                    state.languages
-                      .split(',')
-                      .map((l) => l.trim())
-                      .filter(Boolean)
-                      .map((l) => [l, 'draft'])
-                  ),
-                }
+            parseLangs(state)
+              ? { [state.boneName]: Object.fromEntries(parseLangs(state).map((l) => [l, 'draft'])) }
               : { [state.boneName]: 'draft' }
           "
           :label="state.label"
-          :languages="
-            state.multilang
-              ? state.languages
-                  .split(',')
-                  .map((l) => l.trim())
-                  .filter(Boolean)
-              : null
-          "
+          :languages="parseLangs(state)"
         />
       </template>
       <template #controls="{ state }">
-        <HstText v-model="state.boneName" title="Bone-Name" />
+        <HstText
+          v-model="state.boneName"
+          title="Bone-Name"
+        />
         <div class="hst-hint">{{ hints.boneName }}</div>
 
-        <HstText v-model="state.descr" title="Description (Label)" />
+        <HstText
+          v-model="state.descr"
+          title="Description (Label)"
+        />
         <div class="hst-hint">{{ hints.descr }}</div>
 
         <HstSelect
@@ -134,20 +61,35 @@ function syncPgSource(state) {
         />
         <div class="hst-hint">Steuert welches Widget gerendert wird.</div>
 
-        <HstCheckbox v-model="state.readonly" title="Readonly" />
+        <HstCheckbox
+          v-model="state.readonly"
+          title="Readonly"
+        />
         <div class="hst-hint">{{ hints.readonly }}</div>
 
-        <HstCheckbox v-model="state.required" title="Required" />
+        <HstCheckbox
+          v-model="state.required"
+          title="Required"
+        />
         <div class="hst-hint">{{ hints.required }}</div>
 
-        <HstCheckbox v-model="state.multiple" title="Multiple" />
+        <HstCheckbox
+          v-model="state.multiple"
+          title="Multiple"
+        />
         <div class="hst-hint">{{ hints.multiple }}</div>
 
-        <HstCheckbox v-model="state.multilang" title="Multilang" />
+        <HstCheckbox
+          v-model="state.multilang"
+          title="Multilang"
+        />
         <div class="hst-hint">{{ hints.multilang }}</div>
 
         <template v-if="state.multilang">
-          <HstText v-model="state.languages" title="Sprachen" />
+          <HstText
+            v-model="state.languages"
+            title="Sprachen"
+          />
           <div class="hst-hint">{{ hints.languages }}</div>
         </template>
 
@@ -166,6 +108,31 @@ function syncPgSource(state) {
     </Variant>
   </Story>
 </template>
+
+<script setup>
+import { ref } from "vue"
+import BoneStoryWrapper from "../BoneStoryWrapper.vue"
+import { hints } from "../fixtures/controlHints.js"
+import { src, makeStructure, parseLangs } from "../fixtures/storyUtils.js"
+
+const pgSourceRef = ref("")
+
+function syncPgSource(state) {
+  const langs = parseLangs(state)
+  const skel = langs
+    ? { [state.boneName]: Object.fromEntries(langs.map((l) => [l, "draft"])) }
+    : { [state.boneName]: "draft" }
+  pgSourceRef.value = src(
+    makeStructure(state, {
+      languages: langs,
+      values: { draft: "Entwurf", published: "Veröffentlicht", archived: "Archiviert" },
+    }),
+    skel,
+    langs ? { languages: langs } : {}
+  )
+  return ""
+}
+</script>
 
 <style>
 .hst-hint {

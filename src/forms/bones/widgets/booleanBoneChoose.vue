@@ -1,16 +1,23 @@
 <template>
+  <!-- readonly an der Gruppe: wa-radio-group markiert nur Radios, die selbst
+       nicht disabled sind — sonst wäre bei readonly keine Auswahl sichtbar -->
   <wa-radio-group
     :value="state.value"
-    class="widget-bone widget-bone-boolean widget-bone-boolean-choose"
-    :class="[`widget-bone-boolean-${name}`]"
+    :disabled="boneState.readonly"
+    class="bone-widget bone-widget-boolean bone-widget-boolean-choose"
+    :class="[`bone-widget-boolean-${name}`]"
     :required="
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
     "
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-radio :value="'true'" :disabled="boneState.readonly">{{ $t("bones.bool.true") }}</wa-radio>
-    <wa-radio :value="'false'" :disabled="boneState.readonly">{{ $t("bones.bool.false") }}</wa-radio>
+    <wa-radio :value="'true'">
+      {{ $t("bones.bool.true") }}
+    </wa-radio>
+    <wa-radio :value="'false'">
+      {{ $t("bones.bool.false") }}
+    </wa-radio>
   </wa-radio-group>
 </template>
 
@@ -48,20 +55,3 @@ onMounted(() => {
   emit("change", props.name, val, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-wa-switch {
-  border: 1px solid var(--sl-color-neutral-300);
-  padding: 0.4em 0.1em 0.4em 0.4em;
-  border-top-right-radius: var(--wa-input-border-radius-medium);
-  border-bottom-right-radius: var(--wa-input-border-radius-medium);
-  --height: calc(var(--wa-input-height-medium) - 1em);
-  --width: calc(1.7 * (var(--wa-input-height-medium) - 0.8em));
-  --thumb-size: calc(var(--wa-input-height-medium) - 1em);
-
-  @media (max-width: 900px) {
-    border-top-right-radius: 0;
-    border-bottom-left-radius: var(--sl-border-radius-medium);
-  }
-}
-</style>

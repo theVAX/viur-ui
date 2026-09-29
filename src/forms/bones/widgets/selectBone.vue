@@ -1,7 +1,7 @@
 <template>
   <wa-select
-    class="widget-bone widget-bone-select widget-bone-select-default"
-    :class="[`widget-bone-select-${name}`]"
+    class="bone-widget bone-widget-select bone-widget-select-default"
+    :class="[`bone-widget-select-${name}`]"
     :name="name"
     :disabled="boneState.readonly"
     :value="state.value"
@@ -13,7 +13,11 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-option v-for="value in convertObjToList()" :key="value[0]" :value="value[0]">
+    <wa-option
+      v-for="value in convertObjToList()"
+      :key="value[0]"
+      :value="value[0]"
+    >
       {{ value[1] }}
     </wa-option>
   </wa-select>
@@ -34,10 +38,10 @@ import { reactive, onMounted, inject, computed } from "vue"
  *
  * @displayName SelectBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-select - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-select-default - Standard-Variante (Dropdown)
- * @cssClass widget-bone-select-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-select-status`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-select - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-select-default - Standard-Variante (Dropdown)
+ * @cssClass bone-widget-select-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-select-status`
  */
 defineOptions({
   inheritAttrs: false,
@@ -116,33 +120,3 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-wa-select {
-  width: 100%;
-
-  &::part(combobox) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(combobox) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-
-wa-option {
-  &::part(base) {
-    transition: background-color ease 0.3s;
-  }
-
-  &:hover {
-    &::part(base) {
-      background-color: var(--sl-color-gray-200);
-    }
-  }
-}
-</style>

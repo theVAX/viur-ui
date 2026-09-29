@@ -1,11 +1,12 @@
 <template>
-  <div style="padding: 1rem; max-width: 800px">
+  <div style="padding: 1rem; max-width: 100%">
     <Bone
       :is="recordBone"
       :name="boneName"
       :structure="structure"
       :skel="skel"
       :errors="errors"
+      :languages="languages"
       @change="logEvent('change', $event)"
       @change-internal="logEvent('change-internal', $event)"
       @handle-click="logEvent('handleClick', $event)"
@@ -18,7 +19,7 @@ import { provide, markRaw } from "vue"
 import { logEvent } from "histoire/client"
 import { createMainformState } from "./mocks/mainformState.js"
 import Bone from "../src/forms/bones/bone.vue"
-import recordBone from "../src/forms/bones/recordBone.vue"
+import recordBone from "../src/forms/bones/widgets/recordBone.vue"
 
 const props = defineProps({
   boneName: {
@@ -36,6 +37,10 @@ const props = defineProps({
   errors: {
     type: Array,
     default: () => [],
+  },
+  languages: {
+    type: Array,
+    default: null,
   },
 })
 

@@ -13,12 +13,26 @@
       class="delete-btn"
       @click="openSelector()"
     >
-      <wa-icon slot="start" name="xmark"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="xmark"
+      ></wa-icon>
     </wa-button>
 
-    <div v-if="state.droparea" class="droparea">Dateien hier hinziehen</div>
+    <div
+      v-if="state.droparea"
+      class="droparea"
+    >
+      {{ t("bone.dragFile") }}
+    </div>
 
-    <input ref="uploadinput" hidden type="file" :multiple="boneState.multiple" @change="handleUpload" />
+    <input
+      ref="uploadinput"
+      hidden
+      type="file"
+      :multiple="boneState.multiple"
+      @change="handleUpload"
+    />
     <wa-button
       v-if="boneState.multiple && !readonly"
       appearance="outlined"
@@ -26,7 +40,10 @@
       class="add-btn"
       @click="addMultipleEntry(lang)"
     >
-      <wa-icon slot="start" name="plus"></wa-icon>
+      <wa-icon
+        slot="start"
+        name="plus"
+      ></wa-icon>
     </wa-button>
 
     <wa-button
@@ -39,14 +56,20 @@
     >
       <wa-icon name="upload"></wa-icon>
       {{ $t("bone.upload") }}
-      <wa-spinner v-if="state.loading" slot="end"></wa-spinner>
+      <wa-spinner
+        v-if="state.loading"
+        slot="end"
+      ></wa-spinner>
     </wa-button>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from "vue-i18n"
 import { reactive, onMounted, inject, ref, computed } from "vue"
 import { uploadFile } from "../../../request/index.js"
+
+const { t } = useI18n()
 
 const props = defineProps({
   name: String,
@@ -124,16 +147,16 @@ wa-combobox {
   z-index: 10;
   pointer-events: none;
   opacity: 0.9;
-  border: 1px solid var(--sl-color-info-500);
-  background-color: var(--sl-color-info-300);
-  color: var(--sl-color-info-900);
+  border: 1px solid var(--wa-color-info-50);
+  background-color: var(--wa-color-info-80);
+  color: var(--wa-color-info-10);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .add-btn {
-  margin-left: var(--sl-spacing-x-small);
+  margin-left: var(--wa-space-xs);
 }
 
 .upload-btn {

@@ -1,8 +1,17 @@
 <template>
-  <div v-if="Object.keys(formState.structure).length > 0" class="wrapper">
-    <template v-for="(boneValue, boneName) in formState.skel" :key="boneName">
+  <div
+    v-if="Object.keys(formState.structure).length > 0"
+    class="wrapper"
+  >
+    <template
+      v-for="(boneValue, boneName) in formState.skel"
+      :key="boneName"
+    >
       <template v-if="formState.structure?.[boneName]">
-        <slot :bone-name="boneName" :widget="getBoneWidget(formState.structure[boneName]['type'])"></slot>
+        <slot
+          :bone-name="boneName"
+          :widget="getBoneWidget(formState.structure[boneName]['type'])"
+        ></slot>
       </template>
     </template>
   </div>

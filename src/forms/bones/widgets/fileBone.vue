@@ -1,33 +1,18 @@
 <template>
   <div
-    class="file-wrapper"
+    class="bone-widget-file-area"
+    :class="{
+      'is-dragover': state.droparea,
+      'has-value': !!value,
+      'is-loading': state.loading,
+      'is-readonly': boneState.readonly,
+    }"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+    @click="openPicker"
     @dragover.prevent="state.droparea = true"
-    @dragleave="state.droparea = false"
+    @dragleave.prevent="state.droparea = false"
     @drop.prevent="handleDrop"
   >
-    <div
-      v-if="state.loading"
-      class="loader"
-    >
-      <wa-spinner slot="end"></wa-spinner>
-    </div>
-
-    <div
-      v-if="state.droparea"
-      class="droparea"
-    >
-      Dateien hier hinziehen
-    </div>
-    <wa-button
-      v-if="!boneState.readonly && (!value || state.loading)"
-      :title="$t('bone.upload')"
-      appearance="outlined"
-      class="upload-btn"
-      @click="uploadinput.click()"
-    >
-      <wa-icon name="upload"></wa-icon>
-    </wa-button>
     <input
       ref="uploadinput"
       style="display: none"
@@ -35,29 +20,34 @@
       :multiple="boneState.multiple"
       @change="handleUpload"
     />
-    <wa-button
-      v-if="value"
-      :title="$t('bone.download')"
-      appearance="outlined"
-      class="download-btn"
-      @click="downloadFile"
+
+    <div
+      v-if="!value"
+      class="wa-cluster wa-gap-s wa-align-items-center bone-widget-prompt"
     >
-      <wa-icon name="download"></wa-icon>
-    </wa-button>
-    <div class="box">
+      <wa-icon name="upload"></wa-icon>
+      <span>{{ $t("bone.dropzone") }}</span>
+    </div>
+
+    <div
+      v-else
+      class="wa-flank wa-gap-xs wa-align-items-center"
+    >
       <div
-        v-if="value?.['dest']?.['mimetype'].includes('image')"
-        class="preview has-preview"
-        @click="state.previewopen = !state.previewopen"
+        v-if="value?.['dest']?.['mimetype']?.includes('image')"
+        class="bone-widget-preview has-preview"
+        @click.stop="state.previewopen = !state.previewopen"
       >
-        <img
-          class="preview-img"
-          :src="createBackgroundImage()"
+        <wa-avatar
+          style="--size: round(calc(var(--wa-form-control-height) - 0.09em), 1px)"
+          class="bone-widget-preview-img"
+          shape="rounded"
+          :image="createBackgroundImage()"
           alt=""
-        />
+        ></wa-avatar>
         <wa-dialog
           :label="decodeURIComponent(value?.['dest']?.['name'])"
-          class="preview-overlay"
+          class="bone-widget-preview-overlay"
           :open="state.previewopen"
         >
           <img
@@ -68,49 +58,64 @@
       </div>
       <div
         v-else
-        class="preview"
+        class="bone-widget-preview"
       >
-        <wa-icon
+        <wa-avatar
           v-if="value?.['dest']?.['name']"
-          name="file"
-        ></wa-icon>
+          shape="rounded"
+          style="--size: round(calc(var(--wa-form-control-height) - 0.09em), 1px)"
+        >
+          <wa-icon
+            slot="icon"
+            name="file"
+          ></wa-icon>
+        </wa-avatar>
       </div>
-      <div v-if="value?.['dest']?.['name']">
-        {{ decodeURIComponent(value?.["dest"]?.["name"]) }}
+      <div class="wa-flank:end wa-gap-xs wa-align-items-center bone-widget-file-row">
+        <div
+          v-if="value?.['dest']?.['name']"
+          class="bone-widget-filename"
+          :title="decodeURIComponent(value?.['dest']?.['name'])"
+        >
+          {{ decodeURIComponent(value?.["dest"]?.["name"]) }}
+        </div>
+        <div @click.stop>
+          <slot></slot>
+        </div>
       </div>
     </div>
-    <wa-button
-      v-if="!boneState.multiple"
-      variant="danger"
-      appearance="outlined"
-      :title="$t('bone.del')"
-      class="delete-btn"
-      @click="$emit('change', name, '', lang, index)"
+
+    <div
+      v-if="state.loading"
+      class="wa-cluster wa-align-items-center bone-widget-loader"
     >
-      <wa-icon name="xmark"></wa-icon>
-    </wa-button>
+      <wa-spinner></wa-spinner>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, onMounted, inject, ref } from "vue"
-import { downloadUrlFor, uploadFile } from "../../request/index.js"
+import { downloadUrlFor, uploadFile } from "../../../request/index.js"
 /**
  * Datei-Upload-Widget für Bones vom Typ `relational.tree.leaf.file.file`.
  *
- * Zeigt eine Upload-Schaltfläche und einen optionalen Drag-and-Drop-Bereich.
- * Bei Bilddateien wird eine klickbare Vorschau angezeigt, die einen Dialog öffnet.
- * Der Download der aktuell gespeicherten Datei ist über eine Download-Schaltfläche möglich.
+ * Stellt eine kombinierte Klick-/Drop-Fläche bereit: ein Klick öffnet den File-Picker,
+ * ein Drop lädt die fallengelassene Datei hoch. Bei Bilddateien wird eine klickbare
+ * Vorschau angezeigt, die einen Dialog öffnet. Action-Buttons (Download, Delete)
+ * werden über `<bone-actions>` per Default-Slot eingebracht.
  *
  * @displayName FileBone
  *
- * @cssClass file-wrapper - Äußerer Container des Widgets
- * @cssClass droparea - Eingeblendet während eines aktiven Drag-over
- * @cssClass box - Anzeige-Box mit Dateiname und optionaler Vorschau
- * @cssClass preview - Container für das Vorschaubild oder das Datei-Icon
+ * @cssClass bone-widget-file-area - Äußerer klickbarer Container (Drop-Zone)
+ * @cssClass bone-widget-prompt - Empty-State (Icon + Text)
+ * @cssClass bone-widget-loader - Während des Uploads sichtbar
+ * @cssClass bone-widget-preview - Container für das Vorschaubild oder das Datei-Icon
  * @cssClass has-preview - Zusatzklasse wenn ein Bild-Vorschau vorliegt
- * @cssClass upload-btn - Upload-Schaltfläche (nur sichtbar wenn kein Wert gesetzt)
- * @cssClass delete-btn - Löschen-Schaltfläche (nur bei `multiple: false`)
+ * @cssClass is-dragover - Wenn eine Datei über die Fläche gezogen wird
+ * @cssClass has-value - Wenn ein Wert gesetzt ist
+ * @cssClass is-loading - Während ein Upload läuft
+ * @cssClass is-readonly - Wenn der Bone readonly ist
  */
 defineOptions({
   inheritAttrs: false,
@@ -153,14 +158,18 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 
-function downloadFile() {
-  const url = downloadUrlFor(props.value)
-  if (url) {
-    window.open(url)
-  }
+/**
+ * Triggert den nativen File-Picker des hidden Inputs.
+ * Nur im Empty-State aktiv — ist bereits ein Wert gesetzt, muss zuerst per
+ * Delete-Action geleert oder per Drag-and-Drop ersetzt werden.
+ */
+function openPicker() {
+  if (state.loading || boneState.readonly || props.value) return
+  uploadinput.value?.click()
 }
 
 function createBackgroundImage() {
+  console.log(props.value)
   return downloadUrlFor(props.value, false)
 }
 
@@ -169,6 +178,7 @@ async function handleUpload(event) {
   try {
     for (let file of event.target.files) {
       let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
+      console.log(fileresult)
       uploadinput.value.value = ""
       emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
     }
@@ -194,126 +204,70 @@ async function handleDrop(event) {
 </script>
 
 <style scoped>
-.box {
-  display: flex;
-  align-items: center;
-  padding: 0 var(--sl-spacing-small) 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  border: 1px solid var(--sl-color-gray-500);
-  border-radius: 5px;
-  height: var(--wa-input-height-medium);
-  background-color: transparent;
-}
-
-.preview {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: var(--wa-input-height-medium);
-  width: var(--wa-input-height-medium);
-  aspect-ratio: 1;
-  border-right: 1px solid var(--sl-color-gray-500);
-  margin-right: var(--sl-spacing-small);
-  background-image: /* tint image */
-    linear-gradient(to right, rgba(255, 255, 255, 0.87), rgba(255, 255, 255, 0.87)),
-    /* checkered effect */ linear-gradient(to right, black 50%, white 50%),
-    linear-gradient(to bottom, black 50%, white 50%);
-  background-blend-mode: normal, difference, normal;
-  background-size: 0.65em 0.65em;
-
-  &.has-preview {
-    cursor: pointer;
-  }
-
-  & wa-icon {
-    font-size: 1.1em;
-    color: var(--sl-color-gray-400);
-  }
-
-  .preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-}
-
-.file-wrapper {
-  width: 100%;
-  display: flex;
-  gap: var(--sl-spacing-x-small);
+.bone-widget-file-area {
   position: relative;
-}
+  padding: calc(var(--wa-space-xs) - 1px);
+  border: 2px dashed var(--wa-color-surface-border);
+  border-radius: var(--wa-border-radius-m);
+  cursor: pointer;
+  transition: all 0.15s ease;
 
-.droparea {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  z-index: 10;
-  pointer-events: none;
-  opacity: 0.9;
-  border: 1px solid var(--sl-color-info-500);
-  background-color: var(--sl-color-info-300);
-  color: var(--sl-color-info-900);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.delete-btn {
-  &::part(base) {
-    aspect-ratio: 1;
-  }
-}
-
-.delete-btn {
-  &::part(base) {
-    aspect-ratio: 1;
-  }
-}
-
-.upload-btn {
-  &::part(base) {
-    aspect-ratio: 1;
-  }
-}
-
-.loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-.preview-overlay {
-  &::part(panel) {
-    width: auto;
-    max-width: 1200px;
-  }
-
-  &::part(body) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: /* tint image */
-      linear-gradient(to right, rgba(255, 255, 255, 0.87), rgba(255, 255, 255, 0.87)),
-      /* checkered effect */ linear-gradient(to right, black 50%, white 50%),
-      linear-gradient(to bottom, black 50%, white 50%);
-    background-blend-mode: normal, difference, normal;
-    background-size: 1.2em 1.2em;
+  &.has-value {
+    border-style: none;
     padding: 0;
+    background-color: var(--wa-color-neutral-95);
   }
 
-  & img {
-    width: auto;
-    height: auto;
+  &.is-dragover {
+    border-color: var(--wa-color-brand-50);
+    background-color: var(--wa-color-brand-95);
+  }
+
+  &.is-readonly,
+  &.is-loading,
+  &.has-value {
+    cursor: default;
+  }
+
+  &:hover:not(.is-readonly):not(.is-loading):not(.has-value) {
+    border-color: var(--wa-color-brand-60);
+  }
+}
+
+.bone-widget-prompt {
+  justify-content: center;
+  color: var(--wa-color-on-quiet);
+  /* Klicks fallen auf die outer Drop-Zone durch */
+  pointer-events: none;
+}
+
+/* Dateiname-Zeile darf schrumpfen; lange Namen werden mit Ellipsis abgekürzt */
+.bone-widget-file-row {
+  min-width: 0;
+}
+
+.bone-widget-filename {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bone-widget-loader {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  border-radius: inherit;
+  background-color: color-mix(in srgb, var(--wa-color-surface-default) 70%, transparent);
+}
+
+/* Klickbare Bildvorschau: Zoom-Cursor + leichte Skalierung beim Hover */
+.bone-widget-preview.has-preview {
+  cursor: zoom-in;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: scale(1.08);
   }
 }
 </style>

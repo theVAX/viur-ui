@@ -1,8 +1,8 @@
 <template>
   <wa-input
     ref="stringBone"
-    class="widget-bone widget-bone-string widget-bone-string-default"
-    :class="[`widget-bone-string-${name}`]"
+    class="bone-widget bone-widget-string bone-widget-string-default"
+    :class="[`bone-widget-string-${name}`]"
     :name="name"
     :disabled="boneState.readonly"
     :value="Utils.unescape(value)"
@@ -34,10 +34,10 @@ import Utils from "../utils"
  *
  * @displayName StringBone
  *
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-string - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-string-default - Standard-Variante
- * @cssClass widget-bone-string-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `widget-bone-string-title`
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-string - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-string-default - Standard-Variante
+ * @cssClass bone-widget-string-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-string-title`
  */
 defineOptions({
   inheritAttrs: false,
@@ -137,21 +137,3 @@ onMounted(() => {
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  @media (max-width: 900px) {
-    &::part(base) {
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--sl-border-radius-medium);
-    }
-  }
-}
-</style>

@@ -3,7 +3,7 @@
  * ViUR can return structure as array [[name, bone], ...] or object {name: bone}.
  * bone["using"] (relational/record sub-structure) may still use array format.
  */
-function normalizeStructure(structure) {
+export function normalizeStructure(structure) {
   if (!structure) return {}
   if (Array.isArray(structure)) {
     return Object.fromEntries(structure.map(([name, bone]) => [name, bone]))

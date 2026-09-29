@@ -1,9 +1,9 @@
 <template>
   <div
-    class="record widget-bone widget-bone-relational widget-bone-relational-default"
-    :class="[`widget-bone-relational-${name}`]"
+    class="bone-widget-record bone-widget bone-widget-relational bone-widget-relational-default"
+    :class="[`bone-widget-relational-${name}`]"
   >
-    <div class="single-entry">
+    <div class="bone-widget-single-entry">
       <wa-input
         v-if="state.selection?.['dest']?.['key']"
         :disabled="true"
@@ -17,22 +17,6 @@
         :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
         @change="changeEvent"
       ></wa-combobox>
-
-      <wa-button
-        v-if="!boneState.multiple && !boneState.isEmpty"
-        variant="danger"
-        appearance="outlined"
-        :title="$t('bone.del')"
-        class="delete-btn square-btn"
-        @click="
-          () => {
-            $emit('change', name, '', lang, index)
-            state.selection = null
-          }
-        "
-      >
-        <wa-icon slot="start" name="xmark"></wa-icon>
-      </wa-button>
     </div>
     <Wrapper_nested
       v-if="bone['using']"
@@ -48,9 +32,9 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, inject, computed } from "vue"
+import { reactive, onMounted, inject, computed, watch } from "vue"
 import { useListFetch } from "../../../request/index.js"
-import Wrapper_nested from "../wrapper_nested.vue"
+import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
  * Relational-Auswahl-Widget für Bones vom Typ `relational` und `relational.select`.
  *
@@ -63,14 +47,12 @@ import Wrapper_nested from "../wrapper_nested.vue"
  *
  * @displayName RelationalBone
  *
- * @cssClass record - Äußerer Container des Widgets
- * @cssClass widget-bone - Basis-Klasse aller Bone-Widgets
- * @cssClass widget-bone-relational - Kennzeichnet den Bone-Typ
- * @cssClass widget-bone-relational-default - Standard-Variante
- * @cssClass widget-bone-relational-{name} - Dynamisch gesetzt auf den Bone-Namen
- * @cssClass single-entry - Zeile mit Combobox/Input und Löschen-Button
- * @cssClass delete-btn - Löschen-Schaltfläche (nur bei `multiple: false` und gesetztem Wert)
- * @cssClass square-btn - Quadratische Schaltflächen-Variante
+ * @cssClass bone-widget-record - Äußerer Container des Widgets
+ * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
+ * @cssClass bone-widget-relational - Kennzeichnet den Bone-Typ
+ * @cssClass bone-widget-relational-default - Standard-Variante
+ * @cssClass bone-widget-relational-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass bone-widget-single-entry - Zeile mit Combobox/Input
  */
 defineOptions({
   inheritAttrs: false,
@@ -166,47 +148,17 @@ function changeEventNested(data) {
   }
 }
 
+// Halte state.selection synchron mit props.value — wichtig, wenn der Wert
+// von außen geleert wird (z.B. via Delete-Action).
+watch(
+  () => props.value,
+  (newVal) => {
+    state.selection = newVal || null
+  }
+)
+
 onMounted(() => {
   state.selection = props.value
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-.single-entry {
-  display: flex;
-  gap: var(--sl-spacing-x-small);
-
-  :deep(wa-combobox) {
-    &::part(input__base) {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-  }
-}
-
-wa-input {
-  width: 100%;
-
-  &::part(base) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  &::part(base) {
-    background-color: var(--sl-color-neutral-0);
-  }
-}
-wa-combobox {
-  width: 100%;
-
-  &::part(input) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-
-    & :deep(&::part(base)) {
-      border: 1px solid red;
-    }
-  }
-}
-</style>

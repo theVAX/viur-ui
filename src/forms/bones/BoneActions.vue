@@ -1,0 +1,127 @@
+<template>
+  <template
+    v-for="(action, i) in state.actions"
+    :key="action.arg + '_' + name + '_' + lang + '_' + i"
+  >
+    <!-- title darf ein i18n-Key sein (z.B. "bone.del") — Klartext bleibt
+         Klartext ($te-Prüfung, keine missing-Key-Warnungen). -->
+    <wa-button
+      :disabled="isActionDisabled(action, ctx)"
+      size="medium"
+      appearance="outlined"
+      :variant="action.variant ?? 'neutral'"
+      :title="action.title && $te(action.title) ? $t(action.title) : action.title"
+      @click="onClick(action)"
+    >
+      <wa-icon :name="action.icon"></wa-icon>
+    </wa-button>
+
+    <action-dialog
+      v-if="action.type === 'assistant'"
+      :open="action._opened"
+      :name="bone?.descr"
+      :module="bone?.module"
+      :action="action"
+      :params="{ name, value, index, lang, bone, boneState }"
+      @close="onClose"
+      @next="onNext"
+    ></action-dialog>
+  </template>
+</template>
+
+<script setup>
+import { reactive, computed, onMounted, inject } from "vue"
+import { resolveActions, isActionDisabled, getActionHandler, formConfiguredActions } from "./actions"
+import ActionDialog from "./actions/ActionDialog.vue"
+
+const emit = defineEmits(["change"])
+
+const props = defineProps({
+  name: String,
+  value: [Object, String, Number, Boolean, Array],
+  index: Number,
+  lang: String,
+  bone: Object,
+  /**
+   * Welche Actions diese Leiste zeigt:
+   * - "entry": alle bei `boneactions`, sonst nur die Pflicht-Actions (Standard)
+   * - "value": nur die Pflicht-Actions — am Wert EINER Sprache eines
+   *   mehrsprachigen Bones (Löschen/Download betreffen nur diese Sprache)
+   * - "bone": nur die übrigen — die Leiste neben den Sprach-Tabs (Übersetzen …)
+   */
+  scope: {
+    type: String,
+    default: "entry",
+    validator: (value) => ["entry", "value", "bone"].includes(value),
+  },
+})
+
+const boneState = inject("boneState")
+// Vom HOST bereitgestellte Auswahl für relationale Bones (z.B. ein Admin, der
+// einen Listen-Dialog öffnet): `(request) => Promise<Row[]|null>`. Ohne
+// Provider existiert die zugehörige Action schlicht nicht (`when`-Prädikat).
+const relationSelector = inject("viurRelationSelector", null)
+// Für Mehrfach-Übernahme in multiple-Bones (hängt weitere Einträge an) und
+// die Pflicht-Action "Zeile entfernen".
+const addMultipleEntry = inject("addMultipleEntry", null)
+const removeMultipleEntry = inject("removeMultipleEntry", null)
+// Formular-weite Action-Konfiguration (ViForm `actions`-Prop).
+const boneActionsConfig = inject("boneActionsConfig", null)
+
+const state = reactive({
+  actions: [],
+})
+
+/** Steckt diese Action-Leiste in einer ZEILE eines multiple-Bones? */
+const multipleRow = props.index !== null && props.index !== undefined
+
+const ctx = computed(() => ({
+  name: props.name,
+  value: props.value,
+  index: props.index,
+  lang: props.lang,
+  bone: props.bone,
+  boneState,
+  relationSelector,
+  multipleRow,
+  update: (val) => emit("change", props.name, val, props.lang, props.index),
+  /** Weiteren Eintrag ans Multiple-Array hängen (Mehrfach-Auswahl). */
+  appendEntry: (val) => addMultipleEntry?.(props.lang ?? null, val),
+  /** DIESE Zeile aus dem Multiple-Array entfernen (Pflicht-Action). */
+  removeEntry: () => removeMultipleEntry?.(props.index, props.lang ?? null),
+}))
+
+onMounted(() => {
+  // Formular-Konfiguration VOR den Bone-eigenen params.actions (Bone-Lokales
+  // ist spezifischer); Minus-Einträge gewinnen quellenunabhängig immer.
+  const configured = [...formConfiguredActions(boneActionsConfig, props.name), ...(props.bone?.params?.actions ?? [])]
+  const all = resolveActions(props.bone, configured, boneState, { relationSelector, multipleRow })
+  // Ohne `boneactions` bleiben nur die PFLICHT-Actions (Gerüst, z.B. das
+  // Zeilen-X) — die Leiste als Ganzes ist Opt-in, das Gerüst nicht.
+  if (props.scope === "bone") {
+    state.actions = all.filter((action) => !action.required)
+  } else if (props.scope === "value" || !boneState?.boneactions) {
+    state.actions = all.filter((action) => action.required)
+  } else {
+    state.actions = all
+  }
+})
+
+function onClick(action) {
+  if (action.type === "assistant") {
+    action._opened = true
+  } else if (action.type === "callback") {
+    const handler = getActionHandler(action.arg)
+    handler?.(ctx.value)
+  }
+}
+
+function onClose(val, lang, action) {
+  action._opened = false
+  if (val) emit("change", props.name, val, lang, props.index)
+}
+
+function onNext(val, lang, action) {
+  if (val) emit("change", props.name, val, lang, props.index)
+}
+</script>

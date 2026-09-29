@@ -1,8 +1,8 @@
 <template>
   <div
     v-if="boneState['bonestructure']['multiple']"
-    class="wrapper-multiple widget-bone widget-bone-select widget-bone-select-choose"
-    :class="[`widget-bone-select-${name}`]"
+    class="bone-widget-multiple-wrapper bone-widget bone-widget-select bone-widget-select-choose"
+    :class="[`bone-widget-select-${name}`]"
   >
     <wa-checkbox
       v-for="value in convertObjToList()"
@@ -16,17 +16,19 @@
     </wa-checkbox>
   </div>
 
+  <!-- readonly an der Gruppe (siehe booleanBoneChoose): disabled Radios
+       zeigten keine Auswahl -->
   <wa-radio-group
     v-else
     :value="state.value"
-    class="widget-bone widget-bone-select widget-bone-select-choose"
-    :class="[`widget-bone-select-${name}`]"
+    :disabled="boneState.readonly"
+    class="bone-widget bone-widget-select bone-widget-select-choose"
+    :class="[`bone-widget-select-${name}`]"
     @change="changeEvent"
   >
     <wa-radio
       v-for="value in convertObjToList()"
       :value="value[0]"
-      :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     >
       {{ value[1] }}
@@ -100,19 +102,3 @@ onMounted(() => {
   emit("change", props.name, state.value, props.lang, props.index) //init
 })
 </script>
-
-<style scoped>
-.wrapper-multiple {
-  display: flex;
-  flex-direction: column;
-}
-
-wa-checkbox::part(control--checked) {
-  background-color: var(--sl-color-success-600);
-  border: 1px solid var(--sl-color-primary-600);
-}
-wa-checkbox::part(control--indeterminate) {
-  background-color: var(--sl-color-success-600);
-  border: 1px solid var(--sl-color-success-600);
-}
-</style>

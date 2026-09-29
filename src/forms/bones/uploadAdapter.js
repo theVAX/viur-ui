@@ -18,7 +18,10 @@ class ViURUploadAdapter {
               this.loader.uploaded = 75
               this.loader.uploaded = 100
               resolve({
-                default: downloadUrlFor({ dest: uploadedData }, false, "vi"),
+                // Die URL landet im HTML des Text-Bones: als /file/download/…
+                // (nur absolut gemacht) — die erkennt viur-core wieder
+                // (Blob-Referenz, srcset) und sie liegt nicht hinter /vi.
+                default: downloadUrlFor(uploadedData["downloadUrl"]),
               })
             })
             .catch((error) => {

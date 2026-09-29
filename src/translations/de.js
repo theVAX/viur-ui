@@ -12,6 +12,7 @@ export default {
     list: "Auflisten",
     addEmpty: "Neuer Eintrag",
     no_entries: "Keine Einträge",
+    errors_summary: "Fehler",
   },
   lang: "Sprache",
   bones: {
@@ -26,6 +27,13 @@ export default {
     },
     phone: {
       placeholder: "Telefon/Fax",
+    },
+    password: {
+      mismatch: "Die eingegebenen Passwörter stimmen nicht überein.",
+      empty: "Das eingegebene Passwort ist leer.",
+    },
+    text: {
+      openInNewWindow: "Link in neuem Fenster öffnen",
     },
   },
 
@@ -77,6 +85,10 @@ export default {
     collapseRow: "Zeile einklappen",
     expandRow: "Zeile ausklappen",
     noData: "Keine Daten",
+    noValues: "Keine Werte",
+    clear: "Leeren",
+    filterEquals: "genau …",
+    filterContains: "enthält …",
     noResults: "Keine Treffer",
     filterFrom: "von",
     filterTo: "bis",
@@ -108,6 +120,7 @@ export default {
     path: "Pfad",
     navigation: "Navigation",
     uploadHint: "Dateien hier ablegen",
+    name: "Name",
   },
   form: {
     next: "Weiter",
@@ -122,6 +135,7 @@ export default {
       original: "Original Sprache ({lang}):",
       target: "Zielsprache ({lang}):",
       run: "Übersetzen",
+      name: "Übersetzen",
       applyNext: "Übernehmen und nächste leere Sprache",
       apply: "Ziel für {lang} übernehmen",
     },
@@ -130,6 +144,23 @@ export default {
       instructions: "weitere Anweisungen",
       run: "Beschreibung erstellen",
       apply: "Beschreibung übernehmen",
+      name: "Bildbeschreibung erstellen",
+      title: "Bild beschreiben",
+    },
+    debug: {
+      name: "Debug",
+      title: "Bone Debug-Informationen anzeigen",
+      structure: "Bone-Struktur",
+      value: "Bone-Wert",
+      state: "Bone-Status",
+      context: "Kontext",
+    },
+    placeholder: {
+      name: "Platzhalter",
+      title: "Platzhalter (TODO: entfernen)",
+    },
+    delete: {
+      name: "Löschen",
     },
   },
   messages: {

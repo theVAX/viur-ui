@@ -1,52 +1,52 @@
 import type { DefineComponent } from "vue"
 
-/** Props von LoginScreen.vue (siehe defineProps dort). */
+/** Props of LoginScreen.vue (see defineProps there). */
 export interface LoginScreenProps {
-  /** Überschrift der Karte; per `header`-Slot ersetzbar. */
+  /** Heading of the card; replaceable via the `header` slot. */
   title?: string
   /**
-   * Endpunkt unterhalb des `user`-Moduls, der den Ablauf startet. Envelope v2
-   * fährt die ganze Kette ab "login". viur-core 3.9 (klassisches v1) antwortet
-   * auf "login" mit der Provider-Auswahl; die Kette führt der LoginScreen dann
-   * selbst wie vi-vue-utils (Passwort, Passwort vergessen, zweiter Faktor).
+   * Endpoint below the `user` module that starts the flow. Envelope v2
+   * runs the whole chain from "login". viur-core 3.9 (classic v1) answers
+   * "login" with the provider choice; the LoginScreen then drives the chain
+   * itself like vi-vue-utils (password, lost password, second factor).
    */
   action?: string
-  /** Renderer für die Requests; Standard: VITE_DEFAULT_RENDERER oder "json". */
+  /** Renderer for the requests; default: VITE_DEFAULT_RENDERER or "json". */
   renderer?: string | null
-  /** Protokollversion festnageln; null → unversioniert (Server wählt v2). */
+  /** Pin the protocol version; null → unversioned (server picks v2). */
   version?: string | number | null
   /**
-   * OAuth-Client-ID für „Sign in with Google". Ohne Angabe wird die vom Server
-   * per `/vi/config` ("admin.user.google.clientID") gelieferte ID genutzt;
-   * `false` blendet den Knopf immer aus.
+   * OAuth client ID for "Sign in with Google". If omitted, the ID supplied by
+   * the server via `/vi/config` ("admin.user.google.clientID") is used;
+   * `false` always hides the button.
    */
   googleClientId?: string | false | null
   /**
-   * Hintergrundbild der App, falls die Konfiguration keines setzt
-   * ("admin.login.background" leer). Wie dort: absolute URLs bleiben, "/…" ist
-   * ein Pfad auf dem Backend, alles andere ein Asset der App (unter BASE_URL).
+   * Background image of the app, in case the configuration doesn't set one
+   * ("admin.login.background" empty). As there: absolute URLs stay, "/…" is
+   * a path on the backend, anything else an asset of the app (under BASE_URL).
    */
   backgroundImage?: string | null
-  /** Logo über dem Login, falls "admin.login.logo" leer ist (Auflösung wie oben). */
+  /** Logo above the login, in case "admin.login.logo" is empty (resolved as above). */
   logo?: string | null
-  /** Fortschrittsleiste des Multistep-Formulars zeigen. */
+  /** Show the progress bar of the multistep form. */
   showSteps?: boolean
-  /** Beim Mounten eine bestehende Session prüfen und den Login überspringen. */
+  /** On mount, check for an existing session and skip the login. */
   autoStart?: boolean
   /**
-   * Ziel nach erfolgreicher Anmeldung (auch wenn `autoStart` eine bestehende
-   * Session findet). Läuft über vue-router, falls die Anwendung einen hat,
-   * sonst über `location`. Ohne Angabe bleibt die Ansicht stehen und der
-   * Aufrufer entscheidet in `@success`.
+   * Target after a successful login (also when `autoStart` finds an existing
+   * session). Goes through vue-router if the application has one,
+   * otherwise through `location`. If omitted, the view stays put and the
+   * caller decides in `@success`.
    */
   redirect?: string
 }
 
-/** Ereignisse als `on*`-Props, damit `@success` / `@error` im Template typen. */
+/** Events as `on*` props so that `@success` / `@error` are typed in the template. */
 export interface LoginScreenEmitProps {
-  /** Angemeldet — mit den Werten des UserSkel. */
+  /** Logged in — with the values of the UserSkel. */
   onSuccess?: (user: Record<string, any> | null) => void
-  /** Login fehlgeschlagen (Formularfehler, Transport, "google"). */
+  /** Login failed (form error, transport, "google"). */
   onError?: (error: unknown) => void
 }
 

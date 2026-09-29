@@ -1,7 +1,7 @@
 <template>
-  <!-- Inhalt des Filter-Popovers einer Spalte. Welche Steuerelemente erscheinen,
-       entscheidet der filterType; die Werte für set-Filter kommen aus den
-       Facetten (oder aus column.def.filterOptions, z. B. im Server-Modus). -->
+  <!-- Content of a column's filter popover. Which controls appear is decided
+       by the filterType; the values for set filters come from the
+       facets (or from column.def.filterOptions, e.g. in server mode). -->
   <div class="vi-dtf wa-stack wa-gap-s">
     <span class="vi-dtf-title">{{ column.label }}</span>
 
@@ -70,7 +70,7 @@
           v-if="!state.filteredOptions.length"
           class="vi-dtf-empty"
         >
-          Keine Werte
+          {{ t("dataTable.noValues") }}
         </span>
       </div>
     </template>
@@ -80,7 +80,7 @@
         class="vi-dtf-input"
         size="small"
         appearance="outlined"
-        :placeholder="state.kind === 'equals' ? 'genau …' : 'enthält …'"
+        :placeholder="state.kind === 'equals' ? t('dataTable.filterEquals') : t('dataTable.filterContains')"
         :value="state.text"
         @input="emit('update:modelValue', ($event.target as HTMLInputElement).value || undefined)"
       ></wa-input>
@@ -93,7 +93,7 @@
         appearance="outlined"
         @click="clear"
       >
-        Leeren
+        {{ t("dataTable.clear") }}
       </wa-button>
     </div>
   </div>

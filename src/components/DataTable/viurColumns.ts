@@ -1,38 +1,38 @@
 import type { CellBadge, DataTableColumn, Row } from "./types"
 import { compareValues, firstValueOf } from "./columns"
-// @ts-expect-error – JS-Modul ohne Typen
+// @ts-expect-error – JS module without types
 import Utils from "../../forms/bones/utils.js"
 
 // --------------------------------------------------------------------------- //
-// ViUR-Struktur → Spalten der DataTable                                       //
+// ViUR structure → DataTable columns                                          //
 // --------------------------------------------------------------------------- //
 //
-// Eine ViUR-Liste liefert neben den Datensätzen ihre `structure`: je Bone ein
-// Objekt mit `descr` (Beschriftung), `type` ("str", "str.email", "numeric",
-// "select", "relational.…"), `multiple`, `languages`, `indexed`, `visible` und
-// typabhängigen Zusätzen (`values` bei select, `precision` bei numeric,
-// `format` bei relationalen Bones).
+// Besides the records, a ViUR list delivers its `structure`: per bone an
+// object with `descr` (label), `type` ("str", "str.email", "numeric",
+// "select", "relational.…"), `multiple`, `languages`, `indexed`, `visible` and
+// type-specific extras (`values` for select, `precision` for numeric,
+// `format` for relational bones).
 //
-// Hier entstehen daraus Spalten: Beschriftung, Ausrichtung, Sortierbarkeit und
-// ein `formatter`. Die Übersetzung Wert → Text macht `Utils.boneToString`
-// (src/forms/bones/utils.js) — die EINE Stelle dafür, die auch die Formulare
-// und Formatstrings der Bones benutzen.
+// This turns them into columns: label, alignment, sortability and
+// a `formatter`. The value → text conversion is done by `Utils.boneToString`
+// (src/forms/bones/utils.js) — the ONE place for it, which the forms and the
+// bones' format strings use as well.
 
-/** Ein Bone der Struktur, wie der Renderer ihn liefert. */
+/** A bone of the structure, as delivered by the renderer. */
 export interface BoneDescription {
   descr?: string
   type?: string
   multiple?: boolean
   languages?: string[] | null
-  /** Nur indizierte Bones lassen sich serverseitig sortieren. */
+  /** Only indexed bones can be sorted server-side. */
   indexed?: boolean
   visible?: boolean
   readonly?: boolean
-  /** select: Wert → Beschriftung. */
+  /** select: value → label. */
   values?: Record<string, string> | [string, string][]
-  /** numeric: Nachkommastellen. */
+  /** numeric: decimal places. */
   precision?: number
-  /** date: was der Bone überhaupt führt. */
+  /** date: what the bone actually holds. */
   date?: boolean
   time?: boolean
   params?: Record<string, unknown> | null
@@ -43,49 +43,49 @@ export type BoneStructure = Record<string, BoneDescription>
 
 export interface ColumnsFromStructureOptions<R extends Row = Row> {
   /**
-   * Sprache mehrsprachiger Bones: ein Code zeigt diese Sprache (leer →
-   * erste befüllte, mit ihrer Flagge gekennzeichnet), `"*"` zeigt ALLE
-   * befüllten Sprachen mit Flaggen-Präfix; ohne Angabe die erste des Bones.
+   * Language of multilingual bones: a code shows that language (empty →
+   * first filled one, marked with its flag), `"*"` shows ALL filled
+   * languages with a flag prefix; if unset, the bone's first language.
    */
   language?: string | null
-  /** Steht im `"*"`-Modus vorn — üblicherweise die UI-Sprache. */
+  /** Comes first in `"*"` mode — usually the UI language. */
   primaryLanguage?: string | null
-  /** Gebietseinstellung für Zahlen und Datumsangaben. */
+  /** Locale for numbers and dates. */
   locale?: string
-  /** Nur diese Bones, in dieser Reihenfolge (Standard: alle sichtbaren). */
+  /** Only these bones, in this order (default: all visible ones). */
   bones?: string[]
-  /** Diese Bones nie zeigen (zusätzlich zu den ohnehin verborgenen). */
+  /** Never show these bones (in addition to the ones hidden anyway). */
   exclude?: string[]
-  /** Beschriftung für `bool`-Werte. */
+  /** Labels for `bool` values. */
   boolTexts?: [string, string]
-  /** Ergänzt/überschreibt die erzeugte Spalte je Bone. */
+  /** Extends/overrides the generated column per bone. */
   overrides?: Record<string, Partial<DataTableColumn<R>>>
   /**
-   * Der VOLLSTÄNDIGE Datensatz liegt im Client (alles geladen): Sortieren,
-   * Suchen und Spaltenfilter laufen dann lokal auf allen Spalten — ohne den
-   * Server. Ohne das Flag bleibt beides aus, denn auf einem ANGELADENEN
-   * Ausschnitt wären lokale Sortierung/Filter eine Lüge; dort sortiert der
-   * Server (nur indizierte Bones, über die Tabellen-Ereignisse).
+   * The COMPLETE dataset is in the client (everything loaded): sorting,
+   * searching and column filters then run locally on all columns — without
+   * the server. Without the flag both stay off, because on a PARTIALLY loaded
+   * slice local sorting/filtering would be a lie; there the server sorts
+   * (indexed bones only, via the table events).
    */
   local?: boolean
 }
 
-/** Bones, die in einer Liste nichts zu suchen haben. */
+/** Bones that have no place in a list. */
 const HIDDEN_TYPES = ["password", "credential"]
 
 // --------------------------------------------------------------------------- //
-// Plaketten für reine select- und bool-Bones                                   //
+// Badges for plain select and bool bones                                       //
 // --------------------------------------------------------------------------- //
 //
-// Reine Auswahlwerte ("select" ohne Untertyp — country & Co. bleiben Text) und
-// bool-Werte werden als farbige Plakette gerendert: POSITIVE Werte grün,
-// NEGATIVE rot, alle übrigen Optionen bekommen regenbogen-abgestufte Farbtöne
-// (gleichmäßig über den Farbkreis, stabil je Optionsreihenfolge). Ob ein Wert
-// positiv/negativ ist, entscheidet die Schlüsselwortliste unten — geprüft
-// werden Options-SCHLÜSSEL und -BESCHRIFTUNG, unabhängig von Groß-/
-// Kleinschreibung ("Ja", "ja", "yes", "Aktiv", "visible", …).
+// Plain choice values ("select" without subtype — country & co. stay text) and
+// bool values are rendered as colored badges: POSITIVE values green,
+// NEGATIVE red, all other options get rainbow-graded hues
+// (evenly across the color wheel, stable per option order). Whether a value
+// is positive/negative is decided by the keyword list below — both option
+// KEYS and LABELS are checked, regardless of upper/lower
+// case ("Ja", "ja", "yes", "Aktiv", "visible", …).
 
-/** Positive Werte → grün. Erweiterbar (z. B. `POSITIVE_KEYWORDS.add("live")`). */
+/** Positive values → green. Extensible (e.g. `POSITIVE_KEYWORDS.add("live")`). */
 export const POSITIVE_KEYWORDS = new Set([
   "yes",
   "ja",
@@ -109,7 +109,7 @@ export const POSITIVE_KEYWORDS = new Set([
   "online",
 ])
 
-/** Negative Werte → rot. */
+/** Negative values → red. */
 export const NEGATIVE_KEYWORDS = new Set([
   "no",
   "nein",
@@ -151,7 +151,7 @@ function keywordTone(...candidates: unknown[]): string | null {
   return null
 }
 
-/** select-`values` vereinheitlichen: [ [schlüssel, beschriftung], … ]. */
+/** Normalize select `values`: [ [key, label], … ]. */
 function selectOptions(bone: BoneDescription): [string, string][] {
   const values = bone.values
   if (Array.isArray(values)) return values.map(([key, label]) => [String(key), String(label)])
@@ -160,9 +160,9 @@ function selectOptions(bone: BoneDescription): [string, string][] {
 }
 
 /**
- * Farbzuordnung der Optionen eines reinen select-Bones: Schlüsselwörter
- * entscheiden grün/rot, die übrigen Optionen teilen sich den Farbkreis
- * (Regenbogen), in der Reihenfolge ihrer Definition.
+ * Color mapping for the options of a plain select bone: keywords
+ * decide green/red, the remaining options share the color wheel
+ * (rainbow), in the order of their definition.
  */
 export function selectToneMap(bone: BoneDescription): Map<string, { label: string; color: string }> {
   const options = selectOptions(bone)
@@ -174,7 +174,7 @@ export function selectToneMap(bone: BoneDescription): Map<string, { label: strin
     else neutrals.push([key, label])
   }
   neutrals.forEach(([key, label], index) => {
-    // Regenbogen: gleichmäßig verteilte Farbtöne, Sättigung/Helligkeit fest.
+    // Rainbow: evenly distributed hues, fixed saturation/lightness.
     const hue = Math.round((360 / Math.max(1, neutrals.length)) * index)
     map.set(key, { label, color: `oklch(0.62 0.16 ${hue})` })
   })
@@ -182,8 +182,8 @@ export function selectToneMap(bone: BoneDescription): Map<string, { label: strin
 }
 
 /**
- * Plaketten-Funktion für einen Bone — oder null, wenn der Bone keine bekommt.
- * Nur REINE selects (`type === "select"`, kein select.country o. Ä.) und bools.
+ * Badge function for a bone — or null if the bone doesn't get any.
+ * Only PLAIN selects (`type === "select"`, no select.country or similar) and bools.
  */
 export function badgesForBone(
   bone: BoneDescription,
@@ -211,21 +211,21 @@ export function badgesForBone(
   }
 }
 
-/** Typfamilie eines Bones: "str.email" → "str". */
+/** Type family of a bone: "str.email" → "str". */
 export function boneFamily(type: string | undefined | null): string {
   return Utils.boneFamily(type) as string
 }
 
 /**
- * Bone-Wert eines Datensatzes als Text — mit Sprachen, `multiple` und dem
- * Formatstring relationaler Bones. Dünne Hülle um `Utils.boneToString`, damit
- * Tabellen-Code bei den DataTable-Typen bleiben kann.
+ * Bone value of a record as text — with languages, `multiple` and the
+ * format string of relational bones. Thin wrapper around `Utils.boneToString`
+ * so table code can stay with the DataTable types.
  */
 export function boneText(value: unknown, bone: BoneDescription, options: ColumnsFromStructureOptions = {}): string {
   return Utils.boneToString(value, bone, options) as string
 }
 
-/** Lokaler Spaltenfilter passend zum Bone-Typ. */
+/** Local column filter matching the bone type. */
 function localFilterFor(bone: BoneDescription, options: ColumnsFromStructureOptions): Partial<DataTableColumn> {
   const family = boneFamily(bone.type)
   if (bone.type === "bool") {
@@ -251,10 +251,10 @@ function localFilterFor(bone: BoneDescription, options: ColumnsFromStructureOpti
 const isEmptyValue = (value: unknown): boolean => value === null || value === undefined || value === ""
 
 /**
- * Sortierwert eines MEHRSPRACHIGEN Bones: dieselbe Sprache, die die Anzeige
- * nach vorn stellt — die gewünschte (bzw. bei `"*"` die primäre), und wenn
- * die leer ist, die erste befüllte. So sortiert die Spalte nach dem Text, den
- * die Zelle tatsächlich zeigt, nicht stur nach der ersten Bone-Sprache.
+ * Sort value of a MULTILINGUAL bone: the same language the display puts
+ * first — the requested one (or the primary one for `"*"`), and if that is
+ * empty, the first filled one. This way the column sorts by the text the
+ * cell actually shows, not blindly by the bone's first language.
  */
 function languageSortValue(value: unknown, languages: string[], options: ColumnsFromStructureOptions): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value
@@ -267,18 +267,18 @@ function languageSortValue(value: unknown, languages: string[], options: Columns
   return record[lang]
 }
 
-/** Zahlen rechts, alles andere links — wie in Tabellen üblich. */
+/** Numbers right, everything else left — as usual in tables. */
 function alignOf(bone: BoneDescription): "start" | "end" {
   return boneFamily(bone.type) === "numeric" && !bone.multiple ? "end" : "start"
 }
 
 /**
- * Spalten aus einer ViUR-Struktur.
+ * Columns from a ViUR structure.
  *
- * Sortierbar wird eine Spalte nur, wenn der Bone `indexed` ist und weder
- * `multiple` noch mehrsprachig — nach allem anderen kann der Server nicht
- * ordnen. Suche und Spaltenfilter bleiben aus: die macht bei einer Liste der
- * Server, der Aufrufer verdrahtet sie über die Ereignisse der Tabelle.
+ * A column only becomes sortable if the bone is `indexed` and neither
+ * `multiple` nor multilingual — the server can't order by anything else.
+ * Search and column filters stay off: for a list the server handles those,
+ * the caller wires them up via the table's events.
  */
 export function columnsFromStructure<R extends Row = Row>(
   structure: BoneStructure | null | undefined,
@@ -295,8 +295,8 @@ export function columnsFromStructure<R extends Row = Row>(
     if (bone.visible === false) continue
     if (HIDDEN_TYPES.includes(boneFamily(bone.type))) continue
 
-    // Server-Modus: nur indizierte Bones sind sortierbar; lokal (alles
-    // geladen) darf nach jeder Spalte sortiert, gesucht und gefiltert werden.
+    // Server mode: only indexed bones are sortable; locally (everything
+    // loaded) every column may be sorted, searched and filtered.
     const sortable = options.local === true || (bone.indexed === true && !bone.multiple && !bone.languages?.length)
     const column: DataTableColumn<R> = {
       field: name,
@@ -309,7 +309,7 @@ export function columnsFromStructure<R extends Row = Row>(
       minWidth: 120,
       flex: 1,
     }
-    // Mehrsprachig: nach der ANGEZEIGTEN Sprache sortieren (siehe oben).
+    // Multilingual: sort by the DISPLAYED language (see above).
     if (bone.languages?.length) {
       const languages = bone.languages
       column.comparator = (a, b) =>
@@ -320,7 +320,7 @@ export function columnsFromStructure<R extends Row = Row>(
         )
     }
 
-    // Reine selects und bools als farbige Plaketten (siehe badgesForBone).
+    // Plain selects and bools as colored badges (see badgesForBone).
     const badge = badgesForBone(bone, options as ColumnsFromStructureOptions)
     if (badge) column.badge = (value) => badge(value)
     if (options.local === true) Object.assign(column, localFilterFor(bone, options as ColumnsFromStructureOptions))

@@ -3,8 +3,8 @@
     v-for="(action, i) in state.actions"
     :key="action.arg + '_' + name + '_' + lang + '_' + i"
   >
-    <!-- title darf ein i18n-Key sein (z.B. "bone.del") — Klartext bleibt
-         Klartext ($te-Prüfung, keine missing-Key-Warnungen). -->
+    <!-- title may be an i18n key (e.g. "bone.del") — plain text stays
+         plain text ($te check, no missing-key warnings). -->
     <wa-button
       :disabled="isActionDisabled(action, ctx)"
       size="medium"
@@ -43,11 +43,11 @@ const props = defineProps({
   lang: String,
   bone: Object,
   /**
-   * Welche Actions diese Leiste zeigt:
-   * - "entry": alle bei `boneactions`, sonst nur die Pflicht-Actions (Standard)
-   * - "value": nur die Pflicht-Actions — am Wert EINER Sprache eines
-   *   mehrsprachigen Bones (Löschen/Download betreffen nur diese Sprache)
-   * - "bone": nur die übrigen — die Leiste neben den Sprach-Tabs (Übersetzen …)
+   * Which actions this bar shows:
+   * - "entry": all with `boneactions`, otherwise only the required actions (default)
+   * - "value": only the required actions — on the value of ONE language of a
+   *   multilingual bone (delete/download only affect this language)
+   * - "bone": only the rest — the bar next to the language tabs (translate …)
    */
   scope: {
     type: String,
@@ -57,22 +57,22 @@ const props = defineProps({
 })
 
 const boneState = inject("boneState")
-// Vom HOST bereitgestellte Auswahl für relationale Bones (z.B. ein Admin, der
-// einen Listen-Dialog öffnet): `(request) => Promise<Row[]|null>`. Ohne
-// Provider existiert die zugehörige Action schlicht nicht (`when`-Prädikat).
+// Selector for relational bones provided by the HOST (e.g. an admin that
+// opens a list dialog): `(request) => Promise<Row[]|null>`. Without a
+// provider the corresponding action simply doesn't exist (`when` predicate).
 const relationSelector = inject("viurRelationSelector", null)
-// Für Mehrfach-Übernahme in multiple-Bones (hängt weitere Einträge an) und
-// die Pflicht-Action "Zeile entfernen".
+// For multi-selection into multiple bones (appends further entries) and
+// the required action "remove row".
 const addMultipleEntry = inject("addMultipleEntry", null)
 const removeMultipleEntry = inject("removeMultipleEntry", null)
-// Formular-weite Action-Konfiguration (ViForm `actions`-Prop).
+// Form-wide action configuration (ViForm `actions` prop).
 const boneActionsConfig = inject("boneActionsConfig", null)
 
 const state = reactive({
   actions: [],
 })
 
-/** Steckt diese Action-Leiste in einer ZEILE eines multiple-Bones? */
+/** Is this action bar inside a ROW of a multiple bone? */
 const multipleRow = props.index !== null && props.index !== undefined
 
 const ctx = computed(() => ({
@@ -85,19 +85,19 @@ const ctx = computed(() => ({
   relationSelector,
   multipleRow,
   update: (val) => emit("change", props.name, val, props.lang, props.index),
-  /** Weiteren Eintrag ans Multiple-Array hängen (Mehrfach-Auswahl). */
+  /** Append another entry to the multiple array (multi-selection). */
   appendEntry: (val) => addMultipleEntry?.(props.lang ?? null, val),
-  /** DIESE Zeile aus dem Multiple-Array entfernen (Pflicht-Action). */
+  /** Remove THIS row from the multiple array (required action). */
   removeEntry: () => removeMultipleEntry?.(props.index, props.lang ?? null),
 }))
 
 onMounted(() => {
-  // Formular-Konfiguration VOR den Bone-eigenen params.actions (Bone-Lokales
-  // ist spezifischer); Minus-Einträge gewinnen quellenunabhängig immer.
+  // Form configuration BEFORE the bone's own params.actions (bone-local
+  // is more specific); minus entries always win regardless of source.
   const configured = [...formConfiguredActions(boneActionsConfig, props.name), ...(props.bone?.params?.actions ?? [])]
   const all = resolveActions(props.bone, configured, boneState, { relationSelector, multipleRow })
-  // Ohne `boneactions` bleiben nur die PFLICHT-Actions (Gerüst, z.B. das
-  // Zeilen-X) — die Leiste als Ganzes ist Opt-in, das Gerüst nicht.
+  // Without `boneactions` only the REQUIRED actions remain (scaffolding, e.g. the
+  // row X) — the bar as a whole is opt-in, the scaffolding is not.
   if (props.scope === "bone") {
     state.actions = all.filter((action) => !action.required)
   } else if (props.scope === "value" || !boneState?.boneactions) {

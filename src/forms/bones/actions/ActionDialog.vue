@@ -5,7 +5,7 @@
   >
     <wa-dialog
       open
-      :label="action.name + (name ? ' - ' + name : '')"
+      :label="(action.name && $te(action.name) ? $t(action.name) : action.name) + (name ? ' - ' + name : '')"
       class="bone-action-dialog"
       @wa-after-hide="emit('close', null, null, action)"
     >

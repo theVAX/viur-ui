@@ -12,44 +12,44 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 /**
- * Schalter für boolesche Werte (true/false).
+ * Switch for boolean values (true/false).
  *
- * Verfügbar in drei Varianten: `bool` (Switch), `bool.choose` (Ja/Nein-Buttons),
- * `bool.select` (Dropdown). Der Wert `null`, `undefined`, `false` und `""` wird
- * einheitlich als `false` behandelt.
+ * Available in three variants: `bool` (switch), `bool.choose` (yes/no buttons),
+ * `bool.select` (dropdown). The values `null`, `undefined`, `false` and `""` are
+ * uniformly treated as `false`.
  *
  * @displayName BooleanBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-boolean - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-boolean-default - Standard-Variante
- * @cssClass bone-widget-boolean-{name} - Dynamisch gesetzt auf den Bone-Namen
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-boolean - Identifies the bone type
+ * @cssClass bone-widget-boolean-default - Default variant
+ * @cssClass bone-widget-boolean-{name} - Dynamically set to the bone name
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert. `null`, `undefined`, `false` und `""` gelten als `false`. */
+  /** Current bone value. `null`, `undefined`, `false` and `""` count as `false`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Autofocus (aktuell nicht aktiv genutzt). */
+  /** Autofocus (currently not actively used). */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {boolean} value - Aktueller Wert
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {boolean} value - Current value
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

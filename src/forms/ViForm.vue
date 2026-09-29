@@ -107,7 +107,7 @@
 
   <!-- Footer / action bar for the multi-step flow. Override via the `actions`
        slot; slot props expose the `next` (submit/advance) and `back` actions
-       plus flow state. The default is a Zurück / Weiter|Absenden bar. -->
+       plus flow state. The default is a Back / Next|Submit bar. -->
   <slot
     name="actions"
     :next="submitStep"
@@ -246,16 +246,16 @@ const props = defineProps({
     default: false,
   },
   /**
-   * Formular-weite Action-Konfiguration für die Bones — dieselben Einträge
-   * wie `bone.params.actions`: Namen/Inline-Objekte AKTIVIEREN zusätzlich,
-   * `"-name"` DEAKTIVIERT explizit (schlägt auch Pflicht-Actions).
+   * Form-wide action configuration for the bones — the same entries
+   * as `bone.params.actions`: names/inline objects additionally ENABLE,
+   * `"-name"` explicitly DISABLES (even overrides required actions).
    *
-   *   :actions="['-removeEntry']"                             // ALLE Bones
-   *   :actions="{ '*': ['debug'], tags: ['-removeEntry'] }"   // pro Bone
+   *   :actions="['-removeEntry']"                             // ALL bones
+   *   :actions="{ '*': ['debug'], tags: ['-removeEntry'] }"   // per bone
    *
-   * Wird per provide("boneActionsConfig") an die Bones gereicht und dort VOR
-   * `bone.params.actions` gemerged (Bone-Lokales ist spezifischer; ein Minus
-   * gewinnt immer, egal aus welcher Quelle).
+   * Passed to the bones via provide("boneActionsConfig") and merged there BEFORE
+   * `bone.params.actions` (bone-local is more specific; a minus
+   * always wins, regardless of the source).
    */
   actions: {
     type: [Array, Object],
@@ -336,7 +336,7 @@ const props = defineProps({
 
 const state = reactive({
   skel: {}, // working data
-  pristine: null, // Werte des letzten Server-Stands (für resetForm)
+  pristine: null, // values of the last server state (for resetForm)
   structure: {}, // working data, use dict!
   errors: [], // working data
   actionparams: {}, //actionskel parameters
@@ -405,8 +405,8 @@ function listLabel(item, i) {
   return `#${i + 1}`
 }
 provide("formState", state)
-// Formular-weite Action-Konfiguration (siehe actions-Prop) — computed, damit
-// eine reaktive Prop-Änderung bei den Bones ankommt.
+// Form-wide action configuration (see actions prop) — computed so that
+// a reactive prop change reaches the bones.
 provide("boneActionsConfig", computed(() => props.actions))
 if (!props.internal) {
   provide("mainformState", state)
@@ -492,9 +492,9 @@ async function submitStep() {
     // the normalized v2 envelope.
     const fetchResult = await sendData(state.postUrl)
     const data = fetchResult?.data?.value
-    // v2 liefert das Ziel des nächsten Schritts als `follow`. In der klassischen
-    // v1-Login-Kette gibt es das nicht — dort ist das Ziel der gewählte Wert
-    // (die Provider-Auswahl listet URLs).
+    // v2 delivers the next step's target as `follow`. The classic
+    // v1 login chain doesn't have that — there the target is the selected value
+    // (the provider selection lists URLs).
     const follow = data?.["follow"] ?? v1SelectionFollow(data)
     if (data?.["status"] === "success") {
       emit("success", data)

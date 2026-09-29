@@ -130,41 +130,41 @@ import TreeNav from "./TreeNav.vue"
 import { createDragSession, dropModeFor, DRAG_SESSION } from "./dragSession"
 
 // --------------------------------------------------------------------------- //
-// Browser — Baum zur Navigation + DataTable als Liste                          //
+// Browser — tree for navigation + DataTable as list                            //
 // --------------------------------------------------------------------------- //
 //
-// GENERISCHER Kern: kennt kein ViUR. Die App (oder ViurBrowser.vue) liefert
-// Rootnodes, den Inhalt des aktuellen Ortes (`rows`, Ordner zuerst) und einen
-// Loader für die Baum-Ebenen — und bekommt Absichten als Events zurück:
-//   navigate  — anderer Ort gewählt (Baum, Breadcrumb, Doppelklick auf Ordner)
-//   open      — Doppelklick auf einen Eintrag (Leaf)
-//   move      — Drag & Drop zwischen Liste und Baum bzw. in eine Ordnerzeile
-//   reorder   — Umsortieren innerhalb der Liste (DataTable row-reorder, 1:1)
-//   upload    — Dateien aus dem OS in die Liste gezogen
-// Der Browser lädt selbst nichts und verschiebt nur die ANSICHT — Speichern
-// und Nachladen entscheidet die App (siehe ViurBrowser für die ViUR-Variante).
+// GENERIC core: knows nothing about ViUR. The app (or ViurBrowser.vue) supplies
+// rootnodes, the contents of the current location (`rows`, folders first) and a
+// loader for the tree levels — and gets intents back as events:
+//   navigate  — another location chosen (tree, breadcrumb, double-click on folder)
+//   open      — double-click on an entry (leaf)
+//   move      — drag & drop between list and tree, or into a folder row
+//   reorder   — reordering within the list (DataTable row-reorder, 1:1)
+//   upload    — files dragged from the OS into the list
+// The browser loads nothing itself and only moves the VIEW — saving and
+// reloading are up to the app (see ViurBrowser for the ViUR variant).
 
 const props = defineProps({
-  /** Wurzeln/Repositories: { key, name, icon? } */
+  /** Roots/repositories: { key, name, icon? } */
   rootNodes: { type: Array, default: () => [] },
-  /** Inhalt des aktuellen Ortes — Ordner zuerst (siehe rowKind). */
+  /** Contents of the current location — folders first (see rowKind). */
   rows: { type: Array, default: () => [] },
   columns: { type: Array, default: () => [] },
   rowKey: { type: String, default: "key" },
-  /** Ordnet eine Zeile ein: "node" (Ordner) oder "leaf". */
+  /** Classifies a row: "node" (folder) or "leaf". */
   rowKind: { type: Function, default: (row) => (row?.skelType === "node" ? "node" : "leaf") },
-  /** Kinder eines Baumknotens: (node) => Promise<BrowserNode[]> */
+  /** Children of a tree node: (node) => Promise<BrowserNode[]> */
   loadNodeChildren: { type: Function, default: null },
   orderField: { type: String, default: "sortindex" },
   selectable: { type: [String, Boolean], default: "multiple" },
   loading: { type: Boolean, default: false },
-  /** OS-Dateien annehmen (nur Event `upload`, kein Upload-Code hier). */
+  /** Accept OS files (only the `upload` event, no upload code here). */
   uploads: { type: Boolean, default: false },
   uploadHint: { type: [String, null], default: null },
   label: { type: String, default: "Browser" },
-  /** Cursor-Nachladen: null = aus, sonst „gibt es mehr?" (DataTable-Leiste). */
+  /** Cursor loading: null = off, otherwise "is there more?" (DataTable bar). */
   hasMore: { type: [Boolean, null], default: null },
-  /** Weitere DataTable-Props (withSearch, size, …). */
+  /** Further DataTable props (withSearch, size, …). */
   tableProps: { type: Object, default: () => ({}) },
 })
 
@@ -178,9 +178,9 @@ const treeEl = ref(null)
 const tableEl = ref(null)
 const listEl = ref(null)
 
-// ── Rootnodes & Ort ───────────────────────────────────────────────────────────
-// Der aktive Root ergibt sich aus dem Ort (Breadcrumb-Wurzel); ohne Ort gilt
-// der erste Rootnode. Ein Wechsel im Select navigiert auf dessen Wurzel.
+// ── Rootnodes & location ──────────────────────────────────────────────────────
+// The active root follows from the location (breadcrumb root); without a
+// location the first rootnode applies. A change in the select navigates to its root.
 const nodeIndex = ref(new Map()) // key → { node, parent }
 
 watch(
@@ -237,7 +237,7 @@ function onRootChange(value) {
 
 function onRowDoubleClick({ row, key }) {
   if (props.rowKind(row) === "node") {
-    // Ordner aus der Liste merken, damit der Breadcrumb seinen Namen kennt.
+    // Remember the folder from the list so the breadcrumb knows its name.
     rememberNodes([{ key, name: rowName(row), data: row }], location.value)
     navigateTo(key)
   } else {
@@ -250,11 +250,11 @@ function rowName(row) {
   return typeof value === "string" ? value : (value?.name ?? String(row?.[props.rowKey] ?? ""))
 }
 
-// ── Lokale Sicht auf die Liste ────────────────────────────────────────────────
-// Ein Zug ist rein clientseitig: Zeilen, die den aktuellen Ort VERLASSEN,
-// werden ausgeblendet; Knoten, die aus dem Baum HIERHER gezogen wurden, werden
-// eingefügt. `rows` (die Daten der App) bleiben unangetastet — neue Daten oder
-// ein Ortswechsel verwerfen die Überlagerung.
+// ── Local view of the list ────────────────────────────────────────────────────
+// A drag is purely client-side: rows that LEAVE the current location are
+// hidden; nodes dragged HERE from the tree are inserted. `rows` (the app's
+// data) stay untouched — new data or a change of location discards the
+// overlay.
 const movedAway = ref(new Set())
 const movedIn = ref([])
 
@@ -277,9 +277,9 @@ function resetLocalMoves() {
 watch(() => props.rows, resetLocalMoves)
 watch(location, resetLocalMoves)
 
-// ── Drag-Session (Liste ↔ Baum) ───────────────────────────────────────────────
+// ── Drag session (list ↔ tree) ────────────────────────────────────────────────
 const session = createDragSession((payload, target) => {
-  // In sich selbst oder den eigenen Teilbaum fällt nichts: Ziel verwerfen.
+  // Nothing drops into itself or its own subtree: discard the target.
   if (payload.keys.some((key) => String(key) === String(target.key))) return
   let parent = target.key != null ? nodeIndex.value.get(String(target.key))?.parent : null
   const seen = new Set()
@@ -289,14 +289,14 @@ const session = createDragSession((payload, target) => {
     parent = nodeIndex.value.get(String(parent))?.parent ?? null
   }
 
-  // Ansicht sofort nachziehen — ohne Reload.
+  // Update the view immediately — without reload.
   const targetIsCurrent = location.value != null && String(target.key) === String(location.value)
   if (targetIsCurrent) {
     const away = new Set(movedAway.value)
     for (const key of payload.keys) away.delete(String(key))
     movedAway.value = away
     if (payload.source === "tree") {
-      // Baumknoten in die offene Ebene gezogen: als Ordnerzeile einfügen.
+      // Tree node dragged into the open level: insert as a folder row.
       const rows = payload.rows.map((row) => row?.data ?? row).filter(Boolean)
       movedIn.value = [...movedIn.value, ...rows]
     }
@@ -305,15 +305,15 @@ const session = createDragSession((payload, target) => {
     movedIn.value = movedIn.value.filter(
       (row) => !payload.keys.some((key) => String(key) === String(row[props.rowKey]))
     )
-    // Was den Ort verlassen hat, ist auch nicht mehr ausgewählt.
+    // Whatever left the location is no longer selected either.
     selectedKeys.value = selectedKeys.value.filter(
       (selected) => !payload.keys.some((key) => String(key) === String(selected))
     )
   }
 
-  // Auch der BAUM zieht lokal nach: verschobene ORDNER wechseln (oder
-  // verlassen) ihre geladene Ebene — ohne Reload. Blätter tauchen im
-  // Navigations-Baum nicht auf und brauchen nichts.
+  // The TREE also updates locally: moved FOLDERS change (or leave) their
+  // loaded level — without reload. Leaves don't appear in the navigation
+  // tree and need nothing.
   for (const row of payload.rows) {
     const raw = row?.data ?? row
     const isNode = payload.source === "tree" || props.rowKind(raw) === "node"
@@ -321,7 +321,7 @@ const session = createDragSession((payload, target) => {
     const key = raw?.[props.rowKey] ?? row?.key
     const node = { key, name: nodeIndex.value.get(String(key))?.node?.name ?? rowName(raw), data: raw }
     treeEl.value?.moveNode?.(node, target.key)
-    rememberNodes([node], target.key) // Breadcrumb-Elternkette aktuell halten
+    rememberNodes([node], target.key) // keep the breadcrumb parent chain up to date
   }
 
   emit("move", {
@@ -334,11 +334,11 @@ const session = createDragSession((payload, target) => {
 })
 provide(DRAG_SESSION, session)
 
-// Die Liste ist selbst Drop-Ziel — in beide Richtungen:
-// • Die MITTE einer Ordnerzeile heißt „hinein"; die Ränder (davor/dahinter)
-//   überlässt sie der internen Umsortierung der Tabelle.
-// • Kommt der Zug aus dem BAUM, ist auch der Rest der Liste (Leaf-Zeilen,
-//   freie Fläche) ein Ziel: „in den gerade geöffneten Ordner".
+// The list itself is a drop target — in both directions:
+// • The MIDDLE of a folder row means "into"; the edges (before/after) are
+//   left to the table's internal reordering.
+// • If the drag comes from the TREE, the rest of the list (leaf rows,
+//   empty area) is a target too: "into the currently open folder".
 session.register({
   id: "list",
   el: () => listEl.value,
@@ -355,7 +355,7 @@ session.register({
   },
 })
 
-/** Zug aus dem Baum zielt auf die offene Ebene → die ganze Liste markieren. */
+/** Drag from the tree targets the open level → highlight the whole list. */
 const listIsDropTarget = computed(
   () =>
     session.state.over?.container === "list" &&
@@ -363,7 +363,7 @@ const listIsDropTarget = computed(
     String(session.state.over?.key) === String(location.value)
 )
 
-// ── Upload-Dropzone (native, nur für OS-Dateien) ─────────────────────────────
+// ── Upload dropzone (native, only for OS files) ──────────────────────────────
 const fileDragDepth = ref(0)
 const hasFiles = (event) => Array.from(event.dataTransfer?.types ?? []).includes("Files")
 function onFileDragEnter(event) {
@@ -396,15 +396,15 @@ defineExpose({ table: tableEl, tree: treeEl, session, navigateTo })
   flex-direction: column;
   min-block-size: 0;
   block-size: 100%;
-  /* Gerahmt wie das Listen-Widget (DataTable `appearance="outlined"`): EIN
-     Kasten um Baum und Liste. Die Tabelle darin bleibt deshalb rahmenlos
-     (appearance="plain" unten), sonst stünden zwei Rahmen ineinander. */
+  /* Framed like the list widget (DataTable `appearance="outlined"`): ONE
+     box around tree and list. The table inside therefore stays frameless
+     (appearance="plain" below), otherwise there would be two nested frames. */
   background-color: var(--wa-color-surface-default, #fff);
   border: var(--wa-border-width-s, 1px) solid var(--wa-color-surface-border, #ddd);
   border-radius: var(--wa-border-radius-m, 0.5rem);
   overflow: hidden;
-  /* Eine Textgröße für den ganzen Kasten — dieselbe wie in der Tabelle
-     (.vi-dt), damit Breadcrumb und Baum nicht größer wirken als die Liste. */
+  /* One text size for the whole box — the same as in the table
+     (.vi-dt), so breadcrumb and tree don't look larger than the list. */
   font-size: var(--wa-font-size-s, 0.875rem);
 }
 .vi-browser-head {
@@ -413,7 +413,7 @@ defineExpose({ table: tableEl, tree: treeEl, session, navigateTo })
   gap: var(--wa-space-s, 0.5rem);
   padding: var(--wa-space-2xs, 0.25rem) var(--wa-space-xs, 0.5rem);
   border-block-end: 1px solid var(--wa-color-surface-border, #ddd);
-  /* Abgesetzt wie der Kopf der Tabelle (--dt-header-background). */
+  /* Set off like the table header (--dt-header-background). */
   background-color: var(--wa-color-surface-lowered, #f4f4f5);
 }
 .vi-browser-roots {
@@ -447,14 +447,14 @@ defineExpose({ table: tableEl, tree: treeEl, session, navigateTo })
 .vi-browser-body {
   flex: 1;
   min-block-size: 0;
-  /* <wa-split-panel> IST das Grid (display: grid am Host). Seine Zeile ist von
-     sich aus inhaltshoch und läuft damit über die feste Höhe hinaus — die
-     Tabelle wäre dann so hoch wie ihre Zeilen und würde die Seite verlängern
-     statt in sich zu scrollen. Eine Zeile über die volle Höhe bindet die
-     Panels an die Fläche. Gilt für die waagerechte Aufteilung, die hier fest
-     eingestellt ist. */
+  /* <wa-split-panel> IS the grid (display: grid on the host). Its row is
+     content-sized by itself and thus overflows the fixed height — the
+     table would then be as tall as its rows and lengthen the page instead
+     of scrolling within itself. A single full-height row binds the panels
+     to the area. Applies to the horizontal split, which is fixed
+     here. */
   grid-template-rows: 100%;
-  /* Seitenleiste nicht kleiner als 10rem, Liste behält mindestens die Hälfte */
+  /* Sidebar no smaller than 10rem, list keeps at least half */
   --min: 10rem;
   --max: 50%;
 }

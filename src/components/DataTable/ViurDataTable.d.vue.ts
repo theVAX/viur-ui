@@ -1,69 +1,69 @@
 import type { DefineComponent, Ref } from "vue"
 import type { Row, RowKey } from "./types"
 
-/** Props von ViurDataTable.vue (siehe defineProps dort). */
+/** Props of ViurDataTable.vue (see defineProps there). */
 export interface ViurDataTableProps {
-  /** Modulname bzw. Punkt-Pfad ("user", "shop.order"). */
+  /** Module name or dot path ("user", "shop.order"). */
   module: string
-  /** Renderer der Requests; Standard: VITE_DEFAULT_RENDERER. */
+  /** Renderer for the requests; default: VITE_DEFAULT_RENDERER. */
   renderer?: string | null
-  /** Untertyp gruppierter Listen (Handler `list.grouped`). */
+  /** Subtype of grouped lists (handler `list.grouped`). */
   group?: string | null
-  /** Zusätzliche Request-Parameter — bei jedem Abruf gespreadet. */
+  /** Additional request parameters — spread into every fetch. */
   params?: Record<string, unknown>
-  /** Spalten; ohne Angabe aus der viewSkel-Struktur abgeleitet. */
+  /** Columns; if not given, derived from the viewSkel structure. */
   columns?: unknown[] | null
-  /** Nur diese Bones als Spalten (bei abgeleiteten Spalten). */
+  /** Only these bones as columns (for derived columns). */
   bones?: string[] | null
   label?: string | null
   selectable?: false | "single" | "multiple"
-  /** Einträge je Nachladen (ViUR `limit`). */
+  /** Entries per load (ViUR `limit`). */
   pageSize?: number
-  /** Obergrenze des Lokal-Modus (alles geladen → Client-Pipeline). */
+  /** Upper limit for local mode (everything loaded → client pipeline). */
   localModeLimit?: number
-  /** X-VIUR-BONELIST senden, wenn Felder abgewählt sind (Server braucht ein "*"-Subskel). */
+  /** Send X-VIUR-BONELIST when fields are deselected (server needs a "*" subskel). */
   bonelist?: boolean
-  /** localStorage-Key der Feld-Sichtbarkeit; null = keine Persistenz. */
+  /** localStorage key for field visibility; null = no persistence. */
   storageKey?: string | null
   language?: string | null
-  /** Steht bei language="*" vorn (üblicherweise die UI-Sprache). */
+  /** Comes first with language="*" (usually the UI language). */
   primaryLanguage?: string | null
   locale?: string | null
-  /** Spaltenbreite ziehbar (Default true — anders als die nackte DataTable). */
+  /** Column width draggable (default true — unlike the bare DataTable). */
   resizable?: boolean
-  /** Spalten per Drag umsortierbar (Default true). */
+  /** Columns reorderable via drag (default true). */
   reorderable?: boolean
-  /** Spalten anpinnbar (Default true). */
+  /** Columns pinnable (default true). */
   pinnable?: boolean
-  /** Wird an die DataTable durchgereicht. */
+  /** Passed through to the DataTable. */
   tableProps?: Record<string, unknown>
 }
 
 export interface ViurDataTableEmitProps<R extends Row = Row> {
-  /** Doppelklick auf eine Zeile. */
+  /** Double-click on a row. */
   onOpen?: (payload: { row: R; key: RowKey }) => void
   /** v-model:selectedKeys */
   "onUpdate:selectedKeys"?: (value: RowKey[]) => void
 }
 
-/** Was ViurDataTable per defineExpose freigibt. */
+/** What ViurDataTable exposes via defineExpose. */
 export interface ViurDataTableApi<R extends Row = Row> {
-  /** Der ListRequest (useListFetch): data, structure, cursor, execute, … */
+  /** The ListRequest (useListFetch): data, structure, cursor, execute, … */
   list: Record<string, unknown>
-  /** Template-Ref auf die DataTable (DataTableApi). */
+  /** Template ref to the DataTable (DataTableApi). */
   table: Ref<unknown>
-  /** Von vorn laden — mit den aktuellen props.params. */
+  /** Load from the start — with the current props.params. */
   refresh: () => Promise<unknown>
-  /** Suche: serverseitig (ViUR `search`) bzw. lokal, wenn alles geladen. */
+  /** Search: server-side (ViUR `search`) or local, if everything is loaded. */
   search: (term: string) => void
-  /** Feld-Sichtbarkeit (z.B. für einen „Felder"-Dialog). */
+  /** Field visibility (e.g. for a "Fields" dialog). */
   columns: {
     all: () => { id: string; label: string; hidden: boolean }[]
     apply: (visibleIds: string[]) => void
   }
-  /** Beschriftung eines Eintrags (erster Textwert seiner Spalten). */
+  /** Label of an entry (first text value of its columns). */
   entryTitle: (key: RowKey) => string
-  /** Alles geladen → Sortieren/Filtern/Suchen laufen lokal. */
+  /** Everything loaded → sorting/filtering/searching run locally. */
   allLoaded: Ref<boolean>
   rows: Ref<R[]>
 }

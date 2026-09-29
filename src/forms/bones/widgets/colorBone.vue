@@ -22,43 +22,43 @@
 <script setup>
 import { reactive, onMounted, inject } from "vue"
 /**
- * Farbauswahl-Feld über ein natives `<wa-color-picker>`-Element.
+ * Color picker field using a native `<wa-color-picker>` element.
  *
- * Speichert den gewählten Farbwert als Hex-String, z.B. `"#e74c3c"`.
- * Unterstützt mehrfache Werte (`multiple`), aber keine Mehrsprachigkeit.
+ * Stores the selected color value as a hex string, e.g. `"#e74c3c"`.
+ * Supports multiple values (`multiple`), but not multiple languages.
  *
  * @displayName ColorBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-color - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-color-default - Standard-Variante
- * @cssClass bone-widget-color-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-color-color`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-color - Identifies the bone type
+ * @cssClass bone-widget-color-default - Default variant
+ * @cssClass bone-widget-color-{name} - Dynamically set to the bone name, e.g. `bone-widget-color-color`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert als Hex-String, z.B. `"#e74c3c"`, oder `null`. */
+  /** Current bone value as a hex string, e.g. `"#e74c3c"`, or `null`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
+  /** Focuses the input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string|null} value - Gewählter Farbwert als Hex-String oder `null`
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string|null} value - Selected color value as a hex string or `null`
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

@@ -64,7 +64,7 @@ export function v1SelectionFollow(body) {
     if (!String(bone?.["type"] ?? "").startsWith("select")) continue
     const chosen = values?.[name]
     if (typeof chosen !== "string" || !/^(\/|https?:\/\/)/.test(chosen)) continue
-    // Nur wenn der Wert tatsächlich eine der angebotenen Ziel-URLs ist.
+    // Only if the value actually is one of the offered target URLs.
     if (bone?.["values"] && Object.prototype.hasOwnProperty.call(bone["values"], chosen)) return chosen
   }
   return null
@@ -190,11 +190,11 @@ export function normalizeEnvelope(data) {
   out["action"] = action
   out["status"] = status
   out["errors"] = normalizeErrors(data["errors"])
-  // Ziel des Schritts. v1 legt es je nach Stufe anderswo ab:
-  //   next_url          – vom Server gesetzt (z. B. Auswahl des zweiten Faktors)
-  //   params.action_url  – bei einem gerenderten Schritt, der selbst ein Ziel
-  //                        mitbringt (viur-core: der OTP-Schritt des zweiten
-  //                        Faktors kommt als `edit` mit action_url)
+  // Target of the step. v1 puts it in different places depending on the stage:
+  //   next_url          – set by the server (e.g. choice of the second factor)
+  //   params.action_url  – for a rendered step that brings its own target
+  //                        (viur-core: the OTP step of the second factor
+  //                        comes as `edit` with action_url)
   out["follow"] = data["follow"] ?? data["next_url"] ?? data["params"]?.["action_url"] ?? null
   out["structure"] = data["structure"] ?? null
 

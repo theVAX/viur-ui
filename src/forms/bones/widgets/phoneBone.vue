@@ -39,44 +39,44 @@ import jsonData from "../country_information.json"
 import parsePhoneNumber from "libphonenumber-js/min"
 import { AsYouType, validatePhoneNumberLength } from "libphonenumber-js/min"
 /**
- * Telefonnummer-Eingabefeld mit Ländervorwahl-Auswahl.
+ * Phone number input field with country code selection.
  *
- * Rendert ein `<wa-select>` für die Ländervorwahl (Flaggen-Emoji) und ein
- * `<wa-input type="tel">` für die eigentliche Nummer. Die Nummer wird beim
- * Tippen über `libphonenumber-js` formatiert und normalisiert. Der
- * Standard-Ländercode kann über `boneState.bonestructure.default_country_code`
- * gesteuert werden (Standard: `+49`).
+ * Renders a `<wa-select>` for the country code (flag emoji) and a
+ * `<wa-input type="tel">` for the actual number. The number is formatted and
+ * normalized via `libphonenumber-js` while typing. The
+ * default country code can be controlled via `boneState.bonestructure.default_country_code`
+ * (default: `+49`).
  *
  * @displayName PhoneBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets (auf dem inneren `<wa-input>`)
- * @cssClass bone-widget-phone - Kennzeichnet den Bone-Typ (auf dem inneren `<wa-input>`, via Wrapper-Klasse)
+ * @cssClass bone-widget - Base class of all bone widgets (on the inner `<wa-input>`)
+ * @cssClass bone-widget-phone - Identifies the bone type (on the inner `<wa-input>`, via wrapper class)
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert als internationale Telefonnummer, z.B. `"+49 89 12345678"`. */
+  /** Current bone value as an international phone number, e.g. `"+49 89 12345678"`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Tel-Input-Element. */
+  /** Focuses the tel input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Formatierte internationale Telefonnummer
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Formatted international phone number
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

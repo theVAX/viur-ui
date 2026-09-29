@@ -1,9 +1,9 @@
 name: Release
 
-# Veröffentlicht viur-ui auf npm, sobald ein Versions-Tag gepusht wird (wie in
-# vi-vue-utils). Der Tag muss zur Version in package.json passen, z. B.
-# v0.0.1-alpha für "version": "0.0.1-alpha". Der npm-Dist-Tag folgt dem
-# Suffix: -alpha → alpha, -beta → beta, -rc → rc, sonst latest.
+# Publishes viur-ui to npm as soon as a version tag is pushed (as in
+# vi-vue-utils). The tag must match the version in package.json, e.g.
+# v0.0.1-alpha for "version": "0.0.1-alpha". The npm dist-tag follows the
+# suffix: -alpha → alpha, -beta → beta, -rc → rc, otherwise latest.
 
 on:
   push:

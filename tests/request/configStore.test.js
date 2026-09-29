@@ -214,7 +214,7 @@ describe("fetchConfig({ user }) after login", () => {
 
 describe("module tree", () => {
   it("liest die Gruppen unter dem Schlüssel von viur-core (admin.module.groups)", async () => {
-    // viur-core rendert conf.admin.module_groups als "admin.module.groups".
+    // viur-core renders conf.admin.module_groups as "admin.module.groups".
     const store = useConfigStore()
     store.state.configuration = {
       "admin.module.groups": { bones: { name: "Bones", icon: "list", sortIndex: 2000 } },

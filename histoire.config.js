@@ -120,11 +120,12 @@ export default defineConfig({
     ],
     resolve: {
       alias: [
-        { find: "@viur/vue-utils", replacement: path.resolve(__dirname, "src/legacy") },
         {
           find: "@ckeditor/ckeditor5-vue",
           replacement: path.resolve(__dirname, "example/node_modules/@ckeditor/ckeditor5-vue"),
         },
+        // Subpaths go through ckeditor5's `exports` map ("./*" -> "./dist/*"), which a plain directory alias bypasses
+        { find: /^ckeditor5\/(.*)$/, replacement: path.resolve(__dirname, "example/node_modules/ckeditor5/dist/$1") },
         { find: "ckeditor5", replacement: path.resolve(__dirname, "example/node_modules/ckeditor5") },
         { find: "codemirror", replacement: path.resolve(__dirname, "example/node_modules/codemirror") },
         {

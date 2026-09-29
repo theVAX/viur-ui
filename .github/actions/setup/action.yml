@@ -17,6 +17,6 @@ runs:
       shell: bash
       run: npm ci
 
-    - name: Install example dependencies (required for histoire.legacy aliases)
+    - name: Install example dependencies (required for histoire aliases)
       shell: bash
       run: npm ci --prefix example

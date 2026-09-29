@@ -64,8 +64,8 @@ const props = defineProps({
 const skelRef = ref(null)
 const boneState = inject("boneState")
 const mainformState = inject("mainformState")
-// Action-Konfiguration des umgebenden Formulars (ViForm `actions`) — das
-// Unterformular stellt sonst seine eigene (leere) bereit.
+// Action configuration of the surrounding form (ViForm `actions`) — the
+// subform would otherwise provide its own (empty) one.
 const parentActionsConfig = inject("boneActionsConfig", null)
 const parentBonePath = inject("bonePath", [])
 const bonePath = computed(() => {

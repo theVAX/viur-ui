@@ -24,47 +24,47 @@ import { reactive, onMounted, inject, computed, watchEffect, ref } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
 import Utils from "../utils"
 /**
- * Einzeiliges Textfeld für einfache Zeichenketten.
+ * Single-line text field for simple strings.
  *
- * Rendert ein `<wa-input>` und delegiert Validierung an das native
- * Constraint Validation API. Unterstützt optionale Regex-Validierung
- * via `boneState.params.pattern` sowie eine eigene Fehlermeldung via
- * `boneState.params.pattern_error`. Bei `boneState.label === "placeholder"`
- * wird der Bone-Name als Placeholder angezeigt statt als Label darüber.
+ * Renders a `<wa-input>` and delegates validation to the native
+ * Constraint Validation API. Supports optional regex validation
+ * via `boneState.params.pattern` as well as a custom error message via
+ * `boneState.params.pattern_error`. With `boneState.label === "placeholder"`,
+ * the bone name is shown as a placeholder instead of as a label above.
  *
  * @displayName StringBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-string - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-string-default - Standard-Variante
- * @cssClass bone-widget-string-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-string-title`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-string - Identifies the bone type
+ * @cssClass bone-widget-string-default - Default variant
+ * @cssClass bone-widget-string-{name} - Dynamically set to the bone name, e.g. `bone-widget-string-title`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert. */
+  /** Current bone value. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
+  /** Focuses the input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Eingabewert
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
-   * @arg {boolean} [valid] - Validierungsstatus; fehlt beim Init-Event
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current input value
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
+   * @arg {boolean} [valid] - Validation status; missing on the init event
    */
   "change",
 ])
@@ -104,11 +104,11 @@ const state = reactive({
 const stringBone = ref(null)
 
 /**
- * Verarbeitet `change`- und `keyup`-Events des `<wa-input>`.
- * Prüft die native Validität, setzt bei `patternMismatch` eine eigene
- * Fehlermeldung und emittiert den `change`-Event mit Validierungsstatus.
+ * Handles `change` and `keyup` events of the `<wa-input>`.
+ * Checks the native validity, sets a custom error message on
+ * `patternMismatch` and emits the `change` event with the validation status.
  *
- * @param {Event} event - Das DOM-Event vom Input-Element
+ * @param {Event} event - The DOM event from the input element
  */
 function changeEvent(event) {
   let valid = stringBone.value.reportValidity()

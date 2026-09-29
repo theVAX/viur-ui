@@ -3,47 +3,47 @@ import type { InjectionKey } from "vue"
 import type { RowKey } from "../DataTable/types"
 
 // --------------------------------------------------------------------------- //
-// Drag-Session — gemeinsames Ziehen zwischen Panels (Liste ↔ Baum)            //
+// Drag session — shared dragging between panels (list ↔ tree)                 //
 // --------------------------------------------------------------------------- //
 //
-// Die DataTable zieht Zeilen mit Zeiger-Ereignissen (kein HTML5-D&D). Damit
-// eine Zeile auch AUSSERHALB der Tabelle fallen gelassen werden kann (auf einen
-// Ordner im Navigations-Baum oder eine Ordnerzeile der Liste), stellt der
-// Browser diese Session per provide() bereit:
+// The DataTable drags rows with pointer events (no HTML5 D&D). So that a row
+// can also be dropped OUTSIDE the table (onto a folder in the navigation tree
+// or a folder row of the list), the browser provides this session via
+// provide():
 //
-//   • Die QUELLE (DataTable) meldet Beginn/Bewegung/Ende des Zugs.
-//   • Jedes PANEL registriert sich als Container mit einer `targetFor`-Funktion,
-//     die ein DOM-Element unter dem Zeiger in ein Drop-Ziel übersetzt (oder
-//     null, wenn dort nichts fallen gelassen werden kann).
-//   • Beim Loslassen über einem Ziel liefert `drop()` Nutzlast + Ziel an den
-//     Halter der Session (Browser) — die Quelle überspringt dann ihre interne
-//     Verschiebung.
+//   • The SOURCE (DataTable) reports start/move/end of the drag.
+//   • Every PANEL registers itself as a container with a `targetFor` function
+//     that translates a DOM element under the pointer into a drop target (or
+//     null if nothing can be dropped there).
+//   • On release over a target, `drop()` hands payload + target to the
+//     holder of the session (browser) — the source then skips its internal
+//     move.
 //
-// Die Session ist bewusst DOM-basiert (elementFromPoint statt Ziel-Rechtecke
-// vorab zu vermessen): Panels scrollen und virtualisieren unabhängig.
+// The session is deliberately DOM-based (elementFromPoint instead of measuring
+// target rectangles up front): panels scroll and virtualize independently.
 
 export interface DragPayload<R = Record<string, unknown>> {
   keys: RowKey[]
   rows: R[]
-  /** Container-Id der Quelle (z. B. "list"). */
+  /** Container id of the source (e.g. "list"). */
   source: string
 }
 
 export interface DropTarget {
-  /** Container-Id des Panels, in dem das Ziel liegt. */
+  /** Container id of the panel the target lies in. */
   container: string
-  /** Schlüssel des Zielknotens; null = Wurzelebene des Containers. */
+  /** Key of the target node; null = root level of the container. */
   key: RowKey | null
   mode: "inside" | "before" | "after"
 }
 
 export interface DragContainer {
   id: string
-  /** Wurzelelement des Panels — nur Treffer darin zählen. */
+  /** Root element of the panel — only hits inside it count. */
   el: () => HTMLElement | null
   /**
-   * Element unter dem Zeiger → Drop-Ziel (oder null). `y`/`x` erlauben
-   * Zonen-Entscheidungen (before/inside/after) anhand der Trefferposition.
+   * Element under the pointer → drop target (or null). `y`/`x` allow
+   * zone decisions (before/inside/after) based on the hit position.
    */
   targetFor: (hit: Element, x: number, y: number) => DropTarget | null
 }
@@ -56,9 +56,9 @@ export interface DragSession<R = Record<string, unknown>> {
   }
   register(container: DragContainer): () => void
   start(payload: DragPayload<R>): void
-  /** Hit-Test unter (x, y); `hint` übergeht elementFromPoint (Tests). */
+  /** Hit test at (x, y); `hint` bypasses elementFromPoint (tests). */
   update(x: number, y: number, hint?: Element | null): DropTarget | null
-  /** Ziel eingelöst: liefert Nutzlast+Ziel und beendet die Session. */
+  /** Target redeemed: returns payload+target and ends the session. */
   drop(): { payload: DragPayload<R>; target: DropTarget } | null
   cancel(): void
 }
@@ -69,9 +69,9 @@ export function createDragSession<R = Record<string, unknown>>(
   onDrop?: (payload: DragPayload<R>, target: DropTarget) => void
 ): DragSession<R> {
   const containers = new Map<string, DragContainer>()
-  // `reactive` entpackt generische Typen (R wird zu UnwrapRefSimple<R>), womit
-  // der Zustand nicht mehr auf DragSession<R> passt. Die Nutzlast ist reine
-  // Datenweitergabe — deshalb hier die Form festschreiben.
+  // `reactive` unwraps generic types (R becomes UnwrapRefSimple<R>), so the
+  // state no longer matches DragSession<R>. The payload is pure data
+  // pass-through — hence the shape is pinned down here.
   const state = reactive({
     active: false,
     payload: null as DragPayload<R> | null,
@@ -124,7 +124,7 @@ export function createDragSession<R = Record<string, unknown>>(
   return { state, register, start, update, drop, cancel }
 }
 
-/** Zonen-Helfer: Position im Element → before / inside / after. */
+/** Zone helper: position within the element → before / inside / after. */
 export function dropModeFor(hitRect: DOMRect, y: number, insideOnly = false): "inside" | "before" | "after" {
   if (insideOnly) return "inside"
   const offset = (y - hitRect.top) / Math.max(1, hitRect.height)

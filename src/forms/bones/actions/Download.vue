@@ -2,8 +2,8 @@
 import { downloadUrlFor } from "../../../request/index.js"
 
 /**
- * Direct-fire Action: lädt die im Bone-Value referenzierte Datei herunter.
- * Wird von `BoneActions` bei `type: "callback"` direkt aufgerufen — kein Dialog.
+ * Direct-fire action: downloads the file referenced in the bone value.
+ * Called directly by `BoneActions` for `type: "callback"` — no dialog.
  *
  * @param {{ value: object, name: string, lang: string, index: number, bone: object, boneState: object }} ctx
  */
@@ -11,8 +11,8 @@ export function handler(ctx) {
   const url = downloadUrlFor(ctx.value)
   if (!url) return
 
-  // Anchor-Click statt window.open: funktioniert auch mit Data-URLs
-  // (Browser blockt Top-Level-Navigation zu data:-URLs aus Phishing-Gründen).
+  // Anchor click instead of window.open: also works with data URLs
+  // (browsers block top-level navigation to data: URLs for phishing reasons).
   const a = document.createElement("a")
   a.href = url
   a.download = ctx.value?.dest?.name ?? ""

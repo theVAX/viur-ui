@@ -19,10 +19,7 @@ nvm use                           # liest .nvmrc → Node 24
 
 # Deps installieren (Root UND example/ sind beide Pflicht)
 npm install                       # triggert automatisch 'lefthook install'
-npm install --prefix example      # Peer-Deps für histoire.legacy (CKEditor, codemirror, webawesome, ...)
-
-# Für lokale Playwright-Läufe einmalig nötig:
-npx playwright install chromium
+npm install --prefix example      # Peer-Deps für Histoire (CKEditor, codemirror, webawesome, ...)
 ```
 
 Nach `npm install` sind die Git-Hooks automatisch aktiv (via `prepare` Script in `package.json`).
@@ -84,7 +81,6 @@ npx prettier --write .
 ```bash
 npm run test:run       # Vitest Unit-Tests (einmalig)
 npm run test           # Vitest Watch-Mode (Dev)
-npm run test:contract  # Playwright Contract-Tests (Histoire startet automatisch)
 ```
 
 ### Bone-Coverage-Gate
@@ -103,18 +99,16 @@ Workflow: `.github/workflows/pr.yml`
 **Trigger:** `pull_request` gegen `develop`
 **Concurrency:** Neuer Push cancelt vorherigen Run
 
-### Vier parallele Jobs
+### Drei parallele Jobs
 
 | Job | Dauer | Blockierend? | Zweck |
 |---|---|---|---|
 | `Lint` | ~20 s | `continue-on-error: true` ¹ | ESLint inkl. Prettier |
 | `Unit Tests` | ~30 s | `continue-on-error: true` ² | Vitest |
-| `Bone Coverage Gate` | ~2 s | **ja** | Strukturcheck: jeder Bone hat Story + Spec |
-| `Contract Tests (Playwright)` | ~3–5 min | `continue-on-error: true` ³ | Playwright gegen Histoire |
+| `Bone Coverage Gate` | ~2 s | **ja** | Strukturcheck: jeder Bone hat eine Story |
 
 ¹ Bis Backlog-Task #9 (241 bestehende Lint-Errors) durch ist.
 ² Bis Backlog-Task #10 (3 failing Request-Tests) durch ist.
-³ Bis Backlog-Task #11 (17 legacy-Panel Contract-Failures) durch ist.
 
 **Effektiv blockt aktuell nur der Coverage-Gate.** Nach Backlog-Abarbeitung werden die `continue-on-error`-Einträge entfernt und die Pipeline wird voll blockierend.
 
@@ -122,20 +116,18 @@ Workflow: `.github/workflows/pr.yml`
 
 ## 5. Neuen Bone hinzufügen
 
-Der Coverage-Gate erzwingt: jeder echte Bone hat eine Story **und** einen Contract-Spec.
+Der Coverage-Gate erzwingt: jeder echte Bone hat eine Story.
 
 ```
 src/forms/bones/blobBone.vue              → Component
 stories/bones/BlobBone.story.vue          → Histoire-Story (PascalCase)
-tests/contract/bone-widgets/blob-bone.spec.ts  → Playwright-Spec (kebab-case)
 ```
 
 **Namens-Konventionen sind fix:**
 - File `<name>Bone.vue` (camelCase)
 - Story `<Name>Bone.story.vue` (PascalCase)
-- Spec `<name>-bone.spec.ts` (kebab-case)
 
-Fehlt eines der beiden Artefakte → CI-Job rot → PR blockt.
+Fehlt die Story → CI-Job rot → PR blockt.
 
 ### Ausnahmen (Whitelist)
 
@@ -143,7 +135,7 @@ Nicht-eigenständige Bones werden in `scripts/check-bone-coverage.js` in der `WH
 
 - `bone.vue` — abstrakter Basis-Wrapper
 - `filterBone.vue` — Filter-spezifisch, separate Test-Strategie
-- `jsonBone.vue` — TODO, Story + Spec noch nicht geschrieben
+- `jsonBone.vue` — TODO, Story noch nicht geschrieben
 
 **Die Whitelist zu erweitern ist eine bewusste Team-Entscheidung** — immer im PR-Body begründen.
 
@@ -159,17 +151,9 @@ Nicht-eigenständige Bones werden in `scripts/check-bone-coverage.js` in der `WH
 
 ## 7. Troubleshooting
 
-### Lokale Playwright-Tests schlagen fehl
+### Histoire startet nicht
 
-Meistens eine dieser drei Ursachen:
-
-1. **Browser fehlt:** `npx playwright install chromium`
-2. **`example/` Deps fehlen:** `npm install --prefix example` (ohne die bricht Histoire beim Laden von `@viur/webawesome/...`)
-3. **Histoire läuft bereits:** `playwright.config.ts` setzt `reuseExistingServer: !process.env.CI` — falls schon ein Dev-Server auf Port 6007 läuft, wird der benutzt
-
-### Vitest will Playwright-Specs laufen
-
-Sollte nicht passieren — `vitest.config.js` hat `exclude: ['tests/contract/**']`. Falls doch, prüfe ob die Zeile weg ist.
+Meistens fehlen die `example/`-Deps: `npm install --prefix example` (ohne die bricht Histoire beim Laden von `@viur/webawesome/...`).
 
 ### Lefthook läuft nicht beim Commit
 
@@ -180,25 +164,24 @@ cat .git/hooks/pre-commit   # sollte lefthook erwähnen
 
 ### Coverage-Gate failed für einen Bone, den ich gar nicht angefasst habe
 
-Wahrscheinlich wurde eine Story- oder Spec-Datei umbenannt/verschoben. Check mit:
+Wahrscheinlich wurde eine Story-Datei umbenannt/verschoben. Check mit:
 
 ```bash
-ls stories/bones/ tests/contract/bone-widgets/
+ls stories/bones/ src/forms/bones/widgets/
 ```
 
-Beide Listen müssen symmetrisch sein (PascalCase ↔ kebab-case).
+Zu jedem `<name>Bone.vue` muss es eine `<Name>Bone.story.vue` geben.
 
 ---
 
 ## 8. Technical Debt (Stand April 2026)
 
-Drei Punkte sind per Backlog-Task dokumentiert und lassen die CI derzeit nicht voll blockieren:
+Zwei Punkte sind per Backlog-Task dokumentiert und lassen die CI derzeit nicht voll blockieren:
 
 | # | Beschreibung | Wieviele |
 |---|---|---|
 | 9 | ESLint-Errors (`no-restricted-syntax`, `vue/`) | 241 errors, 386 warnings |
 | 10 | Failing Vitest-Tests in `tests/request/request.test.js` | 3 Tests |
-| 11 | Failing Contract-Tests auf dem `[legacy]`-Panel | 17 Tests (alle „initial mount change-Event") |
 
 Sobald ein Punkt abgeschlossen ist: `continue-on-error: true` aus dem entsprechenden Job in `.github/workflows/pr.yml` entfernen. Dann blockt der Job hart.
 
@@ -208,4 +191,4 @@ Sobald ein Punkt abgeschlossen ist: `continue-on-error: true` aus dem entspreche
 
 - **Branch Protection** auf GitHub ist Repo-Admin-Aufgabe — muss einmalig eingerichtet werden, Required Status Check: mindestens `Bone Coverage Gate`
 - **Auto-Fix in CI** — bewusste Entscheidung: CI verifiziert, mutiert nicht. Formatting lokal via Lefthook, nie per CI-Bot-Commit
-- **Release-Workflow** (Tagging, npm publish) — eigener `release.yml` später, nicht Teil der PR-Pipeline
+- **Release-Workflow** (Tagging, npm publish) — eigener `release.yml`, nicht Teil der PR-Pipeline

@@ -1,43 +1,43 @@
 import type { DefineComponent } from "vue"
 
 export interface BoneProps {
-  /** Das Bone-Widget-Component-Objekt (z.B. StringBone). Typischerweise von ViForm gesetzt. */
+  /** The bone widget component object (e.g. StringBone). Typically set by ViForm. */
   is?: object
-  /** Bone-Identifier; muss einem Key in structure und skel entsprechen. */
+  /** Bone identifier; must match a key in structure and skel. */
   name: string
-  /** Explizite Sprach-Liste; überschreibt bonestructure.languages. */
+  /** Explicit language list; overrides bonestructure.languages. */
   languages?: unknown[]
-  /** Expliziter Multiple-Flag; überschreibt bonestructure.multiple. */
+  /** Explicit multiple flag; overrides bonestructure.multiple. */
   multiple?: boolean
-  /** Expliziter Readonly-Flag; überschreibt bonestructure.readonly. */
+  /** Explicit readonly flag; overrides bonestructure.readonly. */
   readonly?: boolean
-  /** Expliziter Required-Flag; überschreibt bonestructure.required. */
+  /** Explicit required flag; overrides bonestructure.required. */
   required?: boolean
-  /** Zusätzliche Parameter; überschreibt bonestructure.params. */
+  /** Additional parameters; overrides bonestructure.params. */
   params?: Record<string, unknown>
-  /** Expliziter Wert; überschreibt skel[name] wenn gesetzt. */
+  /** Explicit value; overrides skel[name] if set. */
   value?: object | string | number | boolean | unknown[]
-  /** Vollständige Skeleton-Struktur (alle Bone-Definitionen des Formulars). */
+  /** Complete skeleton structure (all bone definitions of the form). */
   structure: Record<string, unknown>
-  /** Skeleton-Datenobjekt mit den aktuellen Werten. */
+  /** Skeleton data object with the current values. */
   skel: unknown
-  /** Fehler-Array aus der Server-Antwort. Einträge mit passendem fieldPath werden angezeigt. */
+  /** Error array from the server response. Entries with a matching fieldPath are displayed. */
   errors?: unknown[]
-  /** Label-Modus. */
+  /** Label mode. */
   label?: "normal" | "top" | "hide" | "placeholder"
-  /** Aktiviert BoneActions-Schaltflächen neben dem Input. */
+  /** Enables BoneActions buttons next to the input. */
   boneactions?: boolean
-  /** Zeigt Tooltip-Inhalt als wa-alert statt als Tooltip. */
+  /** Shows tooltip content as wa-alert instead of a tooltip. */
   showLabelInfo?: boolean
-  /** Gibt autofocus an das Bone-Widget weiter. */
+  /** Passes autofocus on to the bone widget. */
   autofocus?: boolean
-  /** Standardmäßig aktive Sprache im Multilang-Tab. */
+  /** Language active by default in the multilang tab. */
   defaultLanguage?: string
-  /** Erzwingt den Tooltip auf dem Input-Bereich unabhängig vom Label-Modus. */
+  /** Forces the tooltip on the input area regardless of the label mode. */
   showBoneTooltip?: boolean
-  /** Fehler-Darstellungsstil. */
+  /** Error display style. */
   errorStyle?: "default" | "decent"
-  /** Aktiviert Debug-Modus: Bone-Name als Tooltip am Label. */
+  /** Enables debug mode: bone name as tooltip on the label. */
   debug?: boolean
 }
 

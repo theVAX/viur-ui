@@ -100,7 +100,7 @@
         <wa-alert
           v-for="message in state.errorMessages"
           open
-          summary="Errors"
+          :summary="$t('bone.errors_summary')"
           variant="danger"
           class="bone-error"
         >

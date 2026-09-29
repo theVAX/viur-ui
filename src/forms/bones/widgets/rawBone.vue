@@ -30,44 +30,44 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 /**
- * Mehrzeiliges Freitext- oder JSON-Eingabefeld für Rohdaten.
+ * Multi-line free-text or JSON input field for raw data.
  *
- * Rendert ein `<wa-textarea>`. Wenn `boneState.bonestructure.type === 'raw.json'`
- * wird der Wert beim Anzeigen per `JSON.stringify` serialisiert. Unterstützt
- * Mehrsprachigkeit (`languages`) und Mehrfachwerte (`multiple`).
+ * Renders a `<wa-textarea>`. If `boneState.bonestructure.type === 'raw.json'`,
+ * the value is serialized via `JSON.stringify` for display. Supports
+ * multiple languages (`languages`) and multiple values (`multiple`).
  *
  * @displayName RawBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-raw - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-raw-default - Standard-Variante
- * @cssClass bone-widget-raw-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-raw-content`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-raw - Identifies the bone type
+ * @cssClass bone-widget-raw-default - Default variant
+ * @cssClass bone-widget-raw-{name} - Dynamically set to the bone name, e.g. `bone-widget-raw-content`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert. Bei `raw.json` wird ein Objekt per `JSON.stringify` dargestellt. */
+  /** Current bone value. With `raw.json`, an object is displayed via `JSON.stringify`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach dem Mount auf das Textarea-Element. */
+  /** Focuses the textarea element after mount. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Eingabewert
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current input value
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

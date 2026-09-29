@@ -62,7 +62,7 @@
       class="bone-inner wa-stack wa-gap-xs"
       :class="{ 'is-required': state.required }"
     >
-      <!-- Multilanguage: Tab per Sprache -->
+      <!-- Multilanguage: one tab per language -->
       <div
         v-if="state.multilanguage"
         class="bone-row wa-flank:end wa-gap-xs wa-align-items-start"
@@ -98,7 +98,7 @@
                 :readonly="state.readonly"
                 :actionbar="state.actionbar"
               />
-              <!-- Wert-Actions (Löschen, Download …) je Sprache am Eintrag -->
+              <!-- Value actions (delete, download …) per language on the entry -->
               <bone-single-entry
                 :is="is"
                 v-else
@@ -111,7 +111,7 @@
             </wa-tab-panel>
           </template>
         </wa-tab-group>
-        <!-- Bone-Actions über alle Sprachen (Übersetzen …) -->
+        <!-- Bone actions across all languages (translate …) -->
         <div
           v-if="state.boneactions && !state.multiple && state.hasOptionalActions"
           class="wa-cluster wa-gap-xs"
@@ -127,7 +127,7 @@
         </div>
       </div>
 
-      <!-- Einsprachig -->
+      <!-- Single-language -->
       <template v-else>
         <bone-multiple-list
           :is="is"
@@ -149,7 +149,7 @@
         />
       </template>
 
-      <!-- Fehlermeldungen -->
+      <!-- Error messages -->
       <template v-if="errorStyle === 'default'">
         <wa-callout
           v-for="message in state.errorMessages"
@@ -195,110 +195,110 @@ import BoneSingleEntry from "./BoneSingleEntry.vue"
 import { useI18n } from "vue-i18n"
 
 /**
- * @emits change - Historisches Relikt, wird nicht direkt genutzt
- * @emits change-internal {Object} - Internes Event für ViForm: { name, value, lang, index, valid }
- * @emits handleClick - Historisches Relikt, wird nicht direkt genutzt
+ * @emits change - Historical relic, not used directly
+ * @emits change-internal {Object} - Internal event for ViForm: { name, value, lang, index, valid }
+ * @emits handleClick - Historical relic, not used directly
  */
 const emit = defineEmits(["change", "change-internal", "handleClick"])
 
 const props = defineProps({
   is: {
     type: Object,
-    default: rawBone, // Das zu rendernde Bone-Widget (z.B. StringBone), typischerweise von ViForm gesetzt
+    default: rawBone, // The bone widget to render (e.g. StringBone), typically set by ViForm
   },
   name: {
     type: String,
-    required: true, // Bone-Identifier; muss einem Key in structure und skel entsprechen
+    required: true, // Bone identifier; must match a key in structure and skel
   },
   languages: {
     type: Array,
-    default: undefined, // Explizite Sprach-Liste; überschreibt bonestructure.languages
+    default: undefined, // Explicit language list; overrides bonestructure.languages
   },
   multiple: {
     type: Boolean,
-    default: false, // Expliziter Multiple-Flag; überschreibt bonestructure.multiple
+    default: false, // Explicit multiple flag; overrides bonestructure.multiple
   },
   readonly: {
     type: Boolean,
-    default: false, // Expliziter Readonly-Flag; überschreibt bonestructure.readonly
+    default: false, // Explicit readonly flag; overrides bonestructure.readonly
   },
   required: {
     type: Boolean,
-    default: false, // Expliziter Required-Flag; überschreibt bonestructure.required
+    default: false, // Explicit required flag; overrides bonestructure.required
   },
   params: {
     type: Object,
-    default: undefined, // Zusätzliche Parameter; überschreibt bonestructure.params
+    default: undefined, // Additional parameters; overrides bonestructure.params
   },
   value: {
     type: [Object, String, Number, Boolean, Array],
-    default: undefined, // Expliziter Wert; überschreibt skel[name] wenn gesetzt
+    default: undefined, // Explicit value; overrides skel[name] if set
   },
   structure: {
     type: Object,
-    required: true, // Vollständige Skeleton-Struktur (alle Bone-Definitionen des Formulars)
+    required: true, // Complete skeleton structure (all bone definitions of the form)
   },
   skel: {
     type: null,
-    required: true, // Skeleton-Datenobjekt mit den aktuellen Werten
+    required: true, // Skeleton data object with the current values
   },
   errors: {
     type: Array,
-    default: () => [], // Fehler-Array aus der Server-Antwort; Einträge mit passendem fieldPath werden angezeigt
+    default: () => [], // Error array from the server response; entries with a matching fieldPath are displayed
   },
   label: {
     type: String,
-    default: "normal", // Label-Modus: "normal" | "top" | "hide" | "placeholder"
+    default: "normal", // Label mode: "normal" | "top" | "hide" | "placeholder"
     validator(value, props) {
       return ["normal", "top", "hide", "placeholder"].includes(value)
     },
   },
   boneactions: {
     type: Boolean,
-    default: true, // Aktiviert BoneActions (Defaults pro Bone-Type + bone.params.actions). Explizit false um Actions zu unterdrücken.
+    default: true, // Enables BoneActions (defaults per bone type + bone.params.actions). Explicitly false to suppress actions.
   },
   showLabelInfo: {
     type: Boolean,
-    default: false, // Zeigt Tooltip-Inhalt als wa-alert statt als Tooltip
+    default: false, // Shows tooltip content as wa-alert instead of a tooltip
   },
   autofocus: {
     type: Boolean,
-    default: false, // Gibt autofocus an das Bone-Widget weiter
+    default: false, // Passes autofocus on to the bone widget
   },
   defaultLanguage: {
     type: String,
-    default: "de", // Standardmäßig aktive Sprache im Multilang-Tab
+    default: "de", // Language active by default in the multilang tab
   },
   showBoneTooltip: {
     type: Boolean,
-    default: false, // Erzwingt den Tooltip auf dem Input-Bereich
+    default: false, // Forces the tooltip on the input area
   },
   errorStyle: {
     type: String,
-    default: "default", // Fehler-Darstellungsstil: "default" (wa-alert) | "decent" (kleiner roter Text)
+    default: "default", // Error display style: "default" (wa-alert) | "decent" (small red text)
     validator(value, props) {
       return ["default", "decent"].includes(value)
     },
   },
   debug: {
     type: Boolean,
-    default: false, // Aktiviert Debug-Modus: Bone-Name als Tooltip am Label
+    default: false, // Enables debug mode: bone name as tooltip on the label
   },
 })
 const { t } = useI18n()
 
 const parentBonePath = inject("bonePath", [])
-// Für die Sichtbarkeit der Relations-Auswahl (Action-`when` prüft darauf).
+// For the visibility of the relation selector (action `when` checks for it).
 const relationSelector = inject("viurRelationSelector", null)
-// Formular-weite Action-Konfiguration (ViForm `actions`-Prop).
+// Form-wide action configuration (ViForm `actions` prop).
 const boneActionsConfig = inject("boneActionsConfig", null)
-/** Vollständiger Bone-Pfad als Array für verschachtelte Bone-DOM-IDs. @returns {ComputedRef<string[]>} */
+/** Full bone path as an array for nested bone DOM IDs. @returns {ComputedRef<string[]>} */
 const bonePath = computed(() => [...(unref(parentBonePath) ?? []), props.name])
 provide("bonePath", bonePath)
 
 /**
- * Prüft ob ein Objekt ausschließlich null-Werte oder leere Arrays enthält.
- * @param {Object} obj - Das zu prüfende Objekt
+ * Checks whether an object contains only null values or empty arrays.
+ * @param {Object} obj - The object to check
  * @returns {boolean}
  */
 function isObjectEmpty(obj) {
@@ -315,15 +315,15 @@ function isObjectEmpty(obj) {
 }
 
 const state = reactive({
-  boneactions: computed(() => props.boneactions), // Ob BoneActions-Schaltflächen angezeigt werden
+  boneactions: computed(() => props.boneactions), // Whether BoneActions buttons are shown
 
-  // Die Bone-Definition aus der Struktur (z.B. type, params, languages)
+  // The bone definition from the structure (e.g. type, params, languages)
   bonestructure: computed(() => {
     return props.structure?.[props.name]
   }),
-  bonevalue: null, // Aktueller Bone-Wert; wird aus skel initialisiert und bei Änderungen aktualisiert
-  multilanguage: computed(() => state.languages?.length && state.languages.length > 0), // Ob der Bone mehrsprachig ist (mindestens eine Sprache konfiguriert)
-  // Aktive Sprach-Liste: aus props.languages oder bonestructure.languages
+  bonevalue: null, // Current bone value; initialized from skel and updated on changes
+  multilanguage: computed(() => state.languages?.length && state.languages.length > 0), // Whether the bone is multilingual (at least one language configured)
+  // Active language list: from props.languages or bonestructure.languages
   languages: computed(() => {
     if (props.languages) {
       return props.languages
@@ -332,7 +332,7 @@ const state = reactive({
       ? state.bonestructure["languages"]
       : []
   }),
-  // Readonly-Status: props.readonly hat Vorrang vor bonestructure.readonly
+  // Readonly status: props.readonly takes precedence over bonestructure.readonly
   readonly: computed(() => {
     if (props.readonly) {
       return props.readonly
@@ -341,7 +341,7 @@ const state = reactive({
       ? state.bonestructure["readonly"]
       : false
   }),
-  // Required-Status: props.required hat Vorrang vor bonestructure.required
+  // Required status: props.required takes precedence over bonestructure.required
   required: computed(() => {
     if (props.required) {
       return props.required
@@ -350,13 +350,13 @@ const state = reactive({
       ? state.bonestructure["required"]
       : false
   }),
-  // Ob ein Tooltip-Text in bonestructure.params vorhanden ist
+  // Whether a tooltip text exists in bonestructure.params
   hasTooltip: computed(() => {
-    // `params` kommt von viur-core immer als Objekt; fehlt es (eigener Renderer,
-    // handgebaute Struktur), darf das Formular davon nicht sterben.
+    // `params` always comes from viur-core as an object; if it's missing (custom renderer,
+    // hand-built structure), the form must not die from it.
     return state.bonestructure && Object.keys(state.bonestructure["params"] ?? {}).includes("tooltip") ? true : false
   }),
-  // Multiple-Status: props.multiple hat Vorrang vor bonestructure.multiple
+  // Multiple status: props.multiple takes precedence over bonestructure.multiple
   multiple: computed(() => {
     if (props.multiple) {
       return props.multiple
@@ -365,7 +365,7 @@ const state = reactive({
       ? state.bonestructure["multiple"]
       : false
   }),
-  // Bone-Parameter: props.params hat Vorrang vor bonestructure.params
+  // Bone parameters: props.params take precedence over bonestructure.params
   params: computed(() => {
     if (props.params) {
       return props.params
@@ -374,11 +374,11 @@ const state = reactive({
       ? state.bonestructure["params"]
       : {}
   }),
-  // Die Actionbar-Komponente passend zum Bone-Typ (z.B. für File, Relational)
+  // The actionbar component matching the bone type (e.g. for file, relational)
   actionbar: computed(() => {
     return getBoneActionbar(state.bonestructure?.["type"])
   }),
-  // Ob der Bone-Wert leer ist (null, leeres Array, leeres Objekt). Im Readonly-Modus immer false
+  // Whether the bone value is empty (null, empty array, empty object). Always false in readonly mode
   isEmpty: computed(() => {
     // Ignore the computation when the state is readonly
     if (state.readonly) return false
@@ -395,7 +395,7 @@ const state = reactive({
 
     return false
   }),
-  // Fehlermeldungen aus props.errors, gefiltert auf diesen Bone (fieldPath + severity)
+  // Error messages from props.errors, filtered to this bone (fieldPath + severity)
   errorMessages: computed(() => {
     let errors = []
     for (let error of props.errors) {
@@ -412,8 +412,8 @@ const state = reactive({
     }
     return errors
   }),
-  label: computed(() => props.label), // Aktueller Label-Modus (gespiegelt von props.label)
-  // Ob der Bone-Tooltip angezeigt wird (bei hidden/placeholder-Label oder showBoneTooltip=true)
+  label: computed(() => props.label), // Current label mode (mirrored from props.label)
+  // Whether the bone tooltip is shown (with hidden/placeholder label or showBoneTooltip=true)
   showtooltip: computed(() => {
     if (props.showBoneTooltip) {
       return true
@@ -423,16 +423,16 @@ const state = reactive({
     }
     return false
   }),
-  defaultLanguage: computed(() => props.defaultLanguage), // Standardsprache (gespiegelt von props.defaultLanguage)
-  currentLanguage: null, // Aktuell aktiver Sprach-Tab
-  debug: computed(() => props.debug), // Debug-Modus (gespiegelt von props.debug)
-  labelTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "label-tooltip")), // Eindeutige DOM-ID für den Label-Tooltip-Anker
-  boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")), // Eindeutige DOM-ID für den Bone-Tooltip-Anker
-  // Ob für diesen Bone überhaupt Actions auflösbar sind (für UI-Wrapper-Sichtbarkeit).
-  // MIT demselben Extra-Kontext und derselben Konfigurations-Merge-Reihenfolge
-  // wie BoneActions selbst — sonst fällt z.B. die Relations-Auswahl
-  // (when: relationSelector) hier raus und der Wrapper versteckt eine real
-  // vorhandene Action, oder eine per ViForm abgewählte bleibt "sichtbar".
+  defaultLanguage: computed(() => props.defaultLanguage), // Default language (mirrored from props.defaultLanguage)
+  currentLanguage: null, // Currently active language tab
+  debug: computed(() => props.debug), // Debug mode (mirrored from props.debug)
+  labelTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "label-tooltip")), // Unique DOM ID for the label tooltip anchor
+  boneTooltipTargetId: computed(() => buildBoneDomId(unref(bonePath) ?? [], "field-tooltip")), // Unique DOM ID for the bone tooltip anchor
+  // Whether any actions can be resolved for this bone at all (for UI wrapper visibility).
+  // WITH the same extra context and the same config merge order
+  // as BoneActions itself — otherwise e.g. the relation selector
+  // (when: relationSelector) drops out here and the wrapper hides an actually
+  // existing action, or one deselected via ViForm stays "visible".
   resolvedActions: computed(() =>
     resolveActions(
       state.bonestructure,
@@ -442,16 +442,16 @@ const state = reactive({
     )
   ),
   hasActions: computed(() => state.resolvedActions.length > 0),
-  // Pflicht-Actions (Löschen, Download …) erscheinen auch ohne `boneactions`
+  // Required actions (delete, download …) appear even without `boneactions`
   hasRequiredActions: computed(() => state.resolvedActions.some((action) => action.required)),
   hasOptionalActions: computed(() => state.resolvedActions.some((action) => !action.required)),
 })
 provide("boneState", state)
 
 /**
- * Weist jedem Objekt im Array ein stabiles _key-Attribut (UUID) zu, falls noch keines vorhanden ist.
- * Wird via watchEffect aufgerufen um stabile :key-Bindings für vue-draggable sicherzustellen.
- * @param {Array<Object>} arr - Multiple-Array dessen Einträge Objekte sind
+ * Assigns a stable _key attribute (UUID) to each object in the array if it doesn't have one yet.
+ * Called via watchEffect to ensure stable :key bindings for vue-draggable.
+ * @param {Array<Object>} arr - Multiple array whose entries are objects
  */
 function ensureKeys(arr) {
   for (const it of arr) {
@@ -467,14 +467,14 @@ watchEffect(() => {
 })
 
 /**
- * Aktualisiert state.bonevalue anhand von lang/index-Kontext und feuert change-internal.
- * Bei valid=false wird der Wert nicht gespeichert, das Event aber trotzdem gefeuert.
- * Bei state.readonly wird kein Event gefeuert.
- * @param {string} name - Bone-Name
- * @param {unknown} val - Neuer Wert
- * @param {string|null} lang - Sprach-Key (bei Multilang-Bones)
- * @param {number|null} index - Index (bei Multiple-Bones)
- * @param {boolean} valid - Ob der Wert valide ist
+ * Updates state.bonevalue based on the lang/index context and fires change-internal.
+ * With valid=false the value is not stored, but the event is still fired.
+ * With state.readonly no event is fired.
+ * @param {string} name - bone name
+ * @param {unknown} val - new value
+ * @param {string|null} lang - language key (for multilang bones)
+ * @param {number|null} index - index (for multiple bones)
+ * @param {boolean} valid - whether the value is valid
  * @returns {false|void}
  */
 function updateValue(name, val, lang = null, index = null, valid = true) {
@@ -510,10 +510,10 @@ function updateValue(name, val, lang = null, index = null, valid = true) {
 }
 
 /**
- * Fügt einen neuen Eintrag zum Multiple-Array hinzu.
- * Wird via provide("addMultipleEntry") an Actionbars weitergegeben.
- * @param {string|null} lang - Sprach-Key (bei Multilang-Bones)
- * @param {unknown} data - Initialer Wert des neuen Eintrags
+ * Adds a new entry to the multiple array.
+ * Passed on to actionbars via provide("addMultipleEntry").
+ * @param {string|null} lang - language key (for multilang bones)
+ * @param {unknown} data - initial value of the new entry
  */
 function addMultipleEntry(lang = null, data = "") {
   if (lang) {
@@ -532,8 +532,8 @@ function addMultipleEntry(lang = null, data = "") {
 }
 
 /**
- * Feuert updateValue nach einer Multiple-Array-Mutation (splice).
- * @param {string|null} lang - Sprach-Key oder null
+ * Fires updateValue after a multiple array mutation (splice).
+ * @param {string|null} lang - language key or null
  */
 function emitMultipleUpdate(lang) {
   if (lang) {
@@ -544,9 +544,9 @@ function emitMultipleUpdate(lang) {
 }
 
 /**
- * Entfernt einen einzelnen Eintrag aus dem Multiple-Array per Index.
- * @param {number} index - Index des zu entfernenden Eintrags
- * @param {string|null} lang - Sprach-Key (bei Multilang-Bones)
+ * Removes a single entry from the multiple array by index.
+ * @param {number} index - index of the entry to remove
+ * @param {string|null} lang - language key (for multilang bones)
  */
 function removeMultipleEntry(index, lang = null) {
   if (lang) {
@@ -558,9 +558,9 @@ function removeMultipleEntry(index, lang = null) {
 }
 
 /**
- * Entfernt alle Einträge aus dem Multiple-Array.
- * Wird via provide("removeMultipleEntries") an Actionbars weitergegeben.
- * @param {string|null} lang - Sprach-Key (bei Multilang-Bones)
+ * Removes all entries from the multiple array.
+ * Passed on to actionbars via provide("removeMultipleEntries").
+ * @param {string|null} lang - language key (for multilang bones)
  */
 function removeMultipleEntries(lang = null) {
   if (lang) {
@@ -572,17 +572,17 @@ function removeMultipleEntries(lang = null) {
 }
 
 /**
- * Wechselt die aktive Sprache anhand des data-lang-Attributs des geklickten Tab-Elements.
- * @param {Event} e - Click-Event vom wa-tab
+ * Switches the active language based on the data-lang attribute of the clicked tab element.
+ * @param {Event} e - click event from the wa-tab
  */
 function updateLanguage(e) {
   state.currentLanguage = e.target.dataset.lang
 }
 
 /**
- * Delegiert an Utils.formatString — wird via provide("formatString") für Relational-Bones bereitgestellt.
- * @param {string} formatstr - Format-Template
- * @param {unknown} boneValue - Bone-Wert der in das Template eingesetzt wird
+ * Delegates to Utils.formatString — provided via provide("formatString") for relational bones.
+ * @param {string} formatstr - format template
+ * @param {unknown} boneValue - bone value inserted into the template
  * @returns {string}
  */
 function formatString(formatstr, boneValue) {
@@ -590,8 +590,8 @@ function formatString(formatstr, boneValue) {
 }
 
 /**
- * Übersetzt einen Fehler-Key via vue-i18n (errors.{key}). Fällt auf den rohen String zurück.
- * @param {string} error - Fehler-Key oder roher Fehlertext
+ * Translates an error key via vue-i18n (errors.{key}). Falls back to the raw string.
+ * @param {string} error - error key or raw error text
  * @returns {string}
  */
 function errorMessage(error) {
@@ -610,8 +610,8 @@ watch(
   }
 )
 
-// Sprach-Tab wählen: die gewünschte Sprache — führt der Bone sie nicht,
-// die erste seiner Sprachen (sonst wäre KEIN Tab aktiv).
+// Pick the language tab: the requested language — if the bone doesn't have it,
+// the first of its languages (otherwise NO tab would be active).
 function pickLanguage(wanted) {
   if (!state.languages?.length || state.languages.includes(wanted)) return wanted
   return state.languages[0]
@@ -635,7 +635,7 @@ onBeforeMount(() => {
 
 provide("updateValue", updateValue)
 provide("addMultipleEntry", addMultipleEntry)
-// Für die Pflicht-Action "removeEntry" (Zeilen-X der Multiple-Listen).
+// For the required action "removeEntry" (row X of the multiple lists).
 provide("removeMultipleEntry", removeMultipleEntry)
 provide("removeMultipleEntries", removeMultipleEntries)
 provide("formatString", formatString)
@@ -643,14 +643,14 @@ provide("formatString", formatString)
 
 <style scoped>
 @layer foundation.form {
-  /* Bone-Wrapper: Label links, Inhalt rechts (auf Mobile gestapelt) */
+  /* Bone wrapper: label left, content right (stacked on mobile) */
   .bone {
     display: grid;
     grid-template-columns: 235px 1fr;
     grid-gap: var(--wa-space-s);
     margin-bottom: 20px;
 
-    /* Label über dem Inhalt oder gar keins: eine Spalte auf jeder Breite */
+    /* Label above the content or none at all: one column at every width */
     &.is-label-top,
     &.is-label-hide {
       grid-template-columns: 1fr;
@@ -665,7 +665,7 @@ provide("formatString", formatString)
     font-weight: 700;
   }
 
-  /* Fehler-Callout unter dem Bone-Inhalt */
+  /* Error callout below the bone content */
   wa-callout.bone-error {
     padding: var(--wa-space-xs);
     border: 1px solid var(--wa-color-border-loud);
@@ -677,7 +677,7 @@ provide("formatString", formatString)
     }
   }
 
-  /* Sprachumschaltung: Tabs unter dem Eingabefeld (Multilang-Bones) */
+  /* Language switcher: tabs below the input field (multilang bones) */
   .bone-lang-tabs {
     width: 100%;
     --track-width: 0;
@@ -710,7 +710,7 @@ provide("formatString", formatString)
         }
       }
 
-      /* abgerundete Außenecken; Nachbar-Tabs überlappen sich um 1px */
+      /* rounded outer corners; neighboring tabs overlap by 1px */
       &:first-child::part(base) {
         margin-left: 1rem;
         border-bottom-left-radius: 5px;

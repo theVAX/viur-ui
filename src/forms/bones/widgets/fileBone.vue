@@ -98,50 +98,50 @@
 import { reactive, onMounted, inject, ref } from "vue"
 import { downloadUrlFor, uploadFile } from "../../../request/index.js"
 /**
- * Datei-Upload-Widget für Bones vom Typ `relational.tree.leaf.file.file`.
+ * File upload widget for bones of type `relational.tree.leaf.file.file`.
  *
- * Stellt eine kombinierte Klick-/Drop-Fläche bereit: ein Klick öffnet den File-Picker,
- * ein Drop lädt die fallengelassene Datei hoch. Bei Bilddateien wird eine klickbare
- * Vorschau angezeigt, die einen Dialog öffnet. Action-Buttons (Download, Delete)
- * werden über `<bone-actions>` per Default-Slot eingebracht.
+ * Provides a combined click/drop area: a click opens the file picker,
+ * a drop uploads the dropped file. For image files, a clickable
+ * preview is shown that opens a dialog. Action buttons (download, delete)
+ * are inserted via `<bone-actions>` through the default slot.
  *
  * @displayName FileBone
  *
- * @cssClass bone-widget-file-area - Äußerer klickbarer Container (Drop-Zone)
- * @cssClass bone-widget-prompt - Empty-State (Icon + Text)
- * @cssClass bone-widget-loader - Während des Uploads sichtbar
- * @cssClass bone-widget-preview - Container für das Vorschaubild oder das Datei-Icon
- * @cssClass has-preview - Zusatzklasse wenn ein Bild-Vorschau vorliegt
- * @cssClass is-dragover - Wenn eine Datei über die Fläche gezogen wird
- * @cssClass has-value - Wenn ein Wert gesetzt ist
- * @cssClass is-loading - Während ein Upload läuft
- * @cssClass is-readonly - Wenn der Bone readonly ist
+ * @cssClass bone-widget-file-area - Outer clickable container (drop zone)
+ * @cssClass bone-widget-prompt - Empty state (icon + text)
+ * @cssClass bone-widget-loader - Visible during the upload
+ * @cssClass bone-widget-preview - Container for the preview image or the file icon
+ * @cssClass has-preview - Additional class when an image preview is present
+ * @cssClass is-dragover - When a file is dragged over the area
+ * @cssClass has-value - When a value is set
+ * @cssClass is-loading - While an upload is in progress
+ * @cssClass is-readonly - When the bone is readonly
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert; Objekt mit `dest`- und `rel`-Schlüsseln oder `null`. */
+  /** Current bone value; object with `dest` and `rel` keys, or `null`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur; `public`-Flag steuert ob der Upload öffentlich ist. */
+  /** Bone structure; the `public` flag controls whether the upload is public. */
   bone: Object,
-  /** Aktuell nicht genutzt. */
+  /** Currently not used. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei Datei-Upload, Datei-Drop, Löschen und beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {{ dest: object, rel: null }|string} value - Hochgeladenes Datei-Objekt oder `""` beim Löschen
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on file upload, file drop, clearing, and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {{ dest: object, rel: null }|string} value - Uploaded file object, or `""` when cleared
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])
@@ -159,9 +159,9 @@ onMounted(() => {
 })
 
 /**
- * Triggert den nativen File-Picker des hidden Inputs.
- * Nur im Empty-State aktiv — ist bereits ein Wert gesetzt, muss zuerst per
- * Delete-Action geleert oder per Drag-and-Drop ersetzt werden.
+ * Triggers the native file picker of the hidden input.
+ * Only active in the empty state — if a value is already set, it must first be
+ * cleared via the delete action or replaced via drag-and-drop.
  */
 function openPicker() {
   if (state.loading || boneState.readonly || props.value) return
@@ -237,11 +237,11 @@ async function handleDrop(event) {
 .bone-widget-prompt {
   justify-content: center;
   color: var(--wa-color-on-quiet);
-  /* Klicks fallen auf die outer Drop-Zone durch */
+  /* Clicks fall through to the outer drop zone */
   pointer-events: none;
 }
 
-/* Dateiname-Zeile darf schrumpfen; lange Namen werden mit Ellipsis abgekürzt */
+/* Filename row may shrink; long names are truncated with an ellipsis */
 .bone-widget-file-row {
   min-width: 0;
 }
@@ -261,7 +261,7 @@ async function handleDrop(event) {
   background-color: color-mix(in srgb, var(--wa-color-surface-default) 70%, transparent);
 }
 
-/* Klickbare Bildvorschau: Zoom-Cursor + leichte Skalierung beim Hover */
+/* Clickable image preview: zoom cursor + slight scaling on hover */
 .bone-widget-preview.has-preview {
   cursor: zoom-in;
   transition: transform 0.15s ease;

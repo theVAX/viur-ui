@@ -37,10 +37,10 @@ export {
 // Theme (brand color from the configuration)
 export { useColorStore, hexToHsl, BRAND_LIGHTNESS } from "./src/theme/colorStore.js"
 
-// Translations (Komponenten dieses Pakets; in die vue-i18n-Instanz der App mergen —
-// vue-i18n ist Voraussetzung, die Komponenten übersetzen mit t() ohne Fallbacks)
+// Translations (components of this package; merge into the app's vue-i18n instance —
+// vue-i18n is required, the components translate with t() without fallbacks)
 export { default as deTranslations } from "./src/translations/de.js"
 export { default as enTranslations } from "./src/translations/en.js"
 
-// Anzeige von Bone-Werten (vormals aus dem Legacy-Paket)
+// Display of bone values
 export { default as boneLogic } from "./src/forms/bones/view/boneLogic.js"

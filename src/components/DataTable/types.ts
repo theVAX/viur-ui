@@ -1,6 +1,6 @@
-// Typen des DataTable-Widgets — nachgebaut nach <wa-data-grid> (WebAwesome Pro
-// v12), aber mit Vue-Mitteln: Zell-Inhalte kommen über Slots statt über
-// Lit-Templates, Zustand über v-model statt über Properties am Element.
+// Types of the DataTable widget — modeled after <wa-data-grid> (WebAwesome Pro
+// v12), but with Vue means: cell content comes via slots instead of
+// Lit templates, state via v-model instead of properties on the element.
 
 export type Row = Record<string, unknown>
 
@@ -8,7 +8,7 @@ export type Align = "start" | "center" | "end"
 export type PinSide = "start" | "end"
 
 export type SortMode =
-  | "auto" // Zahlen numerisch, Datum chronologisch, sonst alphanumerisch
+  | "auto" // numbers numerically, dates chronologically, otherwise alphanumerically
   | "text"
   | "textCaseSensitive"
   | "number"
@@ -16,13 +16,13 @@ export type SortMode =
   | "basic"
 
 export type FilterType =
-  | "text" // Teilstring, case-insensitive (Default)
+  | "text" // substring, case-insensitive (default)
   | "equals"
   | "number-range" // [min, max]
-  | "date-range" // [von, bis], inklusive nach Kalendertag
-  | "set" // Wert ist einer der gewählten
-  | "includes-any" // Array-Zelle enthält einen der gewählten
-  | "includes-all" // Array-Zelle enthält alle gewählten
+  | "date-range" // [from, to], inclusive by calendar day
+  | "set" // value is one of the selected ones
+  | "includes-any" // array cell contains one of the selected ones
+  | "includes-all" // array cell contains all selected ones
 
 export type AggregationKind = "sum" | "min" | "max" | "extent" | "mean" | "median" | "count" | "unique" | "uniqueCount"
 
@@ -32,34 +32,34 @@ export interface FilterOption {
   count?: number
 }
 
-/** Eine Spaltendefinition. Reines Datenobjekt — reaktiv, ohne Render-Logik. */
+/** A column definition. Plain data object — reactive, without render logic. */
 export interface DataTableColumn<R extends Row = Row> {
-  /** Pfad in die Zeile, Punktpfade erlaubt ("user.name"). Dient als id, wenn `id` fehlt. */
+  /** Path into the row, dot paths allowed ("user.name"). Serves as the id if `id` is missing. */
   field?: string
-  /** Explizite id. Pflicht für Spalten ohne `field` (Aktionen, berechnete Spalten). */
+  /** Explicit id. Required for columns without `field` (actions, computed columns). */
   id?: string
   /**
-   * Berechnet den Zellwert aus der Zeile. Anders als `formatter` (nur Darstellung)
-   * geht dieser Wert in Sortierung, Filter, Suche und Export ein.
+   * Computes the cell value from the row. Unlike `formatter` (display only),
+   * this value is used for sorting, filtering, search and export.
    */
   value?: (row: R) => unknown
   label?: string
   align?: Align
   headerAlign?: Align
-  /** Default: true, sobald `field` oder `value` vorhanden ist. */
+  /** Default: true as soon as `field` or `value` is present. */
   sortable?: boolean
   sortFn?: SortMode
-  /** Wohin leere Werte sortieren. */
+  /** Where empty values sort to. */
   sortUndefined?: false | "first" | "last"
-  /** Erste Sortierung dieser Spalte absteigend. */
+  /** First sort of this column is descending. */
   sortDescFirst?: boolean
   comparator?: (a: unknown, b: unknown, rowA: R, rowB: R) => number
-  /** Default: true, sobald `field` oder `value` vorhanden ist. */
+  /** Default: true as soon as `field` or `value` is present. */
   searchable?: boolean
   filterable?: boolean
   filterType?: FilterType
   filterFn?: (value: unknown, filterValue: unknown, row: R) => boolean
-  /** Ersetzt die berechneten Facetten im set/includes-Filter (z. B. im Server-Modus). */
+  /** Replaces the computed facets in the set/includes filter (e.g. in server mode). */
   filterOptions?: FilterOption[]
   hidden?: boolean
   hideable?: boolean
@@ -70,28 +70,28 @@ export interface DataTableColumn<R extends Row = Row> {
   width?: number
   minWidth?: number
   maxWidth?: number
-  /** Anteil am freien Platz; schlägt `width`. */
+  /** Share of the free space; beats `width`. */
   flex?: number
-  /** Zelltext. Für reichen Inhalt den Slot `cell:<id>` verwenden. */
+  /** Cell text. For rich content use the `cell:<id>` slot. */
   formatter?: (value: unknown, row: R) => string
   /**
-   * Wert(e) als farbige Plakette(n) statt als Text rendern. Positive Werte
-   * grün, negative rot, alles dazwischen regenbogen-abgestuft — siehe
-   * `badgesForBone` in viurColumns.ts, das diese Funktion für reine
-   * select- und bool-Bones erzeugt.
+   * Render value(s) as colored badge(s) instead of text. Positive values
+   * green, negative red, everything in between rainbow-graded — see
+   * `badgesForBone` in viurColumns.ts, which creates this function for plain
+   * select and bool bones.
    */
   badge?: (value: unknown, row: R) => CellBadge[] | null
-  /** Fußzeile: Text oder Funktion über die gefilterten Zeilen (alle Seiten). */
+  /** Footer: text or function over the filtered rows (all pages). */
   footer?: string | ((rows: R[]) => string)
   aggregation?: AggregationKind | ((values: unknown[], rows: R[]) => unknown)
   cellClass?: string | ((value: unknown, row: R) => string)
 }
 
-/** Spalte mit aufgelösten Defaults — was die Komponente intern benutzt. */
-/** Eine farbige Zell-Plakette (siehe DataTableColumn.badge). */
+/** Column with resolved defaults — what the component uses internally. */
+/** A colored cell badge (see DataTableColumn.badge). */
 export interface CellBadge {
   label: string
-  /** CSS-Farbe (Basiston); Hintergrund/Rand mischt die Tabelle selbst. */
+  /** CSS color (base tone); the table mixes background/border itself. */
   color: string
 }
 
@@ -107,9 +107,9 @@ export interface ResolvedColumn<R extends Row = Row> {
   filterable: boolean
   filterType: FilterType
   hideable: boolean
-  /** Zellwert einer Zeile (value() oder Punktpfad). */
+  /** Cell value of a row (value() or dot path). */
   get: (row: R) => unknown
-  /** Zelltext für Anzeige, Suche als Text, Kopieren und CSV. */
+  /** Cell text for display, text search, copying and CSV. */
   text: (row: R) => string
 }
 
@@ -124,13 +124,13 @@ export interface FilterEntry {
 }
 
 export interface ColumnFacets {
-  /** Verschiedene Werte mit Trefferzahl, absteigend nach Häufigkeit. */
+  /** Distinct values with hit count, descending by frequency. */
   values: { value: string; count: number }[]
   min?: number
   max?: number
 }
 
-/** Anfrage an den Server (dataSource / data-request). */
+/** Request to the server (dataSource / data-request). */
 export interface DataTableRequest {
   sort: SortEntry[]
   filters: FilterEntry[]
@@ -145,7 +145,7 @@ export interface DataTableResponse<R extends Row = Row> {
   total: number
 }
 
-/** Serialisierbarer Schnappschuss des vom Nutzer verstellbaren Zustands. */
+/** Serializable snapshot of the user-adjustable state. */
 export interface DataTableState {
   version: 1
   columnOrder?: string[]
@@ -163,7 +163,7 @@ export interface DataTableState {
 
 export type RowKey = string | number
 
-/** Knoten der (Baum-/Gruppen-)Hierarchie nach Filter und Sortierung. */
+/** Node of the (tree/group) hierarchy after filtering and sorting. */
 export interface RowNode<R extends Row = Row> {
   kind: "data" | "group"
   key: RowKey
@@ -179,48 +179,48 @@ export interface RowNode<R extends Row = Row> {
   aggregates?: Record<string, unknown>
 }
 
-/** Eine gerenderte Zeile (flach, inklusive Detail-Panels). */
+/** A rendered row (flat, including detail panels). */
 export interface DisplayRow<R extends Row = Row> {
   kind: "data" | "group" | "detail"
-  /** Eindeutig im Render-Durchlauf (Detailzeilen haben ein Suffix). */
+  /** Unique within the render pass (detail rows have a suffix). */
   key: string
-  /** Schlüssel der zugehörigen Zeile/Gruppe. */
+  /** Key of the associated row/group. */
   nodeKey: RowKey
   depth: number
   expandable: boolean
   expanded: boolean
-  /** Laufender Index der Datenzeilen (nur kind "data"). */
+  /** Running index of the data rows (kind "data" only). */
   index: number
   /**
-   * Die DURCHLAUF-Spalten links des eigenen Winkels (Länge = `depth - 1`).
-   * `true` heißt: dort läuft eine senkrechte Linie durch, weil der Vorfahre
-   * dieser Spalte noch ein Geschwister nach sich hat.
+   * The PASS-THROUGH columns left of the row's own connector (length = `depth - 1`).
+   * `true` means: a vertical line runs through there, because the ancestor
+   * of this column still has a sibling after it.
    *
-   * Wichtig ist die Zuordnung: die Linie in einer Spalte verbindet nicht den
-   * Vorfahren DIESER Ebene mit seinem Geschwister, sondern den Vorfahren der
-   * NÄCHSTEN Ebene — genau wie in `tree`-Ausgaben:
+   * The mapping matters: the line in a column does not connect the ancestor
+   * of THIS level with its sibling, but the ancestor of the
+   * NEXT level — just like in `tree` output:
    *
    * ```
    * A
    * ├── B
-   * │   └── C     ← das "│" steht hier, weil nach B noch D kommt
+   * │   └── C     ← the "│" is here because D still comes after B
    * └── D
    * ```
    *
-   * Wurzeln erzeugen keine Durchlauf-Spalte: zwischen zwei Wurzeln wird keine
-   * Linie gezogen.
+   * Roots create no pass-through column: no line is drawn between two
+   * roots.
    */
   ancestorLines: boolean[]
-  /** Letztes Kind seines Elternteils → Winkel „└" statt „├". */
+  /** Last child of its parent → connector "└" instead of "├". */
   isLastChild: boolean
   row?: R
   node?: RowNode<R>
 }
 
 /**
- * Die per `defineExpose` freigegebene API der Komponente. Als Typ für
- * Template-Refs verwenden — `InstanceType<typeof DataTable>` funktioniert bei
- * generischen Komponenten nicht.
+ * The component API exposed via `defineExpose`. Use as the type for
+ * template refs — `InstanceType<typeof DataTable>` doesn't work with
+ * generic components.
  */
 export interface DataTableApi<R extends Row = Row> {
   getVisibleRows: () => R[]
@@ -240,11 +240,11 @@ export interface DataTableApi<R extends Row = Row> {
   resetColumns: () => void
   getColumnFacets: (id: string) => ColumnFacets
   reload: () => void
-  /** Nachgeladene Kinder einer Zeile verwerfen und erneut holen. */
+  /** Discard a row's lazily loaded children and fetch them again. */
   reloadChildren: (key: RowKey) => Promise<void>
-  /** Nachgeladene Kinder einer Zeile (undefined = noch nicht geladen). */
+  /** Lazily loaded children of a row (undefined = not loaded yet). */
   getLoadedChildren: (key: RowKey) => R[] | undefined
-  /** Nachgeladene Kinder einer Zeile ersetzen, ohne zu laden. */
+  /** Replace a row's lazily loaded children without loading. */
   setLoadedChildren: (key: RowKey, rows: R[]) => void
   getDataAsCsv: (options?: {
     columnIds?: string[]

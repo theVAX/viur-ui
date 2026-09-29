@@ -244,8 +244,8 @@ const emit = defineEmits(["success", "error"])
 const store = useUserStore()
 const configStore = useConfigStore()
 const { t } = useI18n()
-// Optional: ohne installierten Router ist das undefined — dann wird per
-// location navigiert.
+// Optional: without an installed router this is undefined — navigation then
+// happens via location.
 const router = useRouter()
 
 const state = reactive({
@@ -306,9 +306,9 @@ function onFailed(error) {
 }
 
 /**
- * Nach dem Anmelden weiterleiten, wenn `redirect` gesetzt ist. Läuft NACH dem
- * success-Emit, damit der Aufrufer den Benutzer noch in seinen eigenen Zustand
- * übernehmen kann (Rechte, Persona-Sichtbarkeit), bevor das Ziel rendert.
+ * Redirect after login if `redirect` is set. Runs AFTER the success emit so
+ * the caller can still take the user into its own state (access rights,
+ * persona visibility) before the target renders.
  */
 async function goRedirect() {
   if (!props.redirect) return

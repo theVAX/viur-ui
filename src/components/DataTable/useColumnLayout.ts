@@ -1,6 +1,6 @@
-// Spalten-Layout: Reihenfolge, Breiten, Sichtbarkeit, Pinning — plus die
-// Zeigergesten für Resize und Reorder. Alles in EINEM reaktiven State-Objekt
-// (analog zur Komponenten-Regel), damit die Komponente nur noch rendert.
+// Column layout: order, widths, visibility, pinning — plus the
+// pointer gestures for resize and reorder. Everything in ONE reactive state object
+// (analogous to the component rule), so the component only has to render.
 
 import { computed, reactive } from "vue"
 import type { PinSide, ResolvedColumn, Row } from "./types"
@@ -10,16 +10,16 @@ const DEFAULT_MIN_WIDTH = 64
 
 export interface LayoutColumn<R extends Row = Row> {
   column: ResolvedColumn<R>
-  /** Index in der sichtbaren Reihenfolge. */
+  /** Index in the visible order. */
   index: number
-  /** Effektive Breite in px (gemessen oder gesetzt). */
+  /** Effective width in px (measured or set). */
   width: number
-  /** Spaltenbreite für grid-template-columns. */
+  /** Column width for grid-template-columns. */
   track: string
   pinned: PinSide | false
-  /** Sticky-Abstand zur jeweiligen Kante (px). */
+  /** Sticky offset to the respective edge (px). */
   offset: number
-  /** Letzte am Start bzw. erste am Ende gepinnte Spalte (für die Trennlinie). */
+  /** Last column pinned at the start or first pinned at the end (for the divider). */
   pinEdge: boolean
   resizable: boolean
   movable: boolean
@@ -45,19 +45,19 @@ function clampWidth<R extends Row>(column: ResolvedColumn<R>, width: number): nu
 
 export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOptions<R>) {
   const state = reactive({
-    /** Vom Nutzer gesetzte Reihenfolge (ids). Leer = Reihenfolge der Definitionen. */
+    /** User-set order (ids). Empty = order of the definitions. */
     order: [] as string[],
-    /** Vom Nutzer gezogene Breiten. */
+    /** Widths dragged by the user. */
     widths: {} as Record<string, number>,
-    /** Sichtbarkeit; fehlt ein Eintrag, gilt `hidden` aus der Definition. */
+    /** Visibility; if an entry is missing, `hidden` from the definition applies. */
     visibility: {} as Record<string, boolean>,
-    /** Pinning; fehlt ein Eintrag, gilt `pinned` aus der Definition. */
+    /** Pinning; if an entry is missing, `pinned` from the definition applies. */
     pinning: {} as Record<string, PinSide | false>,
-    /** Im DOM gemessene Breiten — Grundlage der Sticky-Abstände. */
+    /** Widths measured in the DOM — basis for the sticky offsets. */
     measured: {} as Record<string, number>,
-    /** Laufende Resize-Geste. */
+    /** Ongoing resize gesture. */
     resizing: null as { id: string; startX: number; startWidth: number } | null,
-    /** Laufende Reorder-Geste. */
+    /** Ongoing reorder gesture. */
     dragging: null as { id: string; overId: string | null; x: number; y: number } | null,
 
     ordered: computed((): ResolvedColumn<R>[] => {
@@ -72,11 +72,11 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
           byId.delete(id)
         }
       }
-      // Neue Spalten, die die gespeicherte Reihenfolge nicht kennt, hinten dran.
+      // New columns unknown to the saved order go at the end.
       return [...sorted, ...byId.values()]
     }),
 
-    /** Sichtbare Spalten in Anzeigereihenfolge: gepinnt (Start) → frei → gepinnt (Ende). */
+    /** Visible columns in display order: pinned (start) → free → pinned (end). */
     visibleColumns: computed((): LayoutColumn<R>[] => {
       const visible = state.ordered.filter((column: ResolvedColumn<R>) => isVisible(column))
       const pinnedStart = visible.filter((column: ResolvedColumn<R>) => pinOf(column) === "start")
@@ -128,15 +128,15 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     return state.pinning[column.id] ?? column.def.pinned ?? false
   }
 
-  /** Effektive Breite: gezogen > gemessen > definiert > Default. */
+  /** Effective width: dragged > measured > defined > default. */
   function widthOf(column: ResolvedColumn<R>): number {
     const width = state.widths[column.id] ?? state.measured[column.id] ?? column.def.width ?? DEFAULT_WIDTH
     return clampWidth(column, width)
   }
 
   function trackOf(column: ResolvedColumn<R>): string {
-    // Eine vom Nutzer gezogene Breite gewinnt IMMER — auch gegen flex, sonst
-    // ließe sich eine flex-Spalte nicht von Hand skalieren.
+    // A width dragged by the user ALWAYS wins — even over flex, otherwise
+    // a flex column couldn't be resized by hand.
     const dragged = state.widths[column.id]
     if (dragged !== undefined) return `${clampWidth(column, dragged)}px`
     const fixed = column.def.width
@@ -153,7 +153,7 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     state.measured[id] = width
   }
 
-  // ── Sichtbarkeit ────────────────────────────────────────────────────
+  // ── Visibility ──────────────────────────────────────────────────────
   function toggleColumn(id: string, visible?: boolean, silent = false): void {
     const column = options.columns().find((item) => item.id === id)
     if (!column) return
@@ -164,8 +164,8 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
 
   // ── Pinning ─────────────────────────────────────────────────────────
   function pinColumn(id: string, side: PinSide | false, silent = false): void {
-    // Ohne feste Breite die aktuelle Breite einfrieren — sonst springt die
-    // Spalte beim Pinnen, weil der Sticky-Abstand eine px-Breite braucht.
+    // Without a fixed width, freeze the current width — otherwise the column
+    // jumps when pinned, because the sticky offset needs a px width.
     const column = options.columns().find((item) => item.id === id)
     if (column && side && state.widths[id] === undefined && column.def.width === undefined) {
       state.widths[id] = widthOf(column)
@@ -179,7 +179,7 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     return column ? pinOf(column) : false
   }
 
-  // ── Reihenfolge ─────────────────────────────────────────────────────
+  // ── Order ───────────────────────────────────────────────────────────
   function currentOrder(): string[] {
     return state.ordered.map((column: ResolvedColumn<R>) => column.id)
   }
@@ -195,7 +195,7 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     options.onMove?.(order, finished)
   }
 
-  /** Spalte um `delta` Positionen verschieben (Tastatur: Shift + ←/→). */
+  /** Move a column by `delta` positions (keyboard: Shift + ←/→). */
   function shiftColumn(id: string, delta: number): void {
     const visible = state.visibleColumns.map((item: LayoutColumn<R>) => item.column.id)
     const index = visible.indexOf(id)
@@ -250,7 +250,7 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     if (active?.overId && active.overId !== active.id) moveColumn(active.id, active.overId, true)
   }
 
-  // ── Zurücksetzen / Zustand ──────────────────────────────────────────
+  // ── Reset / state ───────────────────────────────────────────────────
   function resetColumns(): void {
     state.order = []
     state.widths = {}
@@ -258,7 +258,7 @@ export function useColumnLayout<R extends Row = Row>(options: ColumnLayoutOption
     state.pinning = {}
   }
 
-  /** Spalten-ids, die es nicht mehr gibt, aus dem Zustand entfernen. */
+  /** Remove column ids that no longer exist from the state. */
   function pruneUnknown(): void {
     const ids = new Set(options.columns().map((column) => column.id))
     state.order = state.order.filter((id) => ids.has(id))

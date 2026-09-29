@@ -2,56 +2,56 @@ import type { DefineComponent } from "vue"
 import type { RowKey } from "../DataTable/types"
 import type { BrowserMovePayload, BrowserUploadPayload } from "./types"
 
-/** Props von ViurBrowser.vue (siehe defineProps dort). */
+/** Props of ViurBrowser.vue (see defineProps there). */
 export interface ViurBrowserProps {
-  /** Modulname bzw. Punkt-Pfad ("file", "shop.category"). */
+  /** Module name or dotted path ("file", "shop.category"). */
   module: string
-  /** Renderer der Requests; Standard: VITE_DEFAULT_RENDERER. */
+  /** Renderer for the requests; default: VITE_DEFAULT_RENDERER. */
   renderer?: string | null
-  /** Fester Wurzelknoten; ohne ihn wird `/listRootNodes` befragt. */
+  /** Fixed root node; without it, `/listRootNodes` is queried. */
   rootNode?: string | Record<string, unknown> | null
-  /** Spalten; ohne Angabe aus der Struktur der Blätter abgeleitet. */
+  /** Columns; if omitted, derived from the leaf structure. */
   columns?: unknown[] | null
-  /** Nur diese Bones als Spalten (bei abgeleiteten Spalten). */
+  /** Only these bones as columns (for derived columns). */
   bones?: string[] | null
-  /** Zusätzliche Parameter für die Listen-Requests. */
+  /** Additional parameters for the list requests. */
   params?: Record<string, unknown>
-  /** Feld der festen Reihenfolge (Standard "sortindex"). */
+  /** Field holding the fixed order (default "sortindex"). */
   orderField?: string
-  /** Dateien in die Ebene hochladen erlauben (Datei-Module). */
+  /** Allow uploading files into the level (file modules). */
   uploads?: boolean
-  /** Wird an die DataTable durchgereicht. */
+  /** Passed through to the DataTable. */
   tableProps?: Record<string, unknown>
 }
 
-/** Ereignisse als `on*`-Props, damit `@open` & Co. im Template typen. */
+/** Events as `on*` props so that `@open` & co. are typed in the template. */
 export interface ViurBrowserEmitProps<R = Record<string, unknown>> {
-  /** Doppelklick auf ein BLATT (Ordner navigieren stattdessen hinein). */
+  /** Double-click on a LEAF (folders navigate into themselves instead). */
   onOpen?: (payload: { row: R; key: RowKey }) => void
-  /** Verschieben gespeichert. */
+  /** Move saved. */
   onMoved?: (payload: { keys: RowKey[]; target: RowKey | null; parentChanged?: boolean }) => void
   onMoveFailed?: (payload: { keys: RowKey[]; target: RowKey | null; error: unknown }) => void
-  /** Uploads fertig (nur mit `uploads`). */
+  /** Uploads finished (only with `uploads`). */
   onUploaded?: (payload: { files: unknown[]; target: RowKey | null }) => void
   onUploadFailed?: (payload: { file: File; error: unknown }) => void
-  /** v-model:location — aktueller Ort (Schlüssel des Knotens, null = Wurzel). */
+  /** v-model:location — current location (key of the node, null = root). */
   onUpdateLocation?: (value: RowKey | null) => void
   /** v-model:selectedKeys */
   onUpdateSelectedKeys?: (value: RowKey[]) => void
 }
 
-/** Was ViurBrowser per defineExpose freigibt. */
+/** What ViurBrowser exposes via defineExpose. */
 export interface ViurBrowserApi<R = Record<string, unknown>> {
-  /** Der generische Browser darunter. */
+  /** The generic browser underneath. */
   browser: unknown
-  /** Inhalt des aktuellen Ortes (Knoten UND Blätter, je mit `skelType`). */
+  /** Contents of the current location (nodes AND leaves, each with `skelType`). */
   tree: {
     data: { value: R[] }
     structure: { value: { node?: Record<string, unknown>; leaf?: Record<string, unknown> } }
     isFetching: { value: boolean }
     [key: string]: unknown
   }
-  /** Ort neu vom Server holen. */
+  /** Re-fetch the location from the server. */
   refresh: () => void
 }
 

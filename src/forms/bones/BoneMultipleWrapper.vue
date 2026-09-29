@@ -12,9 +12,9 @@
         <slot></slot>
       </div>
       <div class="wa-cluster wa-gap-xs">
-        <!-- IMMER gerendert: Das Zeilen-X ist die Pflicht-Action "removeEntry"
-             (actions/index.js) — BoneActions filtert ohne `boneactions` selbst
-             auf die Pflicht-Actions herunter. -->
+        <!-- ALWAYS rendered: the row X is the required action "removeEntry"
+             (actions/index.js) — without `boneactions`, BoneActions itself filters
+             down to the required actions. -->
         <bone-actions
           :value="state.value"
           :name="name"

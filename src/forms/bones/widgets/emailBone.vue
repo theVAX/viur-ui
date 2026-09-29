@@ -21,45 +21,45 @@
 import { reactive, onMounted, inject, ref, watchEffect, computed } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
 /**
- * Einzeiliges E-Mail-Eingabefeld mit nativer Browser-Validierung.
+ * Single-line email input field with native browser validation.
  *
- * Rendert ein `<wa-input type="email">` und nutzt die native Constraint
- * Validation API des Browsers zur Format-Prüfung. Bei
- * `boneState.label === "placeholder"` wird die Bone-Beschreibung als
- * Placeholder angezeigt statt als Label darüber.
+ * Renders a `<wa-input type="email">` and uses the browser's native Constraint
+ * Validation API for format checking. With
+ * `boneState.label === "placeholder"`, the bone description is shown as a
+ * placeholder instead of as a label above.
  *
  * @displayName EmailBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-email - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-email-default - Standard-Variante
- * @cssClass bone-widget-email-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-email-email`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-email - Identifies the bone type
+ * @cssClass bone-widget-email-default - Default variant
+ * @cssClass bone-widget-email-{name} - Dynamically set to the bone name, e.g. `bone-widget-email-email`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert. */
+  /** Current bone value. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
+  /** Focuses the input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Eingabewert
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current input value
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

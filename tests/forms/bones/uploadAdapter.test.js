@@ -7,7 +7,7 @@ vi.mock("../../../src/request/index.js", async (importOriginal) => ({
 
 const { ViURUploadAdapterPlugin } = await import("../../../src/forms/bones/uploadAdapter.js")
 
-it("Bild-Upload im Text-Bone speichert /file/download/… (wie Legacy), nicht /vi/…", async () => {
+it("Bild-Upload im Text-Bone speichert /file/download/…, nicht /vi/…", async () => {
   const fileRepository = {}
   const editor = { plugins: { get: () => fileRepository }, config: { get: () => undefined } }
   ViURUploadAdapterPlugin(editor)

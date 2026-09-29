@@ -39,21 +39,21 @@ import { EditorState } from "@codemirror/state"
 import { languages } from "@codemirror/language-data"
 
 /**
- * Code-Editor auf Basis von CodeMirror für syntaxhervorgehobene Quelltext-Eingabe.
+ * Code editor based on CodeMirror for syntax-highlighted source code input.
  *
- * Erkennt die Programmiersprache anhand von `boneState.bonestructure.type`
- * (z.B. `raw.code.python`, `raw.code.html`, `raw.code.javascript`) und lädt
- * das passende CodeMirror-Language-Plugin dynamisch nach. Unterstützt
- * Mehrfachwerte (`multiple`). Ein Expand-Button ermöglicht das Aufklappen
- * auf volle Höhe.
+ * Detects the programming language from `boneState.bonestructure.type`
+ * (e.g. `raw.code.python`, `raw.code.html`, `raw.code.javascript`) and dynamically
+ * loads the matching CodeMirror language plugin. Supports
+ * multiple values (`multiple`). An expand button allows expanding
+ * to full height.
  *
  * @displayName CodeBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-raw - Kennzeichnet den übergeordneten Bone-Typ
- * @cssClass bone-widget-raw-default - Standard-Variante
- * @cssClass bone-widget-wrapper - Umschließt Editor und Expand-Button
- * @cssClass is-max-size - Wird per Expand-Button umgeschaltet; hebt die maximale Höhe auf
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-raw - Identifies the parent bone type
+ * @cssClass bone-widget-raw-default - Default variant
+ * @cssClass bone-widget-wrapper - Wraps the editor and the expand button
+ * @cssClass is-max-size - Toggled via the expand button; removes the maximum height
  */
 defineOptions({
   inheritAttrs: false,
@@ -63,27 +63,27 @@ const element = ref(null)
 const view = ref(null)
 
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert (Quelltext als String). */
+  /** Current bone value (source code as a string). */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones (CodeBone unterstützt kein multilang). */
+  /** Language key for multilingual bones (CodeBone does not support multilang). */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach dem Mount auf den CodeMirror-Editor. */
+  /** Focuses the CodeMirror editor after mount. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Quelltext
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current source code
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

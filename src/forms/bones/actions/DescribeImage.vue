@@ -2,10 +2,12 @@
   <div class="image-description-wrapper">
     <div class="image-description-grid">
       <div>
-        <vi-image
+        <img
           :src="state.url"
+          alt=""
+          draggable="false"
           style="height: 50px"
-        ></vi-image>
+        />
       </div>
 
       <div class="image-description-flex">
@@ -83,7 +85,6 @@
 import { useI18n } from "vue-i18n"
 import { reactive, onMounted, inject, computed } from "vue"
 import { createControllerFetch } from "../../../request/index.js"
-import viImage from "@viur/vue-utils/generic/Image.vue"
 
 const { t } = useI18n()
 

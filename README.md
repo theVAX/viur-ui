@@ -1,79 +1,63 @@
 # viur-ui
 
-Official UI Components for Vue 3.
+Vue 3 components and request helpers for [ViUR](https://www.viur.dev).
 
-## Installation
+## Install
 
 ```bash
 npm install viur-ui
 ```
 
-**Requires:** Vue 3.3+, Vite with `@vitejs/plugin-vue`
+Peers: `vue` 3.3+, `pinia`, `vue-i18n`, `@viur/webawesome`, `@vueuse/core`, `vue-router`; for code/text bones also `codemirror`, `@codemirror/language-data`, `ckeditor5`, `@ckeditor/ckeditor5-vue`.
 
-## Development
-
-### Histoire (Component Stories)
-
-```bash
-# Neue Bones (WebAwesome) — http://localhost:6006
-npm run story:dev
-
-# Legacy-Vergleich: Alt (Shoelace) vs. Neu (WebAwesome) — http://localhost:6007
-npm run histoire:legacy
-```
-
-### Tests
-
-```bash
-# Unit-Tests (Vitest, watch mode)
-npm run test
-
-# Unit-Tests einmalig ausführen
-npm run test:run
-
-# Contract Tests (Playwright gegen laufenden Histoire-Server auf :6007)
-npm run test:contract
-```
-
-> Die Contract Tests starten den Legacy-Histoire-Server automatisch, falls er noch nicht läuft.
-
-**Ersteinrichtung Playwright:** Nach `npm install` oder nach einem Playwright-Update müssen die Browser einmalig installiert werden:
-
-```bash
-npx playwright install chromium
-```
-
-## Vite Configuration
-
-Add to your `vite.config.js` so Vite processes the `.vue` files from this package:
+## Vite
 
 ```js
-import vue from '@vitejs/plugin-vue'
+import vue from "@vitejs/plugin-vue"
 
 export default {
   plugins: [vue()],
   optimizeDeps: {
-    exclude: ['viur-ui']
-  }
+    exclude: ["viur-ui"], // ships raw SFCs; pre-bundling duplicates module state in dev
+  },
 }
 ```
 
-## Usage
+Env: `VITE_API_URL`, `VITE_DEFAULT_RENDERER` (`json` | `vi`).
 
-### Named import via index
-
-```js
-import { HelloWorld } from 'viur-ui'
-```
-
-### Direct path import
+## Setup
 
 ```js
-import HelloWorld from 'viur-ui/src/components/HelloWorld.vue'
+import "viur-ui/src/webawesomeConfig.js"
+import { deTranslations, enTranslations } from "viur-ui"
+import { installViurForms } from "viur-ui/src/forms/install.js"
+
+app.use(createPinia())
+app.use(createI18n({ legacy: false, locale: "de", messages: { de: deTranslations, en: enTranslations } }))
+installViurForms(app) // ViForm, Bone, BoneLabel, … (async)
 ```
 
-## Components
+## API
 
-| Component | Description |
-|-----------|-------------|
-| `HelloWorld` | Renders "Hello World" |
+```js
+import { useListFetch, useViewFetch, useEditFetch, useConfigStore, notify } from "viur-ui"
+```
+
+Full list: [`index.js`](./index.js), types: [`index.d.ts`](./index.d.ts).
+
+## Development
+
+```bash
+npm install && npm install --prefix example
+npm run story:dev   # Histoire, :6006
+npm run test:run    # Vitest
+npm run lint
+```
+
+## Release
+
+```bash
+npm version patch && git push --follow-tags
+```
+
+Published by [`release.yml`](./.github/workflows/release.yml) via npm Trusted Publishing. `-alpha` / `-beta` / `-rc` → matching dist-tag, else `latest`.

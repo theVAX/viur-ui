@@ -3,10 +3,10 @@ import { boneFamily, boneText, columnsFromStructure } from "../../src/components
 import * as viurColumns from "../../src/components/DataTable/viurColumns.ts"
 import * as dataTableColumns from "../../src/components/DataTable/columns.ts"
 
-// Eine ViUR-Liste liefert ihre `structure` mit; daraus entstehen die Spalten der
-// DataTable. Der Kern ist die Übersetzung des BONE-WERTS in Text: mehrsprachige
-// Bones sind ein Objekt je Sprache, `multiple` eine Liste, relationale Bones
-// tragen `{dest, rel}`.
+// A ViUR list ships its `structure`; the DataTable's columns are built from it.
+// The core is translating the BONE VALUE into text: multilingual
+// bones are an object per language, `multiple` a list, relational bones
+// carry `{dest, rel}`.
 
 const str = { descr: "Name", type: "str", indexed: true }
 const num = { descr: "Menge", type: "numeric", precision: 2, indexed: true }
@@ -33,7 +33,7 @@ describe("boneText", () => {
 
   it("select zeigt die Beschriftung, nicht den Schlüssel", () => {
     expect(boneText("done", select)).toBe("Erledigt")
-    // Unbekannter Wert bleibt sichtbar, statt zu verschwinden.
+    // Unknown value stays visible instead of disappearing.
     expect(boneText("weg", select)).toBe("weg")
   })
 
@@ -52,18 +52,18 @@ describe("boneText", () => {
     expect(boneText("2026-08-26T10:30:00", nurDatum, { locale: "de-DE" })).toBe("26.08.2026")
     const nurZeit = { type: "date", date: false, time: true }
     expect(boneText("2026-08-26T10:30:00", nurZeit, { locale: "de-DE" })).toBe("10:30")
-    // Unparsbares bleibt, wie es kam.
+    // Unparsable input stays as it came.
     expect(boneText("bald", { type: "date" })).toBe("bald")
   })
 
   it("relationale Bones zeigen den Namen des Ziels", () => {
     expect(boneText({ dest: { key: "k1", name: "Firma" }, rel: null }, rel)).toBe("Firma")
-    // ohne Namen bleibt der Schlüssel
+    // without a name, the key remains
     expect(boneText({ dest: { key: "k1" } }, rel)).toBe("k1")
   })
 
   it("relationale Bones folgen ihrem Formatstring", () => {
-    // ViUR liefert bei relationalen Bones ein `format` mit ("$(dest.name)").
+    // ViUR ships a `format` with relational bones ("$(dest.name)").
     const bone = { type: "relational.relationalbone", format: "$(dest.name) ($(dest.kdnr))" }
     const wert = { dest: { name: "Firma", kdnr: 42 }, rel: null }
     expect(boneText(wert, bone)).toBe("Firma (42)")
@@ -82,10 +82,10 @@ describe("boneText", () => {
   it("mehrsprachige Bones nehmen die gewünschte Sprache", () => {
     const wert = { de: "Titel", en: "Title" }
     expect(boneText(wert, lang, { language: "en" })).toBe("Title")
-    // ohne Angabe die erste Sprache des Bones
+    // if unspecified, the bone's first language
     expect(boneText(wert, lang)).toBe("Titel")
-    // unbekannte/leere gewünschte Sprache → erste befüllte, mit Flagge
-    // gekennzeichnet (die Zelle zeigt sonst stillschweigend die falsche Sprache)
+    // unknown/empty requested language → first filled one, marked with a
+    // flag (otherwise the cell would silently show the wrong language)
     expect(boneText(wert, lang, { language: "fr" })).toBe("🇩🇪 Titel")
   })
 
@@ -114,9 +114,9 @@ describe("columnsFromStructure", () => {
   it("sortierbar nur, wonach der Server ordnen kann", () => {
     const columns = columnsFromStructure({
       name: str, // indexed
-      aktiv: bool, // nicht indexed
+      aktiv: bool, // not indexed
       tags: { ...multi, indexed: true }, // multiple
-      titel: { ...lang, indexed: true }, // mehrsprachig
+      titel: { ...lang, indexed: true }, // multilingual
     })
     expect(Object.fromEntries(columns.map((c) => [c.field, c.sortable]))).toEqual({
       name: true,
@@ -187,15 +187,15 @@ describe("badgesForBone — Plaketten für reine selects und bools", () => {
     const badge = badgesForBone(STATUS_BONE)
     expect(badge("active")[0]).toMatchObject({ label: "Aktiv", color: expect.stringContaining("success") })
     expect(badge("hidden")[0]).toMatchObject({ label: "Versteckt", color: expect.stringContaining("danger") })
-    // "Versteckt" matcht über die BESCHRIFTUNG (versteckt), "hidden" über den Schlüssel
+    // "Versteckt" matches via the LABEL (versteckt), "hidden" via the key
   })
 
   it("select: übrige Optionen bekommen regenbogen-verteilte, stabile Farbtöne", () => {
     const tones = selectToneMap(STATUS_BONE)
     const neutral = ["draft", "review", "archived"].map((key) => tones.get(key).color)
-    expect(new Set(neutral).size).toBe(3) // alle unterschiedlich
+    expect(new Set(neutral).size).toBe(3) // all different
     for (const color of neutral) expect(color).toMatch(/^oklch\(/)
-    // stabil: gleiche Struktur → gleiche Farben
+    // stable: same structure → same colors
     const again = selectToneMap(STATUS_BONE)
     expect(["draft", "review", "archived"].map((key) => again.get(key).color)).toEqual(neutral)
   })
@@ -294,10 +294,10 @@ describe("compareValues — Arrays/Objekte sortieren nach dem ersten Wert", () =
 
   it("auto-Modus vergleicht zusammengesetzte Werte über ihr erstes Atom", () => {
     const { compareValues } = dataTableColumns
-    expect(compareValues([2], [10], "auto")).toBeLessThan(0) // numerisch, nicht "10" < "2"
+    expect(compareValues([2], [10], "auto")).toBeLessThan(0) // numeric, not "10" < "2"
     expect(compareValues({ de: "Apfel" }, { de: "Birne" }, "auto")).toBeLessThan(0)
     expect(compareValues([{ dest: { name: "Anna" } }], [{ dest: { name: "Ben" } }], "auto")).toBeLessThan(0)
-    // Primitives unverändert
+    // Primitives unchanged
     expect(compareValues(2, 10, "auto")).toBeLessThan(0)
   })
 })
@@ -320,7 +320,7 @@ describe("columnsFromStructure — mehrsprachige Spalten sortieren nach der ange
 
   it("leere gewünschte Sprache fällt wie die Anzeige auf die erste befüllte zurück", () => {
     const comparator = colFor({ language: "en" }).comparator
-    // links fehlt en → fällt auf de ("Beta"); rechts en "Alpha" → Alpha < Beta
+    // left lacks en → falls back to de ("Beta"); right en "Alpha" → Alpha < Beta
     expect(comparator({ de: "Beta", en: "" }, { de: "Zebra", en: "Alpha" })).toBeGreaterThan(0)
   })
 

@@ -1,7 +1,7 @@
 <template>
-  <!-- Vue-Nachbau von <wa-data-grid> (WebAwesome Pro). Spalten sind Daten,
-       Zell-Inhalte kommen aus Slots (`cell:<id>`), veränderlicher Zustand
-       läuft über v-model. Alles Weitere steckt in den Composables. -->
+  <!-- Vue reimplementation of <wa-data-grid> (WebAwesome Pro). Columns are data,
+       cell contents come from slots (`cell:<id>`), mutable state
+       flows through v-model. Everything else lives in the composables. -->
   <div
     class="vi-dt"
     :class="[
@@ -15,7 +15,7 @@
     ]"
     :style="state.hostStyle"
   >
-    <!-- ── Toolbar: Suche + Spaltenmenü ─────────────────────────────── -->
+    <!-- ── Toolbar: search + columns menu ───────────────────────────── -->
     <div
       v-if="state.showToolbar"
       class="vi-dt-toolbar wa-split wa-gap-s wa-flex-nowrap"
@@ -86,7 +86,7 @@
       </div>
     </div>
 
-    <!-- ── Scroll-Bereich: Kopf, Körper, Spaltenfüße ────────────────── -->
+    <!-- ── Scroll area: header, body, column footers ────────────────── -->
     <div
       ref="scrollerEl"
       class="vi-dt-scroller"
@@ -138,7 +138,7 @@
             @dragend="layout.endDrag()"
             @drop.prevent="layout.endDrag()"
           >
-            <!-- Auswahl-Kopfzelle: alles auf dieser Seite -->
+            <!-- Selection header cell: everything on this page -->
             <input
               v-if="cell.kind === 'select' && selectable === 'multiple'"
               class="vi-dt-checkbox vi-dt-select-all"
@@ -271,7 +271,7 @@
           v-for="displayRow in virtual.state.windowRows"
           :key="displayRow.key"
         >
-          <!-- Detail-Panel: eigene Zeile über die volle Breite -->
+          <!-- Detail panel: its own full-width row -->
           <div
             v-if="displayRow.kind === 'detail'"
             class="vi-dt-detailrow"
@@ -344,7 +344,7 @@
               @click="onCellClick(displayRow, cell, $event)"
               @contextmenu="onCellContextMenu(displayRow, cell, $event)"
             >
-              <!-- Ziehgriff der festen Reihenfolge -->
+              <!-- Drag handle for the fixed order -->
               <span
                 v-if="cell.kind === 'order' && displayRow.kind === 'data'"
                 class="vi-dt-grip"
@@ -356,7 +356,7 @@
                 <wa-icon name="grip-vertical"></wa-icon>
               </span>
 
-              <!-- Auswahl -->
+              <!-- Selection -->
               <input
                 v-if="cell.kind === 'select' && selectable !== false"
                 class="vi-dt-checkbox"
@@ -368,7 +368,7 @@
                 @click.stop="onSelectRow(displayRow, $event as MouseEvent)"
               />
 
-              <!-- Aufklapp-Spalte (Baum, Gruppen, Detail-Panels) -->
+              <!-- Expand column (tree, groups, detail panels) -->
               <template v-if="cell.kind === 'expand'">
                 <wa-button
                   v-if="displayRow.expandable"
@@ -376,14 +376,14 @@
                   appearance="plain"
                   size="small"
                   :aria-expanded="displayRow.expanded"
-                  :aria-label="displayRow.expanded ? 'Zeile einklappen' : 'Zeile ausklappen'"
+                  :aria-label="displayRow.expanded ? t('dataTable.collapseRow') : t('dataTable.expandRow')"
                   @click.stop="toggleExpand(displayRow)"
                 >
                   <wa-icon :name="displayRow.expanded ? 'chevron-down' : 'chevron-right'"></wa-icon>
                 </wa-button>
               </template>
 
-              <!-- Gruppenzeile: Wert + Anzahl in der ersten Datenspalte, sonst Aggregate -->
+              <!-- Group row: value + count in the first data column, aggregates elsewhere -->
               <template v-else-if="displayRow.kind === 'group' && cell.kind === 'data'">
                 <template v-if="cell.index === state.firstDataCellIndex">
                   <slot
@@ -402,13 +402,13 @@
                 </span>
               </template>
 
-              <!-- Datenzelle -->
+              <!-- Data cell -->
               <template v-else-if="cell.kind === 'data'">
-                <!-- Baumdaten: Führungslinien, dann Pfeil (oder Platzhalter). Je
-                     Ebene ein Feld — nur dort, wo unter dem Vorfahren noch ein
-                     Geschwister folgt, wird auch eine Linie gezeichnet. -->
+                <!-- Tree data: guide lines, then arrow (or placeholder). One
+                     slot per level — a line is only drawn where another
+                     sibling still follows below the ancestor. -->
                 <template v-if="state.isTree && cell.index === state.firstDataCellIndex">
-                  <!-- Durchlauf-Spalten … -->
+                  <!-- Pass-through columns … -->
                   <span
                     v-for="(line, level) in displayRow.ancestorLines"
                     :key="level"
@@ -416,7 +416,7 @@
                     :class="{ 'is-line': line }"
                     aria-hidden="true"
                   ></span>
-                  <!-- … und der eigene Winkel. -->
+                  <!-- … and the row's own corner. -->
                   <span
                     v-if="displayRow.depth > 0"
                     class="vi-dt-guide"
@@ -450,7 +450,7 @@
                       :name="displayRow.expanded ? 'chevron-down' : 'chevron-right'"
                     ></wa-icon>
                   </wa-button>
-                  <!-- Blatt: derselbe Abstand wie zwischen Pfeil und Linien. -->
+                  <!-- Leaf: same spacing as between arrow and lines. -->
                   <span
                     v-else
                     class="vi-dt-leaf-gap"
@@ -491,7 +491,7 @@
         </template>
       </div>
 
-      <!-- Spaltenfüße, am unteren Rand des Scroll-Bereichs -->
+      <!-- Column footers, at the bottom edge of the scroll area -->
       <div
         v-if="state.hasColumnFooters"
         class="vi-dt-foot"
@@ -531,7 +531,7 @@
         </div>
       </div>
 
-      <!-- Leer / keine Treffer -->
+      <!-- Empty / no results -->
       <div
         v-if="state.showEmpty"
         class="vi-dt-state"
@@ -555,7 +555,7 @@
         </slot>
       </div>
 
-      <!-- Ladeschleier (Server-Modus) -->
+      <!-- Loading overlay (server mode) -->
       <div
         v-if="state.isLoading"
         class="vi-dt-loading"
@@ -564,14 +564,14 @@
       </div>
     </div>
 
-    <!-- ── Nachladen (Cursor-Quellen) ───────────────────────────────── -->
+    <!-- ── Load more (cursor sources) ───────────────────────────────── -->
     <div
       v-if="state.cursorMode"
       class="vi-dt-more wa-split wa-gap-s wa-flex-nowrap"
     >
       <span class="vi-dt-moreinfo">{{ state.loadedText }}</span>
       <div class="wa-cluster wa-gap-2xs wa-flex-nowrap">
-        <!-- Platz für Aufrufer-Inhalte in der Leiste (z.B. Reload-Action). -->
+        <!-- Slot for caller content in the bar (e.g. reload action). -->
         <slot name="cursor-start" />
         <select
           class="vi-dt-pagesize"
@@ -693,7 +693,7 @@
       </div>
     </div>
 
-    <!-- Filter-Popover je sichtbarer filterbarer Spalte (nach ihren Ankern!) -->
+    <!-- Filter popover per visible filterable column (after their anchors!) -->
     <wa-popover
       v-for="column in state.filterColumns"
       :key="column.id"
@@ -764,21 +764,21 @@ const props = withDefaults(
   defineProps<{
     columns: DataTableColumn<R>[]
     data?: R[]
-    /** Feld mit stabiler Zeilen-id — für Auswahl über Sortierung/Seiten hinweg. */
+    /** Field with a stable row id — for selection across sorting/pages. */
     rowKey?: string | null
     label?: string | null
     selectable?: false | "single" | "multiple"
     selectableRows?: ((row: R) => boolean) | null
-    /** Bei aktiver Auswahl wählt ein Linksklick auf die Zeile den Eintrag (Shift: Bereich). */
+    /** With selection enabled, a left click on the row selects the entry (Shift: range). */
     selectOnRowClick?: boolean
     /**
-     * Nachlade-Baum (`loadChildren`) bei jedem Datenwechsel von außen
-     * zurücksetzen (Pfeile zu, Kinder-Cache leer). Standard false: ein Drop
-     * bleibt eine rein lokale Verschiebung und nichts klappt ungefragt zu —
-     * zurückgesetzt wird nur über `reload()` / `resetTree()`.
+     * Reset the lazy-loaded tree (`loadChildren`) on every external data
+     * change (arrows collapsed, children cache empty). Default false: a drop
+     * stays a purely local move and nothing collapses unasked —
+     * resetting only happens via `reload()` / `resetTree()`.
      */
     resetTreeOnDataChange?: boolean
-    /** Container-Id dieser Tabelle in einer umgebenden Drag-Session (Browser). */
+    /** Container id of this table in an enclosing drag session (Browser). */
     dragSource?: string
     striped?: boolean
     size?: "xs" | "s" | "m" | "l" | "xl"
@@ -794,69 +794,69 @@ const props = withDefaults(
     groupBy?: string | string[] | null
     childRows?: string | ((row: R) => R[] | undefined | null) | null
     /**
-     * Feld mit dem Verweis auf die Elternzeile (ViUR: `parententry`). Damit
-     * baut die Komponente aus einer FLACHEN Liste selbst den Baum — `rowKey`
-     * ist dafür Pflicht. Bereits verschachtelte Daten laufen weiter über
-     * `childRows`, das dann Vorrang hat.
+     * Field referencing the parent row (ViUR: `parententry`). With it the
+     * component builds the tree itself from a FLAT list — `rowKey`
+     * is required for this. Already nested data still goes through
+     * `childRows`, which then takes precedence.
      */
     parentField?: string | null
     /**
-     * Kinder einer Ebene bei Bedarf nachladen (ViUR: `list` mit `parententry`).
-     * Gesetzt heißt: JEDE Datenzeile bekommt einen Aufklapp-Pfeil, weil vorher
-     * unbekannt ist, ob es Kinder gibt. Nach dem Laden bleibt der Pfeil stehen
-     * und wird deaktiviert, wenn nichts kam — so springt das Layout nicht.
+     * Load the children of a level on demand (ViUR: `list` with `parententry`).
+     * When set, EVERY data row gets an expand arrow, because it is unknown
+     * beforehand whether there are children. After loading the arrow stays
+     * and is disabled if nothing came back — so the layout doesn't jump.
      */
     loadChildren?: ((row: R) => Promise<R[]>) | null
     /**
-     * Weiß die Anwendung vorab, ob eine Zeile Kinder haben KANN (in ViUR etwa
-     * `node` vs. `leaf`), dann hier melden: `false` → gar kein Pfeil,
-     * `true`/`undefined` → Pfeil, geladen wird beim Aufklappen.
+     * If the application knows in advance whether a row CAN have children (in ViUR e.g.
+     * `node` vs. `leaf`), report it here: `false` → no arrow at all,
+     * `true`/`undefined` → arrow, loading happens on expand.
      */
     rowHasChildren?: ((row: R) => boolean | undefined) | null
     filterFromLeafRows?: boolean
-    /** Zeilen bekommen ein Detail-Panel (Inhalt: Slot `row-detail`). */
+    /** Rows get a detail panel (content: slot `row-detail`). */
     rowDetail?: boolean
     rowClass?: ((row: R) => string | null | undefined) | null
     /**
-     * Feld mit der numerischen Reihenfolge (ViUR: "sortindex"). Gesetzt heißt:
-     * die Tabelle ist fest danach sortiert und die Zeilen lassen sich per
-     * Ziehen umsortieren — die Komponente meldet den neuen Wert über
-     * `row-reorder`, gespeichert wird außerhalb.
+     * Field holding the numeric order (ViUR: "sortindex"). When set,
+     * the table is fixed-sorted by it and rows can be reordered by
+     * dragging — the component reports the new value via
+     * `row-reorder`, saving happens outside.
      */
     orderField?: string | null
-    /** Abstand für neue Werte am Anfang/Ende der Liste. */
+    /** Step for new values at the start/end of the list. */
     orderStep?: number
     sortDescFirst?: boolean
     withoutSortRemoval?: boolean
     maxMultiSort?: number
     searchFn?: ((value: unknown, term: string, row: R) => boolean) | null
-    /** Server-Modus ohne Callback: die Komponente meldet `data-request`. */
+    /** Server mode without callback: the component emits `data-request`. */
     /**
-     * Cursor-Quellen (z. B. ViUR-Listen) laden vorwärts nach statt Seiten zu
-     * springen. Ist `hasMore` gesetzt (auch `false`), erscheint statt des Pagers
-     * eine Leiste mit „Mehr laden"; das Laden macht der Aufrufer auf `load-more`.
+     * Cursor sources (e.g. ViUR lists) load forward instead of jumping between
+     * pages. If `hasMore` is set (even `false`), a bar with "Load more" appears
+     * instead of the pager; the caller does the loading on `load-more`.
      */
     hasMore?: boolean | null
     loadMoreLabel?: string | null
     loadAllLabel?: string | null
-    /** Schnellwahl „die nächsten N Seiten laden" in der Cursor-Leiste. */
+    /** Quick pick "load the next N pages" in the cursor bar. */
     loadMorePages?: number[]
-    /** Seitengrößen der Cursor-Leiste (ViUR: limit, maximal 99). */
+    /** Page sizes of the cursor bar (ViUR: limit, max 99). */
     cursorPageSizes?: number[]
     server?: boolean
     dataSource?: ((request: DataTableRequest) => Promise<DataTableResponse<R>>) | null
     total?: number
     loading?: boolean
     filterDebounce?: number
-    /** true/false erzwingen, "auto" ab `virtualizeThreshold` Zeilen. */
+    /** Force true/false, "auto" from `virtualizeThreshold` rows on. */
     virtualize?: boolean | "auto"
     virtualizeThreshold?: number
     rowHeight?: number
     /**
-     * Deckel für den Scrollbereich. OHNE Angabe greift der CSS-Vorgabewert
-     * `--dt-max-height: 30rem` — dadurch bleibt die Variable von aussen
-     * ueberschreibbar (z. B. `--dt-max-height: none`, damit die Tabelle eine
-     * Flaeche fuellt). Ein gesetzter Wert steht inline und gewinnt.
+     * Cap for the scroll area. WITHOUT a value the CSS default
+     * `--dt-max-height: 30rem` applies — so the variable stays overridable
+     * from outside (e.g. `--dt-max-height: none`, so the table fills an
+     * area). A set value is applied inline and wins.
      */
     maxHeight?: string
   }>(),
@@ -907,12 +907,12 @@ const props = withDefaults(
     virtualize: "auto",
     virtualizeThreshold: 60,
     rowHeight: 44,
-    // Kein Default: siehe maxHeight oben — der Deckel kommt aus dem CSS.
+    // No default: see maxHeight above — the cap comes from the CSS.
     maxHeight: undefined,
   }
 )
 
-// Zustand, den außen mitgeführt werden kann — je ein v-model.
+// State that can be tracked from outside — one v-model each.
 const sort = defineModel<SortEntry[]>("sort", { default: () => [] })
 const filters = defineModel<FilterEntry[]>("filters", { default: () => [] })
 const search = defineModel<string>("search", { default: "" })
@@ -923,7 +923,7 @@ const pageSize = defineModel<number>("pageSize", { default: 20 })
 
 const emit = defineEmits<{
   "cell-click": [payload: { column: string; value: unknown; row: R; index: number }]
-  /** Doppelklick auf eine Datenzeile — typisch zum Öffnen des Datensatzes. */
+  /** Double click on a data row — typically to open the record. */
   "row-dblclick": [payload: { key: RowKey; row: R; index: number; originalEvent: MouseEvent }]
   "cell-contextmenu": [payload: { column: string; value: unknown; row: R; index: number; originalEvent: MouseEvent }]
   "sort-change": [sort: SortEntry[]]
@@ -940,15 +940,15 @@ const emit = defineEmits<{
     payload: {
       row: R
       key: RowKey
-      /** Neuer Wert für das Feld aus `orderField`. */
+      /** New value for the `orderField` field. */
       order: number
-      /** Neue Elternzeile (Baum); null = oberste Ebene. */
+      /** New parent row (tree); null = top level. */
       parent: RowKey | null
-      /** true, wenn sich der Elternteil geändert hat (dann `move` statt `edit`). */
+      /** true if the parent changed (then `move` instead of `edit`). */
       parentChanged: boolean
-      /** Position unter den neuen Geschwistern. */
+      /** Position among the new siblings. */
       toIndex: number
-      /** Nachbarn tragen denselben Wert — die Liste sollte neu durchnummeriert werden. */
+      /** Neighbours share the same value — the list should be renumbered. */
       needsReindex: boolean
     },
   ]
@@ -960,47 +960,47 @@ const emit = defineEmits<{
 
 const uid = useId()
 
-// DOM-Refs (erlaubte Ausnahme).
+// DOM refs (allowed exception).
 const scrollerEl = ref<HTMLElement>()
 const bodyEl = ref<HTMLElement>()
 
-// Nicht-reaktive Interna.
+// Non-reactive internals.
 let headerObserver: ResizeObserver | undefined
 let detailObserver: ResizeObserver | undefined
 let debounceTimer = 0
 let abortController: AbortController | undefined
 let lastSelectedIndex: number | null = null
 
-// Umschließende Drag-Session (Browser): erlaubt, Zeilen AUSSERHALB der Tabelle
-// fallen zu lassen (Navigations-Baum, Ordnerzeilen). Ohne Browser: null.
+// Enclosing drag session (Browser): allows dropping rows OUTSIDE the table
+// (navigation tree, folder rows). Without Browser: null.
 const dragSession = inject(DRAG_SESSION, null)
 
 const { t } = useI18n()
 
 /**
- * Optimistische Verschiebungen (Drag & Drop / Alt+Pfeil): rowKey → neuer
- * Ordnungswert und ggf. neuer Elternteil. Damit verschwindet die Zeile sofort
- * an ihrer alten Stelle und taucht am Ziel (auch IN einem Ordner) auf, ohne
- * auf das Speichern und Neuladen zu warten. Sobald der Aufrufer neue Daten
- * liefert (props.data / Server-Antwort), werden die Überlagerungen verworfen —
- * dann gilt wieder allein der Datenbestand.
+ * Optimistic moves (drag & drop / Alt+arrow): rowKey → new
+ * order value and, if applicable, new parent. This makes the row vanish immediately
+ * from its old position and appear at the target (also INSIDE a folder) without
+ * waiting for saving and reloading. As soon as the caller delivers new data
+ * (props.data / server response), the overrides are discarded —
+ * then the data alone is authoritative again.
  */
 const moveOverrides = shallowRef(new Map<RowKey, { order: number; parent?: RowKey | null }>())
 
 /**
- * Optimistische Verschiebungen im NACHLADE-Modus (`loadChildren`): dort leben
- * die Kinder nicht in `props.data`, sondern im Cache `state.loadedChildren` —
- * eine Verschiebung nimmt die Zeile daher direkt aus dem Quell-Bucket und
- * setzt eine Kopie in den Ziel-Bucket. Für die oberste Ebene (props.data darf
- * nicht mutiert werden) gibt es eine Ausblendliste und eingefügte Kopien.
- * Beides wird — wie moveOverrides — verworfen, sobald neue Daten kommen.
+ * Optimistic moves in LAZY-LOAD mode (`loadChildren`): there the children
+ * don't live in `props.data` but in the cache `state.loadedChildren` —
+ * so a move takes the row directly out of the source bucket and
+ * puts a copy into the target bucket. For the top level (props.data must
+ * not be mutated) there is a hide list and injected copies.
+ * Both are — like moveOverrides — discarded as soon as new data arrives.
  */
 const lazyMoves = shallowRef({ hidden: new Set<RowKey>(), injected: [] as R[] })
 
 const LEAD_WIDTH = 44
 const ORDER_WIDTH = 36
 
-/** Ablegen: davor, dahinter oder hinein (wie admin4). */
+/** Drop: before, after or inside (like admin4). */
 type DropMode = "before" | "after" | "inside"
 
 interface CellColumn {
@@ -1027,7 +1027,7 @@ const layout = useColumnLayout<R>({
 })
 
 const state = reactive({
-  /** Server-Modus: Zeilen und Gesamtzahl aus der letzten Antwort. */
+  /** Server mode: rows and total count from the last response. */
   serverRows: [] as R[],
   serverTotal: -1,
   fetching: false,
@@ -1044,8 +1044,8 @@ const state = reactive({
   isServer: computed((): boolean => props.server || Boolean(props.dataSource)),
 
   /**
-   * Hierarchie aus einer flachen Liste (parentField). Null, sobald die Daten
-   * schon verschachtelt sind oder die Voraussetzungen fehlen.
+   * Hierarchy from a flat list (parentField). Null once the data is
+   * already nested or the prerequisites are missing.
    */
   nested: computed((): NestedTree<R> | null => {
     if (props.childRows || !props.parentField) return null
@@ -1057,9 +1057,9 @@ const state = reactive({
   }),
 
   /**
-   * Zugriff auf die Kinder: aus `childRows`, aus dem gebauten Baum
-   * (`parentField`) und/oder aus den nachgeladenen Ebenen — in dieser
-   * Reihenfolge zusammengeführt.
+   * Access to the children: from `childRows`, from the built tree
+   * (`parentField`) and/or from the lazy-loaded levels — merged in this
+   * order.
    */
   childAccessor: computed((): ChildRowsAccessor<R> | null => {
     const nested = state.nested as NestedTree<R> | null
@@ -1083,16 +1083,16 @@ const state = reactive({
   isTree: computed((): boolean => Boolean(state.childAccessor)),
   isLoading: computed((): boolean => props.loading ?? state.fetching),
 
-  /** Nachgeladene Kinder je Zeilenschlüssel (leeres Array = es gibt keine). */
+  /** Lazy-loaded children per row key (empty array = there are none). */
   loadedChildren: {} as Record<string, R[]>,
-  /** Zeilen, deren Kinder gerade geladen werden. */
+  /** Rows whose children are currently loading. */
   loadingChildren: {} as Record<string, boolean>,
 
-  /** Laufende Zeilen-Ziehgeste (feste Reihenfolge). */
+  /** Ongoing row drag gesture (fixed order). */
   rowDrag: null as {
     key: RowKey
     overKey: RowKey | null
-    /** Wie admin4: davor, dahinter oder HINEIN (neuer Elternteil). */
+    /** Like admin4: before, after or INSIDE (new parent). */
     mode: DropMode
   } | null,
 
@@ -1116,24 +1116,24 @@ const state = reactive({
         return patched
       })
     }
-    // Feste Reihenfolge: numerisch aufsteigend — auch im SERVER-Modus. Nur so
-    // rückt eine per Drag & Drop verschobene Zeile SOFORT an ihren Platz, ohne
-    // die Ebene neu zu laden (den neuen Wert liefert moveOverrides oben).
-    // Eine aktive Spaltensortierung hat Vorrang: dann ordnet im Client-Modus die
-    // Pipeline und im Server-Modus der Server.
+    // Fixed order: numerically ascending — also in SERVER mode. Only this way
+    // does a row moved via drag & drop IMMEDIATELY take its place without
+    // reloading the level (the new value comes from moveOverrides above).
+    // An active column sort takes precedence: then the pipeline orders in
+    // client mode and the server in server mode.
     if (!props.orderField || sort.value.length > 0) return base
     const field = props.orderField
     return [...base].sort((a, b) => Number(a[field] ?? 0) - Number(b[field] ?? 0))
   }),
 
   /**
-   * Umsortieren ist nur in der festen Reihenfolge sinnvoll — nicht bei
-   * Gruppierung und nicht, während eine Spaltensortierung aktiv ist.
+   * Reordering only makes sense in the fixed order — not with
+   * grouping and not while a column sort is active.
    *
-   * Im Server-Modus ist es ausdrücklich erlaubt: die Reihenfolge kommt dort vom
-   * Server (`orderby` auf dem Feld), der neue Wert wird aus den Nachbarn
-   * berechnet und per `row-reorder` nach außen gemeldet — gespeichert wird
-   * ohnehin außerhalb.
+   * In server mode it is explicitly allowed: the order comes from the
+   * server there (`orderby` on the field), the new value is computed from the
+   * neighbours and reported outward via `row-reorder` — saving happens
+   * outside anyway.
    */
   orderActive: computed(
     (): boolean => Boolean(props.orderField) && !state.groupByList.length && sort.value.length === 0
@@ -1141,7 +1141,7 @@ const state = reactive({
 
   sort: computed((): SortEntry[] => sort.value),
 
-  /** Filter/Suche/Sortierung/Gruppierung — im Server-Modus macht das der Server. */
+  /** Filter/search/sort/grouping — in server mode the server does this. */
   built: computed(
     (): BuiltRows<R> =>
       buildRows<R>({
@@ -1158,19 +1158,19 @@ const state = reactive({
       })
   ),
 
-  /** Cursor-Modus: der Aufrufer steuert das Nachladen (siehe hasMore). */
+  /** Cursor mode: the caller controls loading more (see hasMore). */
   cursorMode: computed((): boolean => props.hasMore !== null && props.hasMore !== undefined),
-  /** Seitengrößen der Cursor-Leiste — die aktuelle Größe ist immer wählbar. */
+  /** Page sizes of the cursor bar — the current size is always selectable. */
   cursorPageSizes: computed((): number[] => {
     const options = new Set(props.cursorPageSizes)
     options.add(pageSize.value)
     return [...options].sort((a, b) => a - b)
   }),
-  /** „N Einträge" bzw. „N von M" — M nur, wenn der Server eine Gesamtzahl kennt. */
+  /** "N entries" or "N of M" — M only if the server knows a total count. */
   loadedText: computed((): string => {
     const loaded = state.rows.length
-    // Lokale Suche/Filter aktiv: die Zahl der TREFFER zeigen, nicht den
-    // Ladezähler — sonst wirkt die Leiste, als wäre nichts gefiltert.
+    // Local search/filter active: show the number of MATCHES, not the
+    // load counter — otherwise the bar looks as if nothing were filtered.
     if (!state.isServer && state.filteredCount !== loaded) {
       return t("dataTable.filteredOf", { filtered: state.filteredCount, loaded })
     }
@@ -1203,15 +1203,15 @@ const state = reactive({
     flattenNodes(state.pagedNodes as RowNode<R>[], {
       isExpanded: (key) => state.expandedSet.has(key),
       withDetail: props.rowDetail,
-      // Beim Nachladen ist vorher unbekannt, ob eine Zeile Kinder hat: Pfeil
-      // zeigen, solange das Gegenteil nicht feststeht.
+      // With lazy loading it's unknown beforehand whether a row has children: show
+      // the arrow as long as the opposite isn't established.
       mayHaveChildren: props.loadChildren
         ? (node) => node.kind === "data" && Boolean(node.row) && childState(node.row!) !== "none"
         : undefined,
     })
   ),
 
-  /** Index in der Renderliste je Zeilenschlüssel — für Tastatur und Fokus. */
+  /** Index in the render list per row key — for keyboard and focus. */
   rowIndexOf: computed((): Record<string, number> => {
     const map: Record<string, number> = {}
     state.displayRows.forEach((row, index) => {
@@ -1256,7 +1256,7 @@ const state = reactive({
     return map
   }),
 
-  /** Führende Spalten (Auswahl, Aufklappen) plus die sichtbaren Datenspalten. */
+  /** Leading columns (selection, expand) plus the visible data columns. */
   cellColumns: computed((): CellColumn[] => {
     const cells: CellColumn[] = []
     let lead = 0
@@ -1318,9 +1318,9 @@ const state = reactive({
   firstDataCellIndex: computed((): number => state.cellColumns.find((cell) => cell.kind === "data")?.index ?? 0),
 
   /**
-   * Eigene Aufklapp-Spalte nur für Gruppen und Detail-Panels. Bei Baumdaten
-   * sitzt der Pfeil IN der ersten Datenspalte — nur dort rückt er mit der Ebene
-   * ein, und genau das macht die Hierarchie sichtbar.
+   * Dedicated expand column only for groups and detail panels. With tree data
+   * the arrow sits IN the first data column — only there does it indent with the
+   * level, and that is exactly what makes the hierarchy visible.
    */
   hasExpandColumn: computed((): boolean => Boolean(props.rowDetail || state.groupByList.length)),
 
@@ -1335,15 +1335,15 @@ const state = reactive({
 
   hostStyle: computed((): Record<string, string> => {
     const style: Record<string, string> = { "--dt-row-height": `${props.rowHeight}px` }
-    // Nur setzen, wenn angegeben — sonst bliebe der Inline-Wert gegen jede
-    // Regel von aussen stehen und `--dt-max-height` waere keine Variable mehr.
+    // Only set when given — otherwise the inline value would override every
+    // outside rule and `--dt-max-height` would no longer be a variable.
     if (props.maxHeight) style["--dt-max-height"] = props.maxHeight
     return style
   }),
 
   gridRole: computed((): string => (state.isTree ? "treegrid" : "grid")),
 
-  // Panel-Props sind nicht generisch — hier auf die Basisform bringen.
+  // Panel props aren't generic — cast to the base form here.
   filterColumns: computed((): ResolvedColumn[] =>
     (layout.state.visibleColumns as LayoutColumn<R>[])
       .map((col) => col.column as unknown as ResolvedColumn)
@@ -1379,8 +1379,8 @@ const state = reactive({
   showToolbar: computed((): boolean => props.withSearch || props.withColumnsMenu),
 })
 
-// reactive() entfaltet die Generics zu `Row`; diese Helfer geben den Zugriffen
-// ihren konkreten Typ zurück.
+// reactive() unwraps the generics to `Row`; these helpers give the accessors
+// their concrete type back.
 const cols = (): ResolvedColumn<R>[] => state.columns as ResolvedColumn<R>[]
 const displayed = (): DisplayRow<R>[] => state.displayRows as DisplayRow<R>[]
 const dataRowsOf = (): R[] => state.built.dataRows as R[]
@@ -1458,7 +1458,7 @@ const nav = useGridNavigation(scrollerEl, {
   },
 })
 
-// ── Darstellung ──────────────────────────────────────────────────────
+// ── Rendering ────────────────────────────────────────────────────────
 
 function cellStyle(cell: CellColumn): Record<string, string> {
   if (!cell.sticky) return {}
@@ -1468,13 +1468,13 @@ function cellStyle(cell: CellColumn): Record<string, string> {
 }
 
 /**
- * Einrückung von Baum- und Gruppenebenen. Sie sitzt auf der ERSTEN Datenspalte
- * — in der schmalen Aufklapp-Spalte (feste Breite) wäre sie unsichtbar.
+ * Indentation of tree and group levels. It sits on the FIRST data column
+ * — in the narrow expand column (fixed width) it would be invisible.
  */
 /**
- * Einrückung der Ebenen. Im Baum übernehmen das die Führungsfelder
- * (`.vi-dt-guide`) — dort bleibt es beim normalen Padding. Gruppen ohne Baum
- * haben keine Führungslinien und werden weiter über Padding eingerückt.
+ * Indentation of the levels. In the tree the guide slots handle this
+ * (`.vi-dt-guide`) — there the normal padding stays. Groups without a tree
+ * have no guide lines and are still indented via padding.
  */
 function indentStyle(cell: CellColumn, displayRow: DisplayRow<R>): Record<string, string> {
   if (cell.index !== state.firstDataCellIndex || displayRow.depth === 0) return {}
@@ -1519,13 +1519,13 @@ function aggregateText(cell: CellColumn, displayRow: DisplayRow<R>): string {
   return column.def.formatter && first ? column.def.formatter(value, first) : defaultText(value)
 }
 
-// ── Sortierung ───────────────────────────────────────────────────────
+// ── Sorting ──────────────────────────────────────────────────────────
 
 function toggleSort(column: ResolvedColumn<R>, multi: boolean): void {
   if (!column.sortable) return
-  // Der NEUE Wert wird lokal gehalten und weitergegeben — nicht über das Modell
-  // zurückgelesen (siehe scheduleFetch: bei gebundenem v-model kommt die
-  // Aktualisierung erst mit dem Prop der Eltern).
+  // The NEW value is kept locally and passed on — not read back from the model
+  // (see scheduleFetch: with a bound v-model the update only arrives
+  // with the parent's prop).
   const next = nextSortState(sort.value, column as ResolvedColumn, {
     multi,
     descFirst: props.sortDescFirst,
@@ -1550,12 +1550,12 @@ function onHeaderClick(cell: CellColumn, event: MouseEvent): void {
   nav.setActive(-1, cell.index, false)
   if (cell.kind !== "data") return
   const target = event.target as HTMLElement
-  // Klicks auf Bedienelemente im Kopf (Filter, Menü, Pin, Resize) nicht sortieren.
+  // Don't sort on clicks on header controls (filter, menu, pin, resize).
   if (target.closest(".vi-dt-filter-button, .vi-dt-column-menu, .vi-dt-pin, .vi-dt-resize")) return
   toggleSort(cell.col!.column, event.shiftKey)
 }
 
-// ── Suche & Filter ───────────────────────────────────────────────────
+// ── Search & filter ──────────────────────────────────────────────────
 
 function onSearchInput(value: string): void {
   search.value = value
@@ -1573,9 +1573,9 @@ function setFilter(columnId: string, value: unknown): void {
   if (state.isServer) scheduleFetch(true, { filters: next })
 }
 
-// ── Auswahl ──────────────────────────────────────────────────────────
+// ── Selection ────────────────────────────────────────────────────────
 
-/** Plaketten einer Zelle (Spalten mit `badge`-Funktion, z. B. select/bool). */
+/** Badges of a cell (columns with a `badge` function, e.g. select/bool). */
 function badgesFor(column: ResolvedColumn<R>, row: R): CellBadge[] | null {
   const badges = column.def.badge?.(column.get(row), row)
   return badges?.length ? badges : null
@@ -1586,10 +1586,10 @@ function canSelect(row: R): boolean {
 }
 
 /**
- * Auswählbare Schlüssel der aktuellen Seite — inklusive eingeklappter
- * Teilbäume und Gruppenmitglieder, aber ohne gesperrte Zeilen
- * (`selectableRows`). Nur Wurzelknoten der Seite besuchen, sonst zählen
- * ausgeklappte Kinder doppelt.
+ * Selectable keys of the current page — including collapsed
+ * subtrees and group members, but without locked rows
+ * (`selectableRows`). Only visit the page's root nodes, otherwise
+ * expanded children count twice.
  */
 function selectableKeysOnPage(): RowKey[] {
   const keys: RowKey[] = []
@@ -1649,7 +1649,7 @@ function toggleRowSelection(displayRow: DisplayRow<R>, range: boolean): void {
     return
   }
 
-  // Baum/Gruppe: Kinder mitnehmen.
+  // Tree/group: include children.
   const keys = displayRow.node ? collectKeys(displayRow.node) : [displayRow.nodeKey]
   const selectable = keys.filter((key) => {
     const row = findRowByKey(key)
@@ -1670,19 +1670,19 @@ function findRowByKey(key: RowKey): R | undefined {
 }
 
 /**
- * Auswahl per Checkbox. Absichtlich am `click` und nicht am `change`: nur das
- * Klick-Ereignis trägt `shiftKey`, und darauf beruht die Bereichsauswahl.
+ * Selection via checkbox. Deliberately on `click` rather than `change`: only the
+ * click event carries `shiftKey`, and range selection relies on it.
  */
 function onSelectRow(displayRow: DisplayRow<R>, event: MouseEvent): void {
   toggleRowSelection(displayRow, event.shiftKey)
 }
-// Klick auf die ZEILE (nicht das Kästchen): verhält sich wie ein Dateimanager.
-// Ein schlichter Klick ersetzt die Auswahl durch diese Zeile; Strg/Cmd nimmt
-// sie zusätzlich auf bzw. wieder heraus; Shift wählt den Bereich. Das Kästchen
-// selbst (onSelectRow) toggelt weiterhin additiv.
-// Bei gedrückter Strg/Cmd- oder Shift-Taste dient der Klick der Mehrfachauswahl —
-// die Text-Markierung des Browsers wird dafür unterdrückt (preventDefault auf
-// mousedown verhindert den Markierungsbeginn, der Click kommt trotzdem an).
+// Click on the ROW (not the checkbox): behaves like a file manager.
+// A plain click replaces the selection with this row; Ctrl/Cmd adds
+// or removes it; Shift selects the range. The checkbox
+// itself (onSelectRow) still toggles additively.
+// With Ctrl/Cmd or Shift held, the click serves multi-selection —
+// the browser's text selection is suppressed for this (preventDefault on
+// mousedown prevents the selection from starting, the click still arrives).
 function onCellMouseDown(event: MouseEvent): void {
   if (props.selectable === false || !props.selectOnRowClick) return
   if (event.ctrlKey || event.metaKey || event.shiftKey) event.preventDefault()
@@ -1694,7 +1694,7 @@ function selectRowFromClick(displayRow: DisplayRow<R>, event: MouseEvent): void 
   }
   if (displayRow.kind === "detail") return
   if (displayRow.kind === "data" && displayRow.row && !canSelect(displayRow.row)) return
-  // Baum/Gruppe: Kinder mitnehmen (wie beim Kästchen).
+  // Tree/group: include children (like the checkbox).
   const keys = (displayRow.node ? collectKeys(displayRow.node) : [displayRow.nodeKey]).filter((key) => {
     const row = findRowByKey(key)
     return !row || canSelect(row)
@@ -1722,18 +1722,18 @@ function toggleSelectAll(): void {
   selectAllOnPage()
 }
 
-// ── Kinder nachladen ─────────────────────────────────────────────────
+// ── Lazy-load children ───────────────────────────────────────────────
 
 function rowKeyOf(row: R): RowKey {
   return props.rowKey ? (row[props.rowKey] as RowKey) : ""
 }
 
 /**
- * Was wissen wir über die Kinder dieser Zeile?
- *   "none"    → sicher keine (die Anwendung sagt es über `rowHasChildren`)
- *   "empty"   → nachgeladen, es gab keine → Pfeil bleibt, aber deaktiviert
- *   "loaded"  → nachgeladen, es gibt Kinder
- *   "unknown" → noch nicht geladen → Pfeil aktiv
+ * What do we know about this row's children?
+ *   "none"    → definitely none (the application says so via `rowHasChildren`)
+ *   "empty"   → loaded, there were none → arrow stays, but disabled
+ *   "loaded"  → loaded, there are children
+ *   "unknown" → not loaded yet → arrow active
  */
 function childState(row: R): "none" | "empty" | "loaded" | "unknown" {
   if (props.rowHasChildren?.(row) === false) return "none"
@@ -1746,13 +1746,13 @@ function isLoadingChildren(row?: R): boolean {
   return row ? Boolean(state.loadingChildren[String(rowKeyOf(row))]) : false
 }
 
-/** Pfeil ohne Wirkung: nachgeladen und es gibt nichts. */
+/** Arrow without effect: loaded and there is nothing. */
 function isEmptyBranch(displayRow: DisplayRow<R>): boolean {
   if (!props.loadChildren || displayRow.kind !== "data" || !displayRow.row) return false
   return childState(displayRow.row) === "empty" && !displayRow.node?.children.length
 }
 
-/** Kinder einer Zeile holen (einmalig; `force` lädt erneut). */
+/** Fetch a row's children (once; `force` reloads). */
 async function fetchChildren(row: R, force = false): Promise<void> {
   if (!props.loadChildren) return
   const key = String(rowKeyOf(row))
@@ -1771,14 +1771,14 @@ async function fetchChildren(row: R, force = false): Promise<void> {
   }
 }
 
-// ── Aufklappen ───────────────────────────────────────────────────────
+// ── Expanding ────────────────────────────────────────────────────────
 
 function toggleExpand(displayRow: DisplayRow<R>): void {
   if (!displayRow.expandable) return
   if (isEmptyBranch(displayRow) || isLoadingChildren(displayRow.row)) return
 
-  // Erst laden, dann aufklappen — sonst klappt eine leere Ebene auf und
-  // wieder zu, sobald die Antwort kommt.
+  // Load first, then expand — otherwise an empty level expands and
+  // collapses again as soon as the response arrives.
   if (props.loadChildren && displayRow.kind === "data" && displayRow.row) {
     const row = displayRow.row
     if (childState(row) === "unknown" && !displayRow.node?.children.length) {
@@ -1801,7 +1801,7 @@ function toggleExpand(displayRow: DisplayRow<R>): void {
   }
 }
 
-/** Zeile aufklappen und melden. */
+/** Expand a row and emit the event. */
 function expand(key: RowKey, row?: R): void {
   if (expandedKeys.value.includes(key)) return
   expandedKeys.value = [...expandedKeys.value, key]
@@ -1816,19 +1816,19 @@ function allExpandableKeys(nodes: RowNode<R>[] = state.built.nodes as RowNode<R>
   return into
 }
 
-// ── Zellklicks ───────────────────────────────────────────────────────
+// ── Cell clicks ──────────────────────────────────────────────────────
 
 /**
- * Doppelklick auf einer Datenzeile. Bedienelemente in der Zeile (Auswahl,
- * Aufklappen, Aktionen) lösen ihn nicht aus — dort doppelt zu klicken meint
- * nicht „Datensatz öffnen".
+ * Double click on a data row. Controls in the row (selection,
+ * expand, actions) don't trigger it — double-clicking there doesn't mean
+ * "open record".
  */
 function onRowDoubleClick(displayRow: DisplayRow<R>, event: MouseEvent): void {
   if (displayRow.kind !== "data" || !displayRow.row) return
   const target = event.target as HTMLElement
   if (target.closest("wa-checkbox, wa-button, a, input, select, .vi-dt-expand")) return
-  // Ein Doppelklick löst zwei Klicks aus, die die Auswahl per Klick wieder
-  // aufheben würden — die Zeile bleibt/wird ausgewählt.
+  // A double click fires two clicks, which would undo the click selection
+  // again — the row stays/becomes selected.
   if (props.selectable !== false && props.selectOnRowClick && canSelect(displayRow.row)) {
     const key = displayRow.nodeKey
     if (!state.selectedSet.has(key)) {
@@ -1852,8 +1852,8 @@ function onCellClick(displayRow: DisplayRow<R>, cell: CellColumn, event: MouseEv
   if (cell.kind !== "data" || !displayRow.row) return
   const target = event.target as HTMLElement
   if (target.closest(".vi-dt-expand, .vi-dt-checkbox")) return
-  // Zeile per Klick auswählen — außer der Klick trifft ein interaktives Element
-  // in der Zelle (Link, Button, Eingabefeld), das sich selbst um den Klick kümmert.
+  // Select the row on click — unless the click hits an interactive element
+  // in the cell (link, button, input field) that handles the click itself.
   if (
     props.selectable !== false &&
     props.selectOnRowClick &&
@@ -1881,14 +1881,14 @@ function onCellContextMenu(displayRow: DisplayRow<R>, cell: CellColumn, event: M
   })
 }
 
-// ── Feste Reihenfolge: Zeilen umsortieren ────────────────────────────
+// ── Fixed order: reordering rows ─────────────────────────────────────
 
 /**
- * Zeilen werden mit ZEIGER-Ereignissen gezogen, nicht mit HTML5-Drag-and-Drop.
- * Grund: `dragover` verlangt ein akzeptierendes Ziel und feuert je nach
- * Umgebung unzuverlässig (bei Touch gar nicht) — die Einfügemarke bliebe dann
- * aus und die Zielposition wäre Zufall. Pointer-Events verhalten sich überall
- * gleich, funktionieren mit Touch und sind testbar.
+ * Rows are dragged with POINTER events, not with HTML5 drag and drop.
+ * Reason: `dragover` requires an accepting target and fires unreliably
+ * depending on the environment (not at all on touch) — the insertion marker would then
+ * be missing and the target position would be random. Pointer events behave the same
+ * everywhere, work with touch and are testable.
  */
 function beginRowDrag(displayRow: DisplayRow<R>, event: PointerEvent): void {
   if (!state.orderActive || displayRow.kind !== "data") return
@@ -1916,15 +1916,15 @@ function beginRowDrag(displayRow: DisplayRow<R>, event: PointerEvent): void {
 }
 
 /**
- * Zeile unter dem Zeiger bestimmen und die Zone ableiten. Wie im admin4 gibt es
- * drei: oberes Viertel = davor, unteres Viertel = dahinter, die Mitte = HINEIN
- * (die Zeile wird Kind des Ziels). Ohne Baum bleibt nur davor/dahinter.
+ * Determine the row under the pointer and derive the zone. As in admin4 there are
+ * three: top quarter = before, bottom quarter = after, the middle = INSIDE
+ * (the row becomes a child of the target). Without a tree only before/after remain.
  */
 function updateRowDrag(clientX: number, clientY: number): void {
   const drag = state.rowDrag
   if (!drag) return
-  // Erst die umgebende Session fragen: liefert sie ein Ziel (Baumknoten oder
-  // Ordnerzeile), übernimmt sie Anzeige und Drop — der interne Indikator ruht.
+  // Ask the enclosing session first: if it provides a target (tree node or
+  // folder row), it takes over display and drop — the internal indicator rests.
   if (dragSession?.state.active) {
     const external = dragSession.update(clientX, clientY)
     if (external) {
@@ -1937,7 +1937,7 @@ function updateRowDrag(clientX: number, clientY: number): void {
   const target = displayed().find((row) => row.key === element.dataset.key)
   if (!target || target.nodeKey === drag.key) return
 
-  // In den eigenen Teilbaum ziehen ist nicht möglich — er hinge an sich selbst.
+  // Dragging into its own subtree is impossible — it would hang from itself.
   if (isDescendant(state.built.nodes as RowNode<R>[], drag.key, target.nodeKey)) {
     drag.overKey = null
     return
@@ -1952,7 +1952,7 @@ function updateRowDrag(clientX: number, clientY: number): void {
   else drag.mode = "inside"
 }
 
-/** Nachlade-Modus: Zeile aus ihrem alten Bucket nehmen und am Ziel einsetzen. */
+/** Lazy-load mode: take the row out of its old bucket and insert it at the target. */
 function applyLazyMove(source: NodeLocation<R>, targetParent: RowKey | null, insertAt: number, order: number): void {
   const row = source.node.row
   if (!row) return
@@ -1964,9 +1964,9 @@ function applyLazyMove(source: NodeLocation<R>, targetParent: RowKey | null, ins
   const hidden = new Set(lazyMoves.value.hidden)
   let injected = lazyMoves.value.injected.filter((candidate) => (candidate[props.rowKey!] as RowKey) !== key)
 
-  // Aus der Quelle entfernen …
+  // Remove from the source …
   if (source.parentKey === null) {
-    hidden.add(key) // oberste Ebene: props.data bleibt unangetastet, nur ausblenden
+    hidden.add(key) // top level: props.data stays untouched, just hide
   } else {
     const bucket = state.loadedChildren[String(source.parentKey)] as R[] | undefined
     if (bucket) {
@@ -1976,10 +1976,10 @@ function applyLazyMove(source: NodeLocation<R>, targetParent: RowKey | null, ins
     }
   }
 
-  // … und am Ziel einsetzen.
+  // … and insert at the target.
   if (targetParent === null) {
-    // Original (falls es in props.data steht) bleibt ausgeblendet; sichtbar
-    // ist die Kopie mit neuem Ordnungswert.
+    // The original (if it is in props.data) stays hidden; the copy with the
+    // new order value is visible.
     hidden.add(key)
     injected = [...injected, moved]
   } else {
@@ -1989,20 +1989,20 @@ function applyLazyMove(source: NodeLocation<R>, targetParent: RowKey | null, ins
       next.splice(Math.max(0, Math.min(insertAt, next.length)), 0, moved)
       state.loadedChildren[String(targetParent)] = next as (typeof state.loadedChildren)[string]
     }
-    // Bucket noch nie geladen: beim Aufklappen holt fetchChildren den Stand
-    // vom Server — der enthält die Zeile nach dem Speichern ohnehin.
+    // Bucket never loaded: on expand fetchChildren gets the current state
+    // from the server — which contains the row after saving anyway.
   }
 
   lazyMoves.value = { hidden, injected }
 }
 
 /**
- * Nachlade-Modus zurücksetzen: Kinder-Cache verwerfen und alle Zweige
- * zuklappen — die Pfeile stehen danach wieder auf „zu", und das nächste
- * Aufklappen holt den frischen Stand vom Server. Läuft bei `reload()` und
- * wenn der Aufrufer neue Daten liefert; ohne `loadChildren` (parentField-
- * Bäume) bleibt die Aufklapp-Situation erhalten, dort sind die Kinder ohnehin
- * immer aus den aktuellen Daten abgeleitet.
+ * Reset lazy-load mode: discard the children cache and collapse all
+ * branches — the arrows are back to "collapsed" afterwards, and the next
+ * expand fetches the fresh state from the server. Runs on `reload()` and
+ * when the caller delivers new data; without `loadChildren` (parentField
+ * trees) the expand state is kept, since there the children are always
+ * derived from the current data anyway.
  */
 function resetLazyTree(): void {
   if (!props.loadChildren) return
@@ -2011,15 +2011,15 @@ function resetLazyTree(): void {
   if (expandedKeys.value.length) expandedKeys.value = []
 }
 
-// Drag & Drop ist rein CLIENTSEITIG: die Zeile wird lokal verschoben (Buckets/
-// Überlagerungen oben), `row-reorder` meldet den Zug zum Speichern im
-// Hintergrund — die Tabelle lädt danach NICHTS neu, und die App muss es auch
-// nicht. Kommen von außen neue Daten herein, sind sie maßgeblich: die
-// optimistischen Überlagerungen werden verworfen (frische Daten enthalten
-// einen gespeicherten Zug bereits). Der Nachlade-Baum bleibt dabei stehen —
-// zugeklappt und geleert wird er nur über `reload()`/`resetTree()` oder, per
-// Opt-in `resetTreeOnDataChange`, bei jedem Datenwechsel ohne vorangegangene
-// Verschiebung.
+// Drag & drop is purely CLIENT-SIDE: the row is moved locally (buckets/
+// overrides above), `row-reorder` reports the move for saving in the
+// background — the table reloads NOTHING afterwards, and the app doesn't
+// have to either. When new data comes in from outside, it is authoritative: the
+// optimistic overrides are discarded (fresh data already contains
+// a saved move). The lazy-load tree stays as it is —
+// it is only collapsed and cleared via `reload()`/`resetTree()` or, via the
+// opt-in `resetTreeOnDataChange`, on every data change not preceded by a
+// move.
 watch(
   () => (props.dataSource ? (state.serverRows as R[]) : props.data),
   () => {
@@ -2036,8 +2036,8 @@ watch(
 function commitRowDrag(): void {
   const drag = state.rowDrag
   state.rowDrag = null
-  // Ein Session-Ziel (Baum/Ordner außerhalb der internen Logik) hat Vorrang:
-  // der Browser übernimmt den Zug, hier passiert dann nichts mehr.
+  // A session target (tree/folder outside the internal logic) takes precedence:
+  // the Browser takes over the move, nothing else happens here.
   if (dragSession?.state.active) {
     if (dragSession.state.over) {
       dragSession.drop()
@@ -2051,11 +2051,11 @@ function commitRowDrag(): void {
 }
 
 /**
- * Zeile an eine neue Stelle setzen und den neuen Ordnungswert melden.
+ * Move a row to a new position and report the new order value.
  *
- * Gerechnet wird immer im Kreis der künftigen GESCHWISTER — bei „hinein" also
- * unter den Kindern des Ziels, sonst unter den Geschwistern des Ziels. Nur so
- * ergibt der Wert im Baum Sinn: `sortindex` gilt je Elternteil.
+ * The computation is always among the future SIBLINGS — for "inside" that is
+ * among the target's children, otherwise among the target's siblings. Only then
+ * does the value make sense in the tree: `sortindex` applies per parent.
  */
 function moveRowTo(key: RowKey, targetKey: RowKey, mode: DropMode): void {
   if (!props.orderField || key === targetKey) return
@@ -2065,9 +2065,9 @@ function moveRowTo(key: RowKey, targetKey: RowKey, mode: DropMode): void {
   const target = locateNode(nodes, targetKey)
   if (!target) return
 
-  // Mehrfachauswahl: gehört die gezogene Zeile zur Auswahl, wandert die ganze
-  // Auswahl mit — in Anzeige-Reihenfolge. Zeilen, die nicht ans Ziel dürfen
-  // (das Ziel selbst, Vorfahren des Ziels), bleiben außen vor.
+  // Multi-selection: if the dragged row is part of the selection, the whole
+  // selection moves along — in display order. Rows that may not go to the target
+  // (the target itself, ancestors of the target) are left out.
   const moving = movingKeysFor(key).filter(
     (candidate) => candidate !== targetKey && !isDescendant(nodes, candidate, targetKey)
   )
@@ -2081,7 +2081,7 @@ function moveRowTo(key: RowKey, targetKey: RowKey, mode: DropMode): void {
   let values: number[]
 
   if (mode === "inside") {
-    // Neue Kinder: hinter die vorhandenen Kinder des Ziels.
+    // New children: after the target's existing children.
     parentKey = targetKey
     const children = target.node.children.filter((child) => !movingSet.has(child.key))
     values = children.map(orderOf)
@@ -2103,12 +2103,12 @@ function moveRowTo(key: RowKey, targetKey: RowKey, mode: DropMode): void {
     if (!source?.node.row) continue
 
     const { order, needsReindex } = orderValueFor(values, insertAt, props.orderStep)
-    // Den vergebenen Wert in die Nachbarliste übernehmen, damit die nächste
-    // Zeile der Auswahl DAHINTER einsortiert wird (Reihenfolge bleibt erhalten).
+    // Add the assigned value to the neighbour list so the next
+    // row of the selection is sorted in AFTER it (order is preserved).
     values.splice(Math.max(0, Math.min(values.length, insertAt)), 0, order)
 
-    // Optimistisch übernehmen: die Zeile verlässt ihre alte Stelle sofort und
-    // erscheint am Ziel — beim Drop IN einen Ordner also unter dessen Kindern.
+    // Apply optimistically: the row leaves its old position immediately and
+    // appears at the target — on a drop INTO a folder, among its children.
     if (props.rowKey) {
       if (props.loadChildren) {
         applyLazyMove(source, parentKey, insertAt, order)
@@ -2146,10 +2146,10 @@ function moveRowTo(key: RowKey, targetKey: RowKey, mode: DropMode): void {
 }
 
 /**
- * Welche Zeilen ein Zug bewegt: nur die gezogene — oder, wenn sie Teil der
- * Auswahl ist, alle ausgewählten Zeilen in Anzeige-Reihenfolge. Ausgewählte
- * Nachfahren einer ebenfalls ausgewählten Zeile wandern implizit mit ihrem
- * Teilbaum und werden nicht doppelt bewegt.
+ * Which rows a move affects: only the dragged one — or, if it is part of the
+ * selection, all selected rows in display order. Selected
+ * descendants of an also-selected row move implicitly with their
+ * subtree and are not moved twice.
  */
 function movingKeysFor(key: RowKey): RowKey[] {
   if (props.selectable === false || !state.selectedSet.has(key) || state.selectedSet.size < 2) return [key]
@@ -2159,8 +2159,8 @@ function movingKeysFor(key: RowKey): RowKey[] {
   for (const row of state.dataDisplayRows as DisplayRow<R>[]) {
     if (selected.has(row.nodeKey)) ordered.push(row.nodeKey)
   }
-  // dataDisplayRows enthält nur SICHTBARE Zeilen — ausgewählte Zeilen in
-  // zugeklappten Zweigen hängen wir hinten an, damit sie nicht liegenbleiben.
+  // dataDisplayRows only contains VISIBLE rows — selected rows in
+  // collapsed branches are appended so they aren't left behind.
   const seen = new Set(ordered)
   for (const candidate of selected) {
     if (!seen.has(candidate)) ordered.push(candidate)
@@ -2172,15 +2172,15 @@ function movingKeysFor(key: RowKey): RowKey[] {
   return result.length ? result : [key]
 }
 
-/** Zeilenschlüssel wie in der Pipeline (rowKey oder Indexpfad). */
+/** Row key as in the pipeline (rowKey or index path). */
 function keyOfRow(row: R, index: number): RowKey {
   return props.rowKey ? (row[props.rowKey] as RowKey) : String(index)
 }
 
 /**
- * Tastatur: Zeile um eine Position verschieben (Alt + ↑/↓) — innerhalb ihrer
- * GESCHWISTER. Ein Elternwechsel bleibt der Maus vorbehalten; per Tastatur
- * wäre nicht erkennbar, in welche Ebene man zielt.
+ * Keyboard: move a row by one position (Alt + ↑/↓) — within its
+ * SIBLINGS. Changing the parent is reserved for the mouse; via keyboard
+ * it wouldn't be clear which level is being targeted.
  */
 function moveRowByKeyboard(rowIndex: number, delta: number): void {
   if (!state.orderActive) return
@@ -2194,7 +2194,7 @@ function moveRowByKeyboard(rowIndex: number, delta: number): void {
   nav.setActive(rowIndex + delta, nav.state.col)
 }
 
-// ── Spalten: Resize, Reorder, Pin ────────────────────────────────────
+// ── Columns: resize, reorder, pin ────────────────────────────────────
 
 function onResizeStart(columnId: string, event: PointerEvent): void {
   layout.startResize(columnId, event.clientX)
@@ -2225,13 +2225,13 @@ function pinColumn(columnId: string, side: PinSide | false): void {
 }
 
 /**
- * Spalte auf die Breite ihres breitesten Inhalts bringen.
+ * Size a column to the width of its widest content.
  *
- * Gemessen wird der TEXT, nicht die Box: der Inhalt sitzt in einem
- * Block-Element, das die Zelle ausfüllt — dessen scrollWidth wäre also immer
- * die aktuelle Spaltenbreite, und Autosize könnte nie verkleinern. Ein Range
- * über die Knoteninhalte liefert die echte Textbreite; für Komponenten-Inhalte
- * (Badges, Tags) fällt die Messung auf scrollWidth zurück.
+ * The TEXT is measured, not the box: the content sits in a
+ * block element that fills the cell — its scrollWidth would therefore always be
+ * the current column width, and autosize could never shrink. A Range
+ * over the node contents yields the real text width; for component content
+ * (badges, tags) the measurement falls back to scrollWidth.
  */
 function autoSizeColumn(columnId: string): void {
   const cells = scrollerEl.value?.querySelectorAll<HTMLElement>(`[data-column="${columnId}"]`)
@@ -2247,7 +2247,7 @@ function autoSizeColumn(columnId: string): void {
     }
     widest = Math.max(widest, Math.max(measured, content.scrollWidth === content.clientWidth ? 0 : content.scrollWidth))
   }
-  const width = Math.ceil(widest) + 40 // Polsterung + Werkzeuge im Kopf
+  const width = Math.ceil(widest) + 40 // padding + header tools
   layout.setWidth(columnId, width)
   emit("column-resize", { column: columnId, width, finished: true })
 }
@@ -2272,7 +2272,7 @@ function resetColumns(): void {
   layout.resetColumns()
 }
 
-// ── Paginierung ──────────────────────────────────────────────────────
+// ── Pagination ───────────────────────────────────────────────────────
 
 function setPage(next: number, notify = true): void {
   const clamped = Math.max(0, Math.min(state.pageCount - 1, next))
@@ -2283,7 +2283,7 @@ function setPage(next: number, notify = true): void {
   if (state.isServer) scheduleFetch(false, { page: clamped })
 }
 
-/** Cursor-Leiste: neue Seitengröße — der Aufrufer lädt damit neu (page-change). */
+/** Cursor bar: new page size — the caller reloads with it (page-change). */
 function onCursorPageSize(next: number): void {
   pageSize.value = next
   emit("page-change", { page: 0, pageSize: next })
@@ -2296,16 +2296,16 @@ function setPageSize(next: number): void {
   if (state.isServer) scheduleFetch(false, { page: 0, pageSize: next })
 }
 
-// ── Server-Modus ─────────────────────────────────────────────────────
+// ── Server mode ──────────────────────────────────────────────────────
 
 /**
- * Was der nächste Server-Abruf gegenüber den Modellen abweichend verwenden soll.
+ * What the next server fetch should use instead of the model values.
  *
- * Nötig, weil Vue bei GEBUNDENEM `v-model` den lokalen Wert eines
- * `defineModel` nicht sofort setzt: die Aktualisierung kommt erst über den Prop
- * der Eltern. Ein Lesen direkt nach dem Schreiben liefert also den alten Wert —
- * unbemerkt, solange niemand `v-model:sort` & Co. bindet, und beim ersten
- * Sortierklick sichtbar falsch, sobald doch.
+ * Needed because with a BOUND `v-model`, Vue doesn't set the local value of a
+ * `defineModel` immediately: the update only arrives via the parent's
+ * prop. Reading right after writing therefore yields the old value —
+ * unnoticed as long as nobody binds `v-model:sort` & co., and visibly wrong
+ * on the first sort click as soon as someone does.
  */
 type RequestOverrides = Partial<Pick<DataTableRequest, "sort" | "filters" | "search" | "page" | "pageSize">>
 let pendingRequest: RequestOverrides = {}
@@ -2364,12 +2364,12 @@ async function fetchRows(): Promise<void> {
 
 function reload(): void {
   scheduleFetch(false)
-  // Ohne dataSource ersetzt der Aufrufer props.data selbst (der Watch oben
-  // greift dann); den Nachlade-Baum setzen wir in jedem Fall zurück.
+  // Without dataSource the caller replaces props.data itself (the watch above
+  // kicks in then); we reset the lazy-load tree in any case.
   if (!props.dataSource) resetLazyTree()
 }
 
-// ── Kopieren & CSV ───────────────────────────────────────────────────
+// ── Copy & CSV ───────────────────────────────────────────────────────
 
 interface ExportOptions {
   columnIds?: string[]
@@ -2437,13 +2437,13 @@ async function copySelectedRows(options: ExportOptions & { format?: "tsv" | "csv
   try {
     await navigator.clipboard?.writeText(text)
   } catch {
-    // Clipboard kann verweigert werden (Berechtigung, unsicherer Kontext).
+    // Clipboard may be denied (permission, insecure context).
   }
   state.announcement = t("dataTable.rowsCopied", { count: rows.length })
   return rows.length
 }
 
-// ── Zustand sichern / laden ──────────────────────────────────────────
+// ── Save / load state ────────────────────────────────────────────────
 
 function getState(): DataTableState {
   return {
@@ -2498,7 +2498,7 @@ function resetState(): void {
 }
 
 defineExpose({
-  // Zeilen
+  // Rows
   getVisibleRows: (): R[] =>
     displayed()
       .filter((row) => row.kind === "data")
@@ -2506,7 +2506,7 @@ defineExpose({
   getProcessedRows: (): R[] => dataRowsOf(),
   getSelectedRows: (): R[] => resolveSelectedRows(selectedKeys.value),
   scrollToIndex: virtual.scrollToIndex,
-  // Aufklappen
+  // Expanding
   expandRow: (key: RowKey) => {
     if (!expandedKeys.value.includes(key)) expandedKeys.value = [...expandedKeys.value, key]
   },
@@ -2519,7 +2519,7 @@ defineExpose({
   collapseAllRows: () => {
     expandedKeys.value = []
   },
-  // Spalten
+  // Columns
   toggleColumn: (id: string, visible: boolean) => layout.toggleColumn(id, visible, true),
   pinColumn: (id: string, side: PinSide | false) => layout.pinColumn(id, side, true),
   getColumnPin: layout.getColumnPin,
@@ -2528,32 +2528,32 @@ defineExpose({
   sizeColumnsToFit,
   resetColumns,
   getColumnFacets: (id: string): ColumnFacets => (state.facets as Record<string, ColumnFacets>)[id] ?? { values: [] },
-  // Daten
+  // Data
   reload,
-  /** Nachlade-Baum zurücksetzen: Pfeile zu, Kinder-Cache leer (frisch beim Aufklappen). */
+  /** Reset the lazy-load tree: arrows collapsed, children cache empty (fresh on expand). */
   resetTree: resetLazyTree,
-  /** Nachgeladene Kinder einer Zeile verwerfen und erneut holen. */
+  /** Discard a row's lazy-loaded children and fetch them again. */
   reloadChildren: async (key: RowKey): Promise<void> => {
     const row = findRowByKey(key)
     if (!row) return
     delete state.loadedChildren[String(key)]
     await fetchChildren(row, true)
   },
-  /** Nachgeladene Kinder einer Zeile (undefined = noch nicht geladen). */
+  /** A row's lazy-loaded children (undefined = not loaded yet). */
   getLoadedChildren: (key: RowKey): R[] | undefined => state.loadedChildren[String(key)] as R[] | undefined,
   getDataAsCsv,
   exportDataAsCsv,
   copySelectedRows,
-  // Zustand
+  // State
   getState,
   setState,
   resetState,
   focus: () => void nav.focusActive(),
 })
 
-// ── Messen, Beobachten, Reagieren ────────────────────────────────────
+// ── Measure, observe, react ──────────────────────────────────────────
 
-/** Kopfzellen messen — die Breiten sind die Grundlage der Sticky-Abstände. */
+/** Measure header cells — the widths are the basis for the sticky offsets. */
 function observeHeaderCells(): void {
   const scroller = scrollerEl.value
   if (!scroller || !headerObserver) return
@@ -2563,7 +2563,7 @@ function observeHeaderCells(): void {
   }
 }
 
-/** Detail-Panels haben freie Höhe → für die Virtualisierung messen. */
+/** Detail panels have free height → measure them for virtualization. */
 function measureDetailRows(): void {
   const body = bodyEl.value
   if (!body || !detailObserver) return
@@ -2628,7 +2628,7 @@ watch(
   () => void nextTick(measureDetailRows)
 )
 
-// Datenwechsel: Seite in den gültigen Bereich ziehen.
+// Data change: clamp the page into the valid range.
 watch(
   () => state.filteredCount,
   () => {
@@ -2638,7 +2638,7 @@ watch(
 </script>
 
 <style scoped>
-/* Größen und Farben spiegeln die CSS-Variablen von <wa-data-grid>. */
+/* Sizes and colors mirror the CSS variables of <wa-data-grid>. */
 .vi-dt {
   --dt-border-color: var(--wa-color-surface-border);
   --dt-border-width: var(--wa-border-width-s);
@@ -2653,11 +2653,11 @@ watch(
   display: flex;
   flex-direction: column;
   min-inline-size: 0;
-  /* Bezugsrahmen für absolut positionierte Kinder — vor allem .vi-dt-live.
-     Ohne das hängt die Live-Region am initialen Container (body) und entkommt
-     JEDEM `overflow: hidden` der Vorfahren: sie liegt dann auf der
-     Dokument-Position ihres Gitters und spannt den Scrollbereich der ganzen
-     Seite auf (bei acht Gittern untereinander mehrere Tausend Pixel). */
+  /* Containing block for absolutely positioned children — above all .vi-dt-live.
+     Without it the live region hangs off the initial container (body) and escapes
+     EVERY `overflow: hidden` of its ancestors: it then sits at the
+     document position of its grid and stretches the scroll area of the whole
+     page (several thousand pixels with eight grids stacked). */
   position: relative;
   color: var(--wa-color-text-normal);
   font-size: var(--wa-font-size-s);
@@ -2669,7 +2669,7 @@ watch(
   overflow: hidden;
 }
 
-/* Größen: Zeilenhöhe, Polsterung und Textskala zusammen. */
+/* Sizes: row height, padding and text scale together. */
 .vi-dt.is-size-xs {
   --dt-row-height: 2rem;
   --dt-cell-padding: var(--wa-space-xs);
@@ -2699,15 +2699,15 @@ watch(
   min-inline-size: 14rem;
 }
 
-/* Ein Scroll-Bereich für Kopf, Körper und Fuß — nur so bleiben gepinnte
-   Spalten und die Kopfzeile beim Scrollen in beiden Richtungen bündig. */
+/* One scroll area for header, body and footer — only this way do pinned
+   columns and the header row stay aligned when scrolling in both directions. */
 .vi-dt-scroller {
   position: relative;
   overflow: auto;
-  /* Streckt sich, wenn die Tabelle eine feste Höhe hat (z. B. in einer
-     füllenden Ansicht) — sonst bleibt sie inhaltshoch. Der Deckel gilt
-     weiterhin für inhaltshohe Tabellen; wer füllen will, setzt von aussen
-     `--dt-max-height: none`. */
+  /* Stretches when the table has a fixed height (e.g. in a
+     filling view) — otherwise it stays content-sized. The cap still
+     applies to content-sized tables; to fill, set
+     `--dt-max-height: none` from outside. */
   flex: 1 1 auto;
   min-block-size: 0;
   max-block-size: var(--dt-max-height, 30rem);
@@ -2717,13 +2717,13 @@ watch(
   inset-block-start: 0;
   z-index: 3;
 }
-/* Die Zeile gibt nur den Farbton als Variable vor und ordnet die Zellen an —
-   gemalt wird in den ZELLEN.
-   Grund: Die Zeilenbox ist nur so breit wie der sichtbare Bereich, ihre
-   Spalten-Tracks können aber darüber hinausragen (waagerechtes Scrollen).
-   Ein Hintergrund oder Rahmen auf der Zeile bricht deshalb mitten im Gitter
-   ab — sichtbar als fehlende Trennlinie unter gepinnten Spalten, sobald man
-   scrollt. Die Zellen decken dagegen die gesamte Breite ab. */
+/* The row only provides the tint as a variable and lays out the cells —
+   painting happens in the CELLS.
+   Reason: the row box is only as wide as the visible area, but its
+   column tracks can extend beyond it (horizontal scrolling).
+   A background or border on the row therefore breaks off in the middle of the grid
+   — visible as a missing divider under pinned columns as soon as you
+   scroll. The cells, in contrast, cover the full width. */
 .vi-dt-row {
   --dt-row-bg: var(--wa-color-surface-default);
   display: grid;
@@ -2739,14 +2739,14 @@ watch(
 .vi-dt.is-striped .vi-dt-row.is-odd {
   --dt-row-bg: var(--dt-stripe);
 }
-/* Rangfolge der Zeilenfarbe: Auswahl > Hover > Streifen > Grundfläche.
-   Die Streifenregel braucht `.is-striped` am Wurzelelement und wiegt damit
-   schwerer als ein schlichtes `.vi-dt-row.is-data:hover` — ohne die folgenden
-   Präfixe bliebe auf ungeraden Zeilen weder Hover noch Auswahl sichtbar. */
+/* Precedence of the row color: selection > hover > stripe > base surface.
+   The stripe rule needs `.is-striped` on the root element and thus weighs
+   more than a plain `.vi-dt-row.is-data:hover` — without the following
+   prefixes neither hover nor selection would be visible on odd rows. */
 .vi-dt .vi-dt-row.is-data:hover {
   --dt-row-bg: var(--dt-row-hover);
 }
-/* Auswahl per Zeilenklick: die Zeile signalisiert Klickbarkeit. */
+/* Selection via row click: the row signals that it is clickable. */
 .vi-dt.is-selectable .vi-dt-row.is-data {
   cursor: pointer;
 }
@@ -2789,7 +2789,7 @@ watch(
   gap: var(--wa-space-2xs);
   min-inline-size: 0;
   padding-inline: var(--dt-cell-padding);
-  /* Farbton und Trennlinie trägt jede Zelle selbst (siehe .vi-dt-row). */
+  /* Each cell carries the tint and divider itself (see .vi-dt-row). */
   background-color: var(--dt-row-bg);
   border-block-end: var(--dt-border-width) solid var(--dt-border-color);
   overflow: hidden;
@@ -2808,12 +2808,12 @@ watch(
   outline: var(--wa-focus-ring);
   outline-offset: -2px;
 }
-/* Gepinnte Zellen liegen ÜBER dem waagerecht scrollenden Inhalt und müssen ihn
-   deckend verbergen. Die Zeilentöne (Streifen, Hover, Auswahl) sind
-   teiltransparent (color-mix mit transparent), eine einfache
-   `background-color: var(--dt-row-bg)` ließe den Inhalt also durchscheinen.
-   Deshalb: deckende Grundfläche als Farbe, der Zeilenton als Auflage — das
-   Ergebnis ist derselbe Farbwert wie bei den frei scrollenden Zellen. */
+/* Pinned cells lie ABOVE the horizontally scrolling content and must hide it
+   opaquely. The row tints (stripe, hover, selection) are
+   semi-transparent (color-mix with transparent), so a plain
+   `background-color: var(--dt-row-bg)` would let the content show through.
+   Hence: an opaque base surface as the color, the row tint as an overlay — the
+   result is the same color value as for the freely scrolling cells. */
 .vi-dt-cell.is-sticky {
   background-color: var(--wa-color-surface-default);
   background-image: linear-gradient(var(--dt-row-bg), var(--dt-row-bg));
@@ -2838,8 +2838,8 @@ watch(
 .vi-dt-hcell {
   padding-inline: var(--wa-space-s);
 }
-/* Die Beschriftung füllt den freien Platz — sonst rutschen Filter- und
-   Menüknopf in die Mitte der Zelle und fangen den Sortier-Klick ab. */
+/* The label fills the free space — otherwise the filter and menu buttons
+   slide into the middle of the cell and intercept the sort click. */
 .vi-dt-hcell .vi-dt-hlabel {
   flex: 1 1 auto;
   min-inline-size: 0;
@@ -2851,16 +2851,16 @@ watch(
 .vi-dt-hcell.is-align-center .vi-dt-hlabel {
   text-align: center;
 }
-/* Spaltenmenü nur zeigen, wenn die Spalte im Fokus/Hover ist — sonst frisst es
-   die Beschriftung. (wa-dropdown selbst ist display:contents, also am Trigger.)
-   Aktive Filter bleiben immer sichtbar. */
-/* visibility statt display: der Knopf ist unsichtbar und NICHT anklickbar
-   (fängt also den Sortier-Klick in der Zellmitte nicht ab), behält aber seinen
-   Platz im Layout. Beides ist wichtig:
-   - Mit display:none verlässt der Knopf das Layout. Ist sein Menü offen, hat
-     das Popup plötzlich keinen Anker mehr und springt in die linke obere Ecke.
-   - Außerdem würde die Kopfzeile bei jedem Hover-Wechsel umbrechen und offene
-     Filter-Popover um die Knopfbreite verschieben. */
+/* Only show the column menu when the column is focused/hovered — otherwise it eats
+   the label. (wa-dropdown itself is display:contents, so style the trigger.)
+   Active filters always stay visible. */
+/* visibility instead of display: the button is invisible and NOT clickable
+   (so it doesn't intercept the sort click in the middle of the cell), but keeps its
+   place in the layout. Both matter:
+   - With display:none the button leaves the layout. If its menu is open, the
+     popup suddenly has no anchor anymore and jumps to the top left corner.
+   - Also, the header row would reflow on every hover change and shift open
+     filter popovers by the button width. */
 .vi-dt-column-menu-button {
   visibility: hidden;
 }
@@ -2925,24 +2925,24 @@ watch(
   position: relative;
 }
 
-/* ── Baumstruktur sichtbar machen ──────────────────────────────────── */
-/* Einrückung allein liest sich schlecht. Deshalb pro Ebene eine senkrechte
-   Führungslinie (als Hintergrund-Muster über die eingerückte Fläche) und ein
-   kurzer Winkel zur Zeile selbst — wie in einem Dateibaum. */
+/* ── Making the tree structure visible ─────────────────────────────── */
+/* Indentation alone reads poorly. Hence one vertical guide line per level
+   (as a background pattern over the indented area) and a
+   short corner to the row itself — like in a file tree. */
 .vi-dt {
   --dt-guide: var(--wa-color-surface-border);
 }
 .vi-dt-cell.is-tree-cell {
   position: relative;
 }
-/* Ein Feld je Ebene. Die senkrechte Linie sitzt auf der MITTE des Feldes, damit
-   sie durch die Aufklapp-Pfeile der jeweiligen Ebene läuft.
-     is-line    → durchgehende Linie (Vorfahre hat noch Geschwister)
-     is-tee     → „├" (diese Zeile hat noch Geschwister)
-     is-corner  → „└" (letztes Kind: darunter bleibt es leer)
-     ohne alles → leeres Feld (der Teilbaum ist dort zu Ende)
-   Der Arm endet am Rand des Feldes — er läuft NICHT über den Pfeil oder den
-   Blatt-Platzhalter hinweg bis zum Text. */
+/* One slot per level. The vertical line sits in the MIDDLE of the slot so
+   it runs through the expand arrows of the respective level.
+     is-line    → continuous line (ancestor still has siblings)
+     is-tee     → "├" (this row still has siblings)
+     is-corner  → "└" (last child: empty below)
+     none       → empty slot (the subtree ends there)
+   The arm ends at the edge of the slot — it does NOT run past the arrow or the
+   leaf placeholder up to the text. */
 .vi-dt-guide {
   position: relative;
   flex: 0 0 auto;
@@ -2959,11 +2959,11 @@ watch(
   inline-size: 1px;
   background-color: var(--dt-guide);
 }
-/* Ecke: die senkrechte Linie endet auf halber Höhe. */
+/* Corner: the vertical line ends at half height. */
 .vi-dt-guide.is-corner::before {
   inset-block: 0 50%;
 }
-/* Kurzer Arm von der Mitte zum Rand des Feldes. */
+/* Short arm from the middle to the edge of the slot. */
 .vi-dt-guide.is-tee::after,
 .vi-dt-guide.is-corner::after {
   content: "";
@@ -2974,15 +2974,15 @@ watch(
   background-color: var(--dt-guide);
 }
 
-/* Pfeil und Blatt-Platzhalter MÜSSEN gleich breit sein — sonst stehen die
-   Beschriftungen einer Ebene nicht untereinander und die Einrückung wird
-   teilweise aufgefressen (der wa-button ist von sich aus breiter). */
+/* Arrow and leaf placeholder MUST be equally wide — otherwise the labels of a
+   level don't line up and the indentation gets
+   partially eaten up (the wa-button is wider by itself). */
 .vi-dt-expand {
   flex: 0 0 auto;
   inline-size: var(--dt-toggle-size);
 }
-/* Nachgeladen und leer: der Pfeil bleibt an seinem Platz (kein Layoutsprung),
-   ist aber sichtbar außer Betrieb. */
+/* Loaded and empty: the arrow stays in place (no layout jump),
+   but is visibly out of service. */
 .vi-dt-expand.is-empty {
   opacity: 0.3;
   cursor: default;
@@ -2991,13 +2991,13 @@ watch(
   font-size: 0.75em;
   --track-width: 2px;
 }
-/* Blätter: gleicher Abstand wie zwischen Pfeil und Führungslinien. */
+/* Leaves: same spacing as between arrow and guide lines. */
 .vi-dt-leaf-gap {
   flex: 0 0 auto;
   inline-size: var(--wa-space-2xs);
 }
 
-/* ── Feste Reihenfolge: Griff und Einfügemarke ─────────────────────── */
+/* ── Fixed order: handle and insertion marker ──────────────────────── */
 .vi-dt-grip {
   display: inline-flex;
   align-items: center;
@@ -3018,16 +3018,16 @@ watch(
 .vi-dt-row.is-dragging {
   opacity: 0.5;
 }
-/* Marke, wo die Zeile landen würde. Als inset-Schatten, damit sie keine
-   Layout-Höhe kostet und die Zeilen beim Ziehen nicht springen. */
+/* Marker where the row would land. As an inset shadow so it costs no
+   layout height and rows don't jump while dragging. */
 .vi-dt-row.is-drop-before .vi-dt-cell {
   box-shadow: inset 0 2px 0 var(--dt-accent);
 }
 .vi-dt-row.is-drop-after .vi-dt-cell {
   box-shadow: inset 0 -2px 0 var(--dt-accent);
 }
-/* „Hinein": die Zeile wird Elternteil — deshalb ein Rahmen um die ganze Zeile
-   statt einer Linie an der Kante. */
+/* "Inside": the row becomes the parent — hence a frame around the whole row
+   instead of a line at the edge. */
 .vi-dt-row.is-drop-inside .vi-dt-cell {
   box-shadow:
     inset 0 2px 0 var(--dt-accent),
@@ -3037,8 +3037,8 @@ watch(
   --dt-row-bg: color-mix(in oklab, var(--dt-selected) 60%, transparent);
 }
 
-/* Die Aufklapp-Spalte liegt links der Baumzelle — ihre Linie führt weiter,
-   damit Pfeil und Struktur zusammenhängen. */
+/* The expand column sits left of the tree cell — its line continues
+   so arrow and structure connect. */
 .vi-dt-cell.is-lead.is-expand-cell {
   position: relative;
 }
@@ -3141,8 +3141,8 @@ watch(
   font-size: var(--wa-font-size-s);
   cursor: pointer;
 }
-/* Nur für Screenreader: unsichtbar, aber vorhanden. Bezugsrahmen ist .vi-dt
-   (position: relative), damit die Region im Gitter geclippt bleibt. */
+/* Screen readers only: invisible but present. The containing block is .vi-dt
+   (position: relative) so the region stays clipped within the grid. */
 .vi-dt-live {
   position: absolute;
   inset-block-start: 0;

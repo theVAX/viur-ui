@@ -43,6 +43,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed, watch, onBeforeMount } from "vue"
 import { Ckeditor } from "@ckeditor/ckeditor5-vue"
+import { useI18n } from "vue-i18n"
 import {
   ClassicEditor,
   Essentials,
@@ -72,56 +73,57 @@ import {
   RemoveFormat,
   GeneralHtmlSupport,
 } from "ckeditor5"
-import coreTranslations from "ckeditor5/dist/translations/de.js"
-import "ckeditor5/dist/ckeditor5.css"
+import coreTranslations from "ckeditor5/translations/de.js"
+import "ckeditor5/ckeditor5.css"
 import { ViURUploadAdapterPlugin } from "../uploadAdapter"
 
 /**
- * Mehrzeiliges Textfeld für längere Inhalte, wahlweise als Textarea oder Rich-Text-Editor (CKEditor 5).
+ * Multi-line text field for longer content, either as a textarea or a rich-text editor (CKEditor 5).
  *
- * Wenn `boneState.bonestructure.valid_html` oder `boneState.bonestructure.validHtml` gesetzt ist,
- * wird ein CKEditor 5 (ClassicEditor) gerendert. Die sichtbaren Toolbar-Aktionen werden anhand
- * der erlaubten HTML-Tags (`validTags`) gefiltert. Ohne HTML-Konfiguration erscheint ein
- * einfaches `<wa-textarea>`. Bei `boneState.label === "placeholder"` wird der Bone-Name als
- * Placeholder angezeigt statt als Label.
+ * If `boneState.bonestructure.valid_html` or `boneState.bonestructure.validHtml` is set,
+ * a CKEditor 5 (ClassicEditor) is rendered. The visible toolbar actions are filtered based on
+ * the allowed HTML tags (`validTags`). Without an HTML configuration, a simple
+ * `<wa-textarea>` is shown. With `boneState.label === "placeholder"`, the bone name is
+ * shown as a placeholder instead of as a label.
  *
  * @displayName TextBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-text - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-text-default - Standard-Variante (Textarea oder CKEditor)
- * @cssClass bone-widget-text-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-text-content`
- * @cssClass bone-widget-text-{name}-html - Gesetzt wenn der Bone HTML-Inhalt enthält
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-text - Identifies the bone type
+ * @cssClass bone-widget-text-default - Default variant (textarea or CKEditor)
+ * @cssClass bone-widget-text-{name} - Dynamically set to the bone name, e.g. `bone-widget-text-content`
+ * @cssClass bone-widget-text-{name}-html - Set when the bone contains HTML content
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert als Klartext oder HTML-String. */
+  /** Current bone value as plain text or an HTML string. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus auf das Eingabefeld (aktuell nicht implementiert). */
+  /** Focuses the input field (currently not implemented). */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Textwert oder HTML-String
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current text value or HTML string
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])
 
+const { t } = useI18n()
 const boneState = inject("boneState")
 const state = reactive({
   value: "",
@@ -235,7 +237,7 @@ onBeforeMount(() => {
       decorators: [
         {
           mode: "manual",
-          label: "Link in neuem Fester öffnen",
+          label: t("bones.text.openInNewWindow"),
           attributes: {
             target: "_blank",
             rel: "noopener noreferrer",

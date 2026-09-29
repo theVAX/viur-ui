@@ -124,13 +124,13 @@ describe("normalizeEnvelope — idempotency", () => {
 })
 
 // --------------------------------------------------------------------------- //
-// Ziel des nächsten Login-Schritts (v1)                                       //
+// Target of the next login step (v1)                                          //
 // --------------------------------------------------------------------------- //
 //
-// v2 liefert `follow`. In v1 wechselt die Stelle je Stufe:
-//   Provider-Auswahl / Zweitfaktor-Auswahl → der gewählte Wert
-//   vom Server gesetzt                     → next_url
-//   gerenderter Schritt mit eigenem Ziel   → params.action_url (OTP)
+// v2 delivers `follow`. In v1 the location changes per stage:
+//   provider choice / second factor choice → the chosen value
+//   set by the server                      → next_url
+//   rendered step with its own target      → params.action_url (OTP)
 
 const providerChooser = (action, chosen) => ({
   action,

@@ -31,8 +31,8 @@ export interface ListFetchOptions {
   immediate?: boolean
   cached?: boolean
   ttl?: number
-  /** Zusatz-Header der LIST-Requests (nicht der Struktur) — Objekt oder
-   *  Funktion, pro Request ausgewertet (z.B. X-VIUR-BONELIST). */
+  /** Extra headers for the LIST requests (not the structure) — object or
+   *  function, evaluated per request (e.g. X-VIUR-BONELIST). */
   headers?: Record<string, string> | (() => Record<string, string> | null) | null
 }
 
@@ -83,9 +83,9 @@ type ControllerFetchFn = (
 ) => UseFetchReturn<any>
 
 /**
- * Eigene Abfrage gegen einen Endpunkt eines Moduls bauen — die Grundlage der
- * `use*Fetch`-Helfer. `ctx` nimmt u. a. `renderer`, `version`, `query`
- * (zusätzlicher Query-String), `headers`, `immediate`.
+ * Build a custom query against an endpoint of a module — the basis of the
+ * `use*Fetch` helpers. `ctx` accepts, among others, `renderer`, `version`, `query`
+ * (additional query string), `headers`, `immediate`.
  */
 export declare function createControllerFetch(options?: {
   endpoint?: string
@@ -97,9 +97,9 @@ export declare function createControllerFetch(options?: {
 
 export declare const useViewFetch: ControllerFetchFn
 export declare const useStructureFetch: ControllerFetchFn
-/** Envelope v2 auspacken (v1-Antworten kommen unveraendert zurueck). */
+/** Unwrap envelope v2 (v1 responses are returned unchanged). */
 export declare function normalizeEnvelope(body: unknown): unknown
-/** Skel-Struktur glaetten — akzeptiert Dict- wie Paar-Listen-Form. */
+/** Flatten a skel structure — accepts both dict and pair-list form. */
 export declare function normalizeStructure(structure: unknown): Record<string, Record<string, unknown>>
 export declare const useAddFetch: ControllerFetchFn
 export declare const useEditFetch: ControllerFetchFn
@@ -345,7 +345,7 @@ export declare function skelDataToFormData(
 
 // ─── Translations ─────────────────────────────────────────────────────────────
 
-/** Message-Bäume der Paket-Komponenten — in die vue-i18n-Messages der App mergen
- *  (vue-i18n ist Voraussetzung; die Komponenten übersetzen mit t() ohne Fallbacks). */
+/** Message trees of the package components — merge into the app's vue-i18n messages
+ *  (vue-i18n is required; the components translate with t() without fallbacks). */
 export declare const deTranslations: Record<string, any>
 export declare const enTranslations: Record<string, any>

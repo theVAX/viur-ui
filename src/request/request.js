@@ -126,14 +126,14 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     }
 
     /**
-     * Struktur der Liste holen.
+     * Fetch the structure of the list.
      *
-     * Zwei Antwortformen sind unterwegs:
-     *   • aktuell:  `/<modul>/structure` rendert wie jede andere Aktion, also
+     * Two response shapes are in circulation:
+     *   • current:  `/<modul>/structure` renders like any other action, i.e.
      *     `{ action: "structure.view", values, structure }`
-     *   • historisch (getStructure): `{ viewSkel: {…}, editSkel: {…} }`
-     * Zusätzlich kann die Struktur eine PAAR-LISTE sein
-     * (`json.bone.structure.keytuples`) — normalizeStructure glättet das.
+     *   • historic (getStructure): `{ viewSkel: {…}, editSkel: {…} }`
+     * Additionally, the structure can be a PAIR LIST
+     * (`json.bone.structure.keytuples`) — normalizeStructure flattens that.
      */
     async function _fetchStructure() {
       const skeltype =
@@ -188,9 +188,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
             await _fetchStructure()
           }
           const list = responseData.data ?? []
-          // Manche Installationen liefern die Struktur in der Liste mit
-          // (Kompatibilitäts-Flag `json.bone.structure.inlists`) — dann ist der
-          // separate Aufruf oben umsonst gewesen, aber diese hier ist aktueller.
+          // Some installations deliver the structure along with the list
+          // (compatibility flag `json.bone.structure.inlists`) — then the
+          // separate call above was in vain, but this one is more current.
           if (responseData.structure) {
             structure.value = normalizeStructure(responseData.structure)
           }
@@ -218,8 +218,8 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 
     const { isFetching, isFinished, error, execute: _execute, abort } = useViurFetch(listUrl, { immediate }).json()
 
-    /** Alles geladen: letzte Antwort da und kein Cursor mehr offen. Ab hier
-     *  dürfen Sortierung/Filter lokal auf dem Datensatz laufen. */
+    /** Everything loaded: last response is in and no cursor left open. From here
+     *  on, sorting/filtering may run locally on the dataset. */
     const complete = computed(() => isFinished.value && !cursor.value)
 
     const fetchResult = {
@@ -262,8 +262,8 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       return executeAndThrow(fetchResult, _execute)
     }
 
-    /** Eine Seite nachladen; erkennt das ViUR-Ende (leere Seite mit derselben
-     *  Cursor-Marke) und löscht dann den Cursor. Liefert true bei Fortschritt. */
+    /** Load one more page; detects the ViUR end (empty page with the same
+     *  cursor marker) and then clears the cursor. Returns true on progress. */
     async function _advance() {
       if (!cursor.value) return false
       const before = data.value.length
@@ -279,8 +279,8 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       return true
     }
 
-    /** Die nächsten `pages` Seiten laden (Standard: eine) — z. B. direkt als
-     *  Handler der DataTable-Cursor-Leiste: `@load-more="({ pages }) =>
+    /** Load the next `pages` pages (default: one) — e.g. directly as the
+     *  handler of the DataTable cursor bar: `@load-more="({ pages }) =>
      *  pages === 'all' ? list.nextAll() : list.next(pages)"`. */
     async function next(pages = 1) {
       let remaining = pages
@@ -289,10 +289,10 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       }
     }
 
-    /** Alle restlichen Seiten laden ("Alles laden"). */
+    /** Load all remaining pages ("load everything"). */
     async function nextAll() {
       while (await _advance()) {
-        /* bis zum Ende */
+        /* until the end */
       }
     }
 
@@ -352,7 +352,7 @@ export function useTreeFetch(
   const isFinished = computed(() => nodes.isFinished.value && leaves.isFinished.value)
   const error = computed(() => nodes.error.value ?? leaves.error.value)
   const hasMore = computed(() => !!(nodes.cursor.value || leaves.cursor.value))
-  /** Beide Listen vollständig geladen — Sortierung/Filter dürfen lokal laufen. */
+  /** Both lists fully loaded — sorting/filtering may run locally. */
   const complete = computed(() => isFinished.value && !hasMore.value)
 
   function _both(fn) {
@@ -363,9 +363,9 @@ export function useTreeFetch(
     return _both((l) => l.execute())
   }
 
-  // Eine Seite nachladen: erst Nodes zu Ende, dann Leaves. Das ViUR-Ende
-  // (leere Seite mit derselben Cursor-Marke) erkennt useListFetch.next()
-  // selbst und löscht dann seinen Cursor — hier zählt nur der Fortschritt.
+  // Load one more page: nodes to the end first, then leaves. useListFetch.next()
+  // detects the ViUR end (empty page with the same cursor marker) itself and
+  // then clears its cursor — only progress counts here.
   async function _nextOf(list) {
     const before = list.data.value.length
     await list.next()
@@ -377,7 +377,7 @@ export function useTreeFetch(
     if (leaves.cursor.value) await _nextOf(leaves)
   }
 
-  /** Alle restlichen Seiten beider Listen laden ("Alles laden"). */
+  /** Load all remaining pages of both lists ("load everything"). */
   async function nextAll() {
     while (nodes.cursor.value) {
       if (!(await _nextOf(nodes))) break

@@ -1,4 +1,4 @@
-// Öffentliche Oberfläche des DataTable-Widgets.
+// Public surface of the DataTable widget.
 export { default as DataTable } from "./DataTable.vue"
 export { default as ColumnFilterPanel } from "./ColumnFilterPanel.vue"
 export * from "./types"
@@ -53,8 +53,8 @@ export {
   type BoneStructure,
   type ColumnsFromStructureOptions,
 } from "./viurColumns"
-// ViurDataTable ist (wie ViurBrowser) ein JS-SFC — seine Typen liegen in
-// ViurDataTable.d.vue.ts (Import: ".../DataTable/ViurDataTable.d.vue", wie
-// bei ViForm).
-// @ts-expect-error — JS-SFC ohne eingebettetes Typing
+// ViurDataTable is (like ViurBrowser) a JS SFC — its types live in
+// ViurDataTable.d.vue.ts (import: ".../DataTable/ViurDataTable.d.vue", as
+// with ViForm).
+// @ts-expect-error — JS SFC without embedded typing
 export { default as ViurDataTable } from "./ViurDataTable.vue"

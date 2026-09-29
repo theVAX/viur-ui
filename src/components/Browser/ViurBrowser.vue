@@ -37,28 +37,29 @@
 
 <script setup>
 import { ref, computed, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Browser from "./Browser.vue"
 import { useTreeFetch, useListFetch, useListRootNodesFetch, useMoveFetch, uploadFile } from "../../request/index.js"
 import { columnsFromStructure } from "../DataTable/viurColumns"
 
-// Dünner ViUR-Wrapper um den generischen Browser: `module` rein, fertig.
-// Rootnodes über /listRootNodes, Inhalt des Ortes über useTreeFetch (Nodes +
-// Leaves), Baum-Ebenen über list(skelType=node), Verschieben über /move,
-// Uploads über uploadFile. Gespeichert wird pro Zeile; die Ansicht verschiebt
-// der Browser lokal — nachgeladen wird nur der Ort selbst nach Uploads.
+// Thin ViUR wrapper around the generic browser: pass in `module`, done.
+// Rootnodes via /listRootNodes, contents of the location via useTreeFetch
+// (nodes + leaves), tree levels via list(skelType=node), moving via /move,
+// uploads via uploadFile. Saving happens per row; the browser moves the view
+// locally — only the location itself is reloaded, after uploads.
 
 const props = defineProps({
   module: { type: String, required: true },
   renderer: { type: String, default: null },
-  /** Fester Rootnode; ohne ihn wird /listRootNodes befragt. */
+  /** Fixed rootnode; without it, /listRootNodes is queried. */
   rootNode: { type: [String, Object], default: null },
-  /** Spalten; ohne Angabe aus der viewLeafSkel-Struktur abgeleitet. */
+  /** Columns; if omitted, derived from the viewLeafSkel structure. */
   columns: { type: Array, default: null },
-  /** Nur diese Bones als Spalten (bei abgeleiteten Spalten). */
+  /** Only these bones as columns (for derived columns). */
   bones: { type: Array, default: null },
   /**
-   * Anzeigesprache mehrsprachiger Bones ("de", "en" oder "*" für alle mit der
-   * primären vorn) — bestimmt Anzeige UND lokale Sortierung der Spalten.
+   * Display language of multilingual bones ("de", "en" or "*" for all, with the
+   * primary one first) — determines display AND local sorting of the columns.
    */
   language: { type: String, default: null },
   primaryLanguage: { type: String, default: null },
@@ -68,6 +69,7 @@ const props = defineProps({
   tableProps: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(["open", "moved", "move-failed", "uploaded", "upload-failed"])
+const { t } = useI18n()
 
 const browserEl = ref(null)
 const location = defineModel("location", { type: [String, Number, null], default: null })
@@ -75,24 +77,24 @@ const selectedKeys = defineModel("selectedKeys", { type: Array, default: () => [
 
 const ctx = computed(() => (props.renderer ? { renderer: props.renderer } : {}))
 
-// Seitengröße der Cursor-Leiste = ViUR-Parameter `limit` (core ≥ 3.9; das
-// frühere `amount` gibt es dort nicht mehr). Sie gilt vom ERSTEN Fetch an:
-// eine per tableProps vorgegebene pageSize (oder ein `limit` in den params)
-// bestimmt schon den Initial-Request; sonst 30 (ViUR-Standard). Angezeigt
-// wird immer die tatsächliche Fetch-Größe.
+// Page size of the cursor bar = ViUR parameter `limit` (core ≥ 3.9; the
+// former `amount` no longer exists there). It applies from the FIRST fetch:
+// a pageSize given via tableProps (or a `limit` in the params) already
+// determines the initial request; otherwise 30 (ViUR default). The actual
+// fetch size is always what's displayed.
 const limit = ref(Math.min(99, Number(props.params?.limit ?? props.tableProps?.pageSize ?? 30) || 30))
 const baseParams = () => ({ ...props.params, orderby: props.orderField, limit: limit.value })
-// Für jeden Fetch nach dem Setup gilt: IMMER mit dem aktuellen Ort (Rootnode
-// oder navigierter Ordner) als parententry — sonst listet der Server quer
-// über den ganzen Baum.
+// Every fetch after setup ALWAYS uses the current location (rootnode or
+// navigated folder) as parententry — otherwise the server lists across the
+// whole tree.
 const currentParams = () => ({
   ...baseParams(),
   ...(location.value != null ? { parententry: location.value } : {}),
 })
 const mergedTableProps = computed(() => ({
-  // Keine Suche im Browser: navigiert wird über Baum und Breadcrumb, gesucht
-  // wird in der Listen-Ansicht des Moduls. Wer sie doch will, setzt
-  // `tableProps.withSearch` (lokal sinnvoll nur, wenn alles geladen ist:
+  // No search in the browser: navigation happens via tree and breadcrumb,
+  // searching in the module's list view. Anyone who wants it anyway sets
+  // `tableProps.withSearch` (locally only useful once everything is loaded:
   // `allLoaded`).
   ...props.tableProps,
   pageSize: limit.value,
@@ -110,7 +112,7 @@ const rootNodeList = computed(() => {
   return Array.isArray(list) ? list.map((entry) => ({ key: entry.key, name: entry.name ?? entry.key })) : []
 })
 
-// ── Inhalt des aktuellen Ortes (Nodes + Leaves) ───────────────────────────────
+// ── Contents of the current location (nodes + leaves) ─────────────────────────
 const tree = useTreeFetch(props.module, {
   params: baseParams(),
   parententry: location.value ?? undefined,
@@ -120,9 +122,9 @@ const tree = useTreeFetch(props.module, {
 const rows = computed(() => tree.data.value)
 const rowKind = (row) => (row?.skelType === "node" ? "node" : "leaf")
 
-// Ohne expliziten Ort ist die ROOTNODE der Ort: sobald sie bekannt ist, wird
-// sie zum Standard-`parententry` für alles — Listen-Fetch, Drops auf die
-// freie Fläche, Reorder und Uploads. Gefetcht wird nie ohne parententry.
+// Without an explicit location, the ROOTNODE is the location: as soon as it is
+// known, it becomes the default `parententry` for everything — list fetch,
+// drops onto the empty area, reorder and uploads. Never fetch without parententry.
 watch(
   rootNodeList,
   (roots) => {
@@ -139,8 +141,8 @@ watch(
   { immediate: true }
 )
 
-// Alles geladen (tree.complete)? Dann laufen Sortierung, Suche und
-// Spaltenfilter nur noch LOKAL auf dem vollständigen Datensatz.
+// Everything loaded (tree.complete)? Then sorting, search and column
+// filters run only LOCALLY on the complete dataset.
 const allLoaded = computed(() => tree.complete.value)
 
 const effectiveColumns = computed(() => {
@@ -151,15 +153,16 @@ const effectiveColumns = computed(() => {
     ...(props.language ? { language: props.language } : {}),
     ...(props.primaryLanguage ? { primaryLanguage: props.primaryLanguage } : {}),
     local: allLoaded.value,
+    boolTexts: [t("bones.bool.true"), t("bones.bool.false")],
   })
-  return derived.length ? derived : [{ id: "name", label: "Name" }]
+  return derived.length ? derived : [{ id: "name", label: t("browser.name") }]
 })
 
 function onNavigate() {
   selectedKeys.value = []
 }
 
-// ── Cursor-Nachladen: 1 / 5 / 10 Seiten oder alles ───────────────────────────
+// ── Cursor loading: 1 / 5 / 10 pages or everything ───────────────────────────
 async function onLoadMore({ pages }) {
   if (pages === "all") {
     await tree.nextAll().catch(() => null)
@@ -171,14 +174,14 @@ async function onLoadMore({ pages }) {
   }
 }
 
-/** Neue Seitengröße: aktuellen Ort mit geändertem `limit` neu holen. */
+/** New page size: re-fetch the current location with the changed `limit`. */
 function onPageSizeChange({ pageSize }) {
   if (!pageSize || pageSize === limit.value) return
   limit.value = Math.min(99, pageSize)
   void tree.filter(currentParams()).catch(() => null)
 }
 
-// ── Verschieben (Drop auf Baum/Ordner) & Umsortieren ─────────────────────────
+// ── Moving (drop on tree/folder) & reordering ────────────────────────────────
 async function saveMove(row, parentNode, sortindex, kind = rowKind(row)) {
   const data = {
     skelType: kind,
@@ -191,7 +194,7 @@ async function saveMove(row, parentNode, sortindex, kind = rowKind(row)) {
     await result.execute()
     return result.data.value
   } catch (error) {
-    // Fehler trägt der Aufrufer aus (onMove/onReorder fangen und melden).
+    // The caller handles errors (onMove/onReorder catch and report).
     throw error
   }
 }
@@ -199,17 +202,17 @@ async function saveMove(row, parentNode, sortindex, kind = rowKind(row)) {
 async function onMove({ rows: movedRows, target, keys, source }) {
   try {
     for (const row of movedRows) {
-      // Aus dem BAUM kommen BrowserNodes ({ key, name, data }) — das Skel
-      // steckt in `data`, und ein Baum-Eintrag ist immer ein Node. Aus der
-      // LISTE kommen Skels mit skelType.
+      // From the TREE come BrowserNodes ({ key, name, data }) — the skel
+      // lives in `data`, and a tree entry is always a node. From the
+      // LIST come skels with skelType.
       const raw = row?.data ?? row
       await saveMove(raw, target, undefined, source === "tree" ? "node" : rowKind(raw))
     }
     emit("moved", { keys, target })
-    // Ansicht (Liste UND Baum) ist bereits lokal verschoben — kein Reload.
+    // View (list AND tree) has already been moved locally — no reload.
   } catch (error) {
     emit("move-failed", { keys, target, error })
-    // Der lokale Stand (Liste UND Baum) ist dann falsch — einmal frisch holen.
+    // The local state (list AND tree) is then wrong — fetch it fresh once.
     void refresh().catch(() => null)
   }
 }
@@ -236,15 +239,15 @@ async function onUpload({ files, target }) {
   }
   if (results.length) {
     emit("uploaded", { files: results, target })
-    // Neue Einträge gibt es nur vom Server — den aktuellen Ort einmal holen.
+    // New entries only come from the server — fetch the current location once.
     void tree.execute().catch(() => null)
   }
 }
 
-// ── Baum-Ebenen (nur Nodes) ───────────────────────────────────────────────────
+// ── Tree levels (nodes only) ──────────────────────────────────────────────────
 async function loadNodeChildren(node) {
   const list = useListFetch(props.module, {
-    // Baum-Ebenen sind Navigation: möglichst vollständig (ViUR-Maximum 99).
+    // Tree levels are navigation: as complete as possible (ViUR maximum 99).
     params: { skelType: "node", parententry: node.key, orderby: props.orderField, limit: 99 },
     ...(props.renderer ? { renderer: props.renderer } : {}),
     immediate: false,
@@ -258,9 +261,9 @@ async function loadNodeChildren(node) {
 }
 
 /**
- * Alles neu laden: die Liste des aktuellen Ortes UND den Navigations-Baum.
- * Der Baum verwirft seine geladenen Ebenen und klappt die Rootnodes wieder
- * auf (frisch vom Server); offene Unterebenen laden beim Aufklappen neu.
+ * Reload everything: the list of the current location AND the navigation tree.
+ * The tree discards its loaded levels and expands the rootnodes again
+ * (fresh from the server); open sublevels reload when expanded.
  */
 function refresh() {
   browserEl.value?.tree?.reset?.()

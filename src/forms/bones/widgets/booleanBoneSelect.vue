@@ -8,9 +8,9 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <!-- String-Werte: wa-select gleicht seinen Wert beim Setzen mit den
-         Options-Werten ab; boolesche werden erst später zu Strings, der
-         gespeicherte Wert erschiene dann nicht -->
+    <!-- String values: wa-select matches its value against the option values
+         when it is set; booleans only become strings later, so the
+         stored value would not appear -->
     <wa-option
       v-for="val in ['true', 'false']"
       :key="val"

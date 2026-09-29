@@ -1,7 +1,7 @@
 <script>
 /**
- * Platzhalter-Action zum Testen der Anzeige mehrerer Buttons.
- * TODO: wieder entfernen sobald nicht mehr benötigt.
+ * Placeholder action for testing the display of multiple buttons.
+ * TODO: remove again once no longer needed.
  *
  * @param {{ value: object, name: string, lang: string, index: number, bone: object, boneState: object }} ctx
  */

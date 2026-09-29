@@ -198,10 +198,10 @@ describe("multi-step form flow", () => {
 
     expect(state.status).toBe("rejected")
     expect(state.errors).toHaveLength(1)
-    // fieldPath erreicht die Bones immer als Pfad-Liste — der Bone vergleicht
-    // fieldPath[0] mit seinem Namen. Server, die (wie viur-cores
-    // userpassword-Login) einen bloßen String schicken, werden beim
-    // Normalisieren aufgelöst.
+    // fieldPath always reaches the bones as a path list — the bone compares
+    // fieldPath[0] with its name. Servers that (like viur-core's
+    // userpassword login) send a bare string are resolved during
+    // normalization.
     expect(state.errors[0].fieldPath).toEqual(["password"])
   })
 
@@ -247,7 +247,7 @@ describe("multi-step form flow", () => {
     await fetchData()
     expect(state.skel["name"]).toBe("Atlas")
 
-    // Eingabe des Benutzers
+    // user input
     state.skel["name"] = "geändert"
     const requests = vi.mocked(fetch).mock.calls.length
 
@@ -255,12 +255,12 @@ describe("multi-step form flow", () => {
 
     expect(state.skel["name"]).toBe("Atlas")
     expect(state.errors).toEqual([])
-    // ohne weiteren Request
+    // without another request
     expect(vi.mocked(fetch).mock.calls.length).toBe(requests)
   })
 
   it("baut die URL eines Singletons ohne Key (edit ohne skelkey)", async () => {
-    // Ein Singleton hat genau einen Datensatz; /<modul>/edit nimmt keinen Key.
+    // A singleton has exactly one entry; /<module>/edit takes no key.
     vi.stubGlobal(
       "fetch",
       vi
@@ -331,14 +331,14 @@ describe("list envelope in the form", () => {
   })
 })
 
-describe("Legacy-Verhalten der Formularlogik", () => {
+describe("Verhalten der Formularlogik", () => {
   const recordStructure = {
     title: { type: "str", languages: ["de", "en"], visible: true, params: {} },
     tags: { type: "str", multiple: true, visible: true, params: {} },
   }
 
   it("Unterformular mit reaktivem Wert (Record/using) baut sich auf", () => {
-    // so reicht BoneNestedWrapper den Wert des Eltern-Bones durch
+    // this is how BoneNestedWrapper passes the parent bone's value through
     const parentValue = reactive({ title: { de: "Hallo", en: "Hello" }, tags: ["a", "b"] })
     const state = makeState()
     const { reload, resetForm } = useFormUtils(
@@ -350,7 +350,7 @@ describe("Legacy-Verhalten der Formularlogik", () => {
 
     expect(Object.keys(state.categories).length).toBeGreaterThan(0)
     expect(state.loading).toBe(false)
-    // der Ausgangsstand ist eine echte Kopie — keine Proxies, kein geteilter Wert
+    // the initial state is a real copy — no proxies, no shared value
     expect(isProxy(state.pristine.title)).toBe(false)
     expect(state.pristine.tags).not.toBe(parentValue.tags)
 
@@ -372,7 +372,7 @@ describe("Legacy-Verhalten der Formularlogik", () => {
       )
     )
     const state = makeState()
-    state.values = { name: "vorbelegt" } // der values-Prop
+    state.values = { name: "vorbelegt" } // the values prop
     state.structure = { name: { type: "str", visible: true, params: {} } }
     state.skel = { name: "vom-benutzer" }
 
@@ -418,7 +418,7 @@ describe("Legacy-Verhalten der Formularlogik", () => {
     const { sendData } = useFormUtils(makeProps({ module: "appconf", action: "edit" }), state)
     await sendData()
 
-    // der Server schickt visible: true — die Logik blendet den Bone aus
+    // the server sends visible: true — the logic hides the bone
     expect(state.structure.detail.visible).toBe(false)
   })
 })

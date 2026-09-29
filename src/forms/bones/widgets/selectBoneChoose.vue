@@ -16,8 +16,8 @@
     </wa-checkbox>
   </div>
 
-  <!-- readonly an der Gruppe (siehe booleanBoneChoose): disabled Radios
-       zeigten keine Auswahl -->
+  <!-- readonly on the group (see booleanBoneChoose): disabled radios
+       would show no selection -->
   <wa-radio-group
     v-else
     :value="state.value"

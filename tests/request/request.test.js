@@ -206,8 +206,8 @@ describe("useListFetch", () => {
   })
 
   it("liest die Struktur aus der HEUTIGEN Antwort von /structure", async () => {
-    // /<modul>/structure rendert wie jede andere Aktion:
-    // { action: "structure.view", values, structure } — nicht { viewSkel }.
+    // /<modul>/structure renders like any other action:
+    // { action: "structure.view", values, structure } — not { viewSkel }.
     const bones = { name: { type: "str" }, age: { type: "numeric" } }
     vi.stubGlobal(
       "fetch",
@@ -253,7 +253,7 @@ describe("useListFetch", () => {
   })
 
   it("nimmt die Struktur aus der Liste, wenn sie mitkommt", async () => {
-    // Mit dem Flag `json.bone.structure.inlists` liefert die Liste sie direkt.
+    // With the flag `json.bone.structure.inlists` the list delivers it directly.
     const bones = { title: { type: "str" } }
     vi.stubGlobal(
       "fetch",
@@ -1048,7 +1048,7 @@ describe("useTreeFetch — parententry bleibt über filter()/next() erhalten", (
     )
     const tree = useTreeFetch("files", { params: { limit: 10 }, immediate: false })
     await tree.open("root-1")
-    // Seitengrößen-Wechsel: neues limit, Ort MUSS mitkommen (ViurBrowser currentParams)
+    // Page size change: new limit, location MUST be included (ViurBrowser currentParams)
     await tree.filter({ limit: 50, parententry: "root-1" })
     await tree.next()
     await tree.next()
@@ -1069,7 +1069,7 @@ describe("useTreeFetch — nextAll lädt beide Listen vollständig", () => {
       if (url.includes("/structure")) return jsonResponse({ viewNodeSkel: {}, viewLeafSkel: {} })
       if (url.includes("skelType=node")) {
         nodeCalls++
-        // letzte "Seite": leer, aber mit DERSELBEN Cursor-Marke (ViUR-Ende)
+        // last "page": empty, but with the SAME cursor marker (ViUR end)
         if (nodeCalls > nodePages) return jsonResponse({ skellist: [], cursor: `n${nodePages}`, orders: [] })
         return jsonResponse({ skellist: [{ key: `n-${nodeCalls}` }], cursor: `n${nodeCalls}`, orders: [] })
       }
@@ -1092,8 +1092,8 @@ describe("useTreeFetch — nextAll lädt beide Listen vollständig", () => {
   it("next() bleibt nicht am Nodes-Ende hängen, sondern lädt danach Leaves", async () => {
     vi.stubGlobal("fetch", staleCursorServer(1, 2))
     const tree = useTreeFetch("files", { parententry: "root-1", immediate: false })
-    await tree.execute() // Seite 1 beider Listen
-    await tree.next() // Nodes: leere Seite mit altem Cursor → erschöpft → Leaves Seite 2
+    await tree.execute() // page 1 of both lists
+    await tree.next() // nodes: empty page with old cursor → exhausted → leaves page 2
     expect(tree.data.value.map((e) => e.key)).toEqual(["n-1", "l-1", "l-2"])
     await tree.next()
     expect(tree.hasMore.value).toBe(false)
@@ -1106,7 +1106,7 @@ describe("useListFetch — next(pages) / nextAll", () => {
     return vi.fn().mockImplementation(async (url) => {
       if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
       calls++
-      // Ende: leere Seite mit derselben Cursor-Marke (ViUR-Verhalten)
+      // end: empty page with the same cursor marker (ViUR behavior)
       if (calls > pages) return jsonResponse({ skellist: [], cursor: `c${pages}`, orders: [] })
       return jsonResponse({ skellist: [{ key: `e${calls}` }], cursor: `c${calls}`, orders: [] })
     })
@@ -1126,7 +1126,7 @@ describe("useListFetch — next(pages) / nextAll", () => {
     const list = useListFetch("items", { immediate: false })
     expect(list.complete.value).toBe(false)
     await list.execute()
-    expect(list.complete.value).toBe(false) // Cursor offen
+    expect(list.complete.value).toBe(false) // cursor open
     await list.nextAll()
     expect(list.data.value.map((e) => e.key)).toEqual(["e1", "e2", "e3", "e4"])
     expect(list.cursor.value).toBe("")

@@ -1,6 +1,6 @@
-// Reine Spalten-/Zell-Logik: Auflösen der Definitionen, Vergleich, Filter,
-// Facetten, Aggregation. Absichtlich frei von Vue — so ist der ganze
-// Datenpfad ohne DOM testbar.
+// Pure column/cell logic: resolving definitions, comparison, filters,
+// facets, aggregation. Deliberately free of Vue — so the whole
+// data path is testable without a DOM.
 
 import type {
   AggregationKind,
@@ -15,7 +15,7 @@ import type {
   SortMode,
 } from "./types"
 
-/** Wert über einen Punktpfad lesen ("user.name"). */
+/** Read a value via a dot path ("user.name"). */
 export function getPath(row: Row, path: string): unknown {
   if (!path.includes(".")) return row[path]
   let current: unknown = row
@@ -75,7 +75,7 @@ export function findColumn<R extends Row>(columns: ResolvedColumn<R>[], id: stri
   return columns.find((column) => column.id === id)
 }
 
-// ── Sortierung ────────────────────────────────────────────────────────
+// ── Sorting ───────────────────────────────────────────────────────────
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" })
 const collatorCase = new Intl.Collator(undefined, { numeric: true })
@@ -92,11 +92,11 @@ export function isEmptyValue(value: unknown): boolean {
 }
 
 /**
- * Zusammengesetzte Zellwerte aufs Sortier-Atom reduzieren: bei Arrays zählt
- * der ERSTE Eintrag, bei einfachen Objekten der ERSTE Wert — rekursiv, bis ein
- * Primitivwert (oder Date) übrig ist. Damit sortieren `multiple`-Bones,
- * mehrsprachige Werte ({ de: "…" }) und relationale Bones ({ dest: { … } })
- * nach ihrem jeweils ersten Wert statt nach "[object Object]".
+ * Reduce composite cell values to the sort atom: for arrays the FIRST entry
+ * counts, for plain objects the FIRST value — recursively, until a primitive
+ * (or Date) remains. This way `multiple` bones, multilingual values
+ * ({ de: "…" }) and relational bones ({ dest: { … } }) sort by their
+ * respective first value instead of by "[object Object]".
  */
 export function firstValueOf(value: unknown, depth = 0): unknown {
   if (depth > 10 || value === null || value === undefined) return value
@@ -108,7 +108,7 @@ export function firstValueOf(value: unknown, depth = 0): unknown {
   return value
 }
 
-/** Vergleich zweier Zellwerte in einem der eingebauten Modi (aufsteigend). */
+/** Compare two cell values in one of the built-in modes (ascending). */
 export function compareValues(a: unknown, b: unknown, mode: SortMode = "auto"): number {
   switch (mode) {
     case "basic":
@@ -135,7 +135,7 @@ export function compareValues(a: unknown, b: unknown, mode: SortMode = "auto"): 
       return collatorCase.compare(defaultText(a), defaultText(b))
     case "auto":
     default: {
-      // Arrays/Objekte: nach dem ersten Wert sortieren (siehe firstValueOf).
+      // Arrays/objects: sort by the first value (see firstValueOf).
       if (a !== null && typeof a === "object" && !(a instanceof Date)) a = firstValueOf(a)
       if (b !== null && typeof b === "object" && !(b instanceof Date)) b = firstValueOf(b)
       if (typeof a === "number" && typeof b === "number") return a - b
@@ -147,8 +147,8 @@ export function compareValues(a: unknown, b: unknown, mode: SortMode = "auto"): 
 }
 
 /**
- * Sortiert eine Zeilenliste stabil nach mehreren Spalten. Leere Werte landen
- * gemäß `sortUndefined` der Spalte vorn oder hinten (Default: normal vergleicht).
+ * Stably sorts a row list by multiple columns. Empty values end up at the
+ * front or back according to the column's `sortUndefined` (default: compared normally).
  */
 export function sortRows<R extends Row>(rows: R[], sort: SortEntry[], columns: ResolvedColumn<R>[]): R[] {
   if (!sort.length) return rows
@@ -157,7 +157,7 @@ export function sortRows<R extends Row>(rows: R[], sort: SortEntry[], columns: R
     .filter((item): item is { entry: SortEntry; column: ResolvedColumn<R> } => Boolean(item.column))
   if (!entries.length) return rows
 
-  // Index mitführen → stabile Sortierung unabhängig von der Engine.
+  // Carry the index along → stable sorting regardless of the engine.
   return rows
     .map((row, index) => ({ row, index }))
     .sort((left, right) => {
@@ -181,9 +181,9 @@ export function sortRows<R extends Row>(rows: R[], sort: SortEntry[], columns: R
 }
 
 /**
- * Nächster Sortierzustand beim Klick auf einen Spaltenkopf.
- * asc → desc → aus (bzw. endlos wechselnd bei `withoutSortRemoval`),
- * mit Shift mehrspaltig (begrenzt durch `maxMultiSort`, 0 = unbegrenzt).
+ * Next sort state when clicking a column header.
+ * asc → desc → off (or cycling endlessly with `withoutSortRemoval`),
+ * multi-column with Shift (limited by `maxMultiSort`, 0 = unlimited).
  */
 export function nextSortState(
   current: SortEntry[],
@@ -211,7 +211,7 @@ export function nextSortState(
   return max > 0 ? combined.slice(-max) : combined
 }
 
-// ── Filter & Suche ────────────────────────────────────────────────────
+// ── Filter & search ───────────────────────────────────────────────────
 
 function dayStart(value: unknown): number {
   const time = toTime(value)
@@ -220,7 +220,7 @@ function dayStart(value: unknown): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
 }
 
-/** Ist ein Filterwert „leer" (dann filtert die Spalte nicht)? */
+/** Is a filter value "empty" (then the column doesn't filter)? */
 export function isEmptyFilter(value: unknown): boolean {
   if (value === null || value === undefined || value === "") return true
   if (Array.isArray(value)) return value.every((item) => isEmptyFilter(item))
@@ -286,11 +286,11 @@ export function rowMatchesFilters<R extends Row>(
   return true
 }
 
-// Suchtext-Cache je (Spalte, Zeile): `column.text` läuft durch den Formatter
-// (bei ViUR-Spalten Sprachauflösung, multiple-Joins, Format-Strings) — ohne
-// Cache friert die Suche über einen großen, voll geladenen Datensatz den
-// Browser ein (Zeilen × Spalten × Tastendruck). WeakMaps: der Cache lebt so
-// lange wie Spalte bzw. Zeile und räumt sich selbst ab.
+// Search text cache per (column, row): `column.text` runs through the formatter
+// (for ViUR columns: language resolution, multiple joins, format strings) — without
+// a cache, searching a large, fully loaded dataset freezes the
+// browser (rows × columns × keystroke). WeakMaps: the cache lives as
+// long as the column or row and cleans up after itself.
 const searchTextCache = new WeakMap<object, WeakMap<object, string>>()
 
 function searchTextOf<R extends Row>(column: ResolvedColumn<R>, row: R): string {
@@ -323,9 +323,9 @@ export function rowMatchesSearch<R extends Row>(
 }
 
 /**
- * Facetten einer Spalte: verschiedene Werte mit Trefferzahl und numerischer
- * Spanne — berechnet über die Zeilen, die alle ANDEREN Filter (und die Suche)
- * passieren. Genau das braucht ein set-Filter, damit er sich nicht selbst leert.
+ * Facets of a column: distinct values with hit count and numeric
+ * range — computed over the rows that pass all OTHER filters (and the search).
+ * That's exactly what a set filter needs so it doesn't empty itself.
  */
 export function computeFacets<R extends Row>(rows: R[], column: ResolvedColumn<R>): ColumnFacets {
   const counts = new Map<string, number>()
@@ -354,7 +354,7 @@ export function computeFacets<R extends Row>(rows: R[], column: ResolvedColumn<R
   return { values, min, max }
 }
 
-// ── Aggregation (Gruppenzeilen) ───────────────────────────────────────
+// ── Aggregation (group rows) ──────────────────────────────────────────
 
 function numbers(values: unknown[]): number[] {
   return values.map((value) => Number(value)).filter((value) => !Number.isNaN(value))

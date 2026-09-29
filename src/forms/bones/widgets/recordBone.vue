@@ -14,12 +14,12 @@
 import { reactive, onMounted, inject, computed, getCurrentInstance } from "vue"
 import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
- * Record-Widget für Bones vom Typ `record`.
+ * Record widget for bones of type `record`.
  *
- * Delegiert die gesamte Darstellung an `Wrapper_nested`, der die Sub-Bones
- * aus `bone.using` rendert. Der Record-Wert ist ein Objekt dessen Schlüssel
- * den Sub-Bone-Namen entsprechen. Bei `multiple: true` ist der Wert ein Array
- * dieser Objekte.
+ * Delegates all rendering to `Wrapper_nested`, which renders the sub-bones
+ * from `bone.using`. The record value is an object whose keys match the
+ * sub-bone names. With `multiple: true`, the value is an array
+ * of these objects.
  *
  * @displayName RecordBone
  */
@@ -29,26 +29,26 @@ defineOptions({
 
 const emit = defineEmits([
   /**
-   * Wird weitergeleitet wenn `Wrapper_nested` einen Wert ändert oder beim Mount (Initialisierung).
-   * @arg {string} name - Bone-Name
-   * @arg {object} value - Aktueller Record-Wert (Objekt mit Sub-Bone-Werten)
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Forwarded when `Wrapper_nested` changes a value, or on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {object} value - Current record value (object with sub-bone values)
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Record-Wert; Objekt mit Sub-Bone-Werten oder Array davon bei `multiple`. */
+  /** Current record value; object with sub-bone values, or an array of them with `multiple`. */
   value: null,
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur; `using` enthält die Sub-Bone-Definitionen. */
+  /** Bone structure; `using` contains the sub-bone definitions. */
   bone: Object,
-  /** Aktuell nicht genutzt. */
+  /** Currently not used. */
   autofocus: Boolean,
 })
 

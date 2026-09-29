@@ -84,3 +84,7 @@ export function clearCache() {}
 export function skelDataToFormData() {
   return new FormData()
 }
+export { normalizeStructure } from "../../src/request/skel.js"
+
+// envelope.js re-exports (pure, no network)
+export { normalizeEnvelope, isEnvelopeV2, v1SelectionFollow } from "../../src/request/envelope.js"

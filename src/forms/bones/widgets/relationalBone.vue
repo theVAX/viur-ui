@@ -36,49 +36,49 @@ import { reactive, onMounted, inject, computed, watch } from "vue"
 import { useListFetch } from "../../../request/index.js"
 import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
- * Relational-Auswahl-Widget für Bones vom Typ `relational` und `relational.select`.
+ * Relational selection widget for bones of type `relational` and `relational.select`.
  *
- * Beim Typ `relational` wird eine `<wa-combobox>` angezeigt, die via `getList`
- * Einträge aus dem konfigurierten `module` lädt und filtert. Ist ein Wert gesetzt,
- * wird stattdessen ein gesperrtes `<wa-input>` mit dem formatierten Eintrag angezeigt.
- * Beim Typ `relational.select` wird ein Dropdown-Widget gerendert.
- * Falls die Struktur ein `using`-Objekt enthält, wird zusätzlich ein `Wrapper_nested`
- * für die relationalen Zusatz-Felder (`rel`) eingeblendet.
+ * For type `relational`, a `<wa-combobox>` is shown that loads and filters
+ * entries from the configured `module` via `getList`. If a value is set,
+ * a locked `<wa-input>` with the formatted entry is shown instead.
+ * For type `relational.select`, a dropdown widget is rendered.
+ * If the structure contains a `using` object, a `Wrapper_nested`
+ * is additionally shown for the relational extra fields (`rel`).
  *
  * @displayName RelationalBone
  *
- * @cssClass bone-widget-record - Äußerer Container des Widgets
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-relational - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-relational-default - Standard-Variante
- * @cssClass bone-widget-relational-{name} - Dynamisch gesetzt auf den Bone-Namen
- * @cssClass bone-widget-single-entry - Zeile mit Combobox/Input
+ * @cssClass bone-widget-record - Outer container of the widget
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-relational - Identifies the bone type
+ * @cssClass bone-widget-relational-default - Default variant
+ * @cssClass bone-widget-relational-{name} - Dynamically set to the bone name
+ * @cssClass bone-widget-single-entry - Row with combobox/input
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert; Objekt mit `dest`- und `rel`-Schlüsseln oder `null`. */
+  /** Current bone value; object with `dest` and `rel` keys, or `null`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur; `using` steuert ob ein Nested-Wrapper angezeigt wird. */
+  /** Bone structure; `using` controls whether a nested wrapper is shown. */
   bone: Object,
-  /** Aktuell nicht genutzt. */
+  /** Currently not used. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei Auswahl eines Eintrags, beim Löschen und beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {{ dest: object, rel: object|null }|string} value - Ausgewähltes Relational-Objekt oder `""` beim Löschen
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired when an entry is selected, when cleared, and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {{ dest: object, rel: object|null }|string} value - Selected relational object, or `""` when cleared
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])
@@ -148,8 +148,8 @@ function changeEventNested(data) {
   }
 }
 
-// Halte state.selection synchron mit props.value — wichtig, wenn der Wert
-// von außen geleert wird (z.B. via Delete-Action).
+// Keep state.selection in sync with props.value — important when the value
+// is cleared from outside (e.g. via the delete action).
 watch(
   () => props.value,
   (newVal) => {

@@ -93,10 +93,10 @@ export default class Utils {
       let finalstr = formatstr
       for (let pathstr of pathlist) {
         let aval = readValue(pathstr, avalue)
-        // Auch Zahlen und Wahrheitswerte gehören in den Text: vorher wurde
-        // JEDER Nicht-String durch den Fallback ersetzt, `$(dest.kdnr)` mit 42
-        // verschwand also. Leeres, Objekte und der Platzhalter "-" bleiben der
-        // Fallback.
+        // Numbers and booleans belong in the text too: previously
+        // EVERY non-string was replaced by the fallback, so `$(dest.kdnr)` with 42
+        // disappeared. Empty values, objects and the placeholder "-" remain the
+        // fallback.
         if (aval === null || aval === undefined || aval === "-" || typeof aval === "object") {
           aval = fallback
         } else {
@@ -110,20 +110,20 @@ export default class Utils {
     return finalStrList.join(", ")
   }
 
-  // ── ViUR-Werte als Text ───────────────────────────────────────────────
+  // ── ViUR values as text ───────────────────────────────────────────────
   //
-  // EINE Stelle, die jeden Bone-Wert in eine Zeichenkette übersetzt — für
-  // Tabellen, Detailansichten, Export. Denn ein Bone-Wert ist selten ein
-  // Skalar: mehrsprachige Bones sind ein Objekt je Sprache, `multiple` eine
-  // Liste, relationale Bones tragen `{dest, rel}` und ihren eigenen
-  // Formatstring, `text` enthält HTML.
+  // ONE place that turns every bone value into a string — for
+  // tables, detail views, export. Because a bone value is rarely a
+  // scalar: multilingual bones are one object per language, `multiple` a
+  // list, relational bones carry `{dest, rel}` and their own
+  // format string, `text` contains HTML.
 
-  /** Typfamilie eines Bones: "str.email" → "str". */
+  /** Type family of a bone: "str.email" → "str". */
   static boneFamily(type) {
     return String(type ?? "").split(".")[0]
   }
 
-  /** select-Wert → Beschriftung. Akzeptiert Objekt- UND Paar-Schreibweise. */
+  /** select value → label. Accepts object AND pair notation. */
   static optionLabel(bone, value) {
     const values = bone?.["values"]
     if (Array.isArray(values)) {
@@ -137,7 +137,7 @@ export default class Utils {
     return String(value)
   }
 
-  /** Ein EINZELNER Wert (ohne Sprachen/multiple — das macht boneToString). */
+  /** A SINGLE value (without languages/multiple — boneToString handles that). */
   static singleValueToString(value, bone = {}, options = {}) {
     if (value === null || value === undefined || value === "") return ""
     switch (Utils.boneFamily(bone["type"])) {
@@ -159,7 +159,7 @@ export default class Utils {
       case "date": {
         const parsed = new Date(String(value))
         if (Number.isNaN(parsed.getTime())) return String(value)
-        // ViUR setzt die Flags `date`/`time` (beide standardmäßig an).
+        // ViUR sets the flags `date`/`time` (both on by default).
         const wantsDate = bone["date"] !== false
         const wantsTime = bone["time"] !== false
         const format = {}
@@ -169,15 +169,15 @@ export default class Utils {
       }
       case "relational":
       case "record": {
-        // Relationale Bones bringen ihren Formatstring mit ("$(dest.name)").
+        // Relational bones bring their own format string ("$(dest.name)").
         const formatstr = bone["format"] ?? bone["params"]?.["format"] ?? "$(dest.name)"
         const text = Utils.formatString(formatstr, value, "")
         if (text && text !== "-") return Utils.stripHtml(String(text))
-        // Ohne Format ist der Schlüssel besser als nichts.
+        // Without a format, the key is better than nothing.
         return String(value?.["dest"]?.["key"] ?? value?.["key"] ?? "")
       }
       case "text":
-        // Textbones enthalten HTML — in einer Zelle stört das.
+        // Text bones contain HTML — that's disruptive in a cell.
         return Utils.stripHtml(String(value))
       case "raw":
         return typeof value === "object" ? JSON.stringify(value) : String(value)
@@ -186,7 +186,7 @@ export default class Utils {
     }
   }
 
-  /** Ein Wert OHNE Sprachdimension (multiple-Listen inklusive) als Text. */
+  /** A value WITHOUT language dimension (multiple lists included) as text. */
   static monolingualToString(value, bone = {}, options = {}) {
     if (bone["multiple"]) {
       const list = Array.isArray(value) ? value : value === null || value === undefined ? [] : [value]
@@ -196,10 +196,10 @@ export default class Utils {
   }
 
   /**
-   * Flagge einer Sprache — pflegefrei über die CLDR-Daten des Browsers:
-   * Sprachcode → wahrscheinlichste Region (`Intl.Locale.maximize`, de→DE,
-   * en→US, ja→JP) → Regional-Indicator-Emoji. `null`, wenn keine Region
-   * bestimmbar ist.
+   * Flag of a language — maintenance-free via the browser's CLDR data:
+   * language code → most likely region (`Intl.Locale.maximize`, de→DE,
+   * en→US, ja→JP) → regional indicator emoji. `null` if no region
+   * can be determined.
    */
   static languageFlag(code) {
     try {
@@ -211,28 +211,28 @@ export default class Utils {
     }
   }
 
-  /** Präfix, das einen Wert seiner Sprache zuordnet: Flagge, sonst Kürzel. */
+  /** Prefix that assigns a value to its language: flag, otherwise code. */
   static languageTag(code) {
     return Utils.languageFlag(code) ?? `${code}:`
   }
 
   /**
-   * Bone-Wert eines Datensatzes als Text.
+   * Bone value of an entry as text.
    *
-   * Mehrsprachige Bones (`bone.languages`) steuert `options.language`:
-   * - `"*"` — ALLE befüllten Sprachen, je mit Flaggen-Präfix (`🇩🇪 Wert`),
-   *   verkettet mit `languageSeparator` (Standard `", "`).
-   *   `options.primaryLanguage` steht dabei vorn, die übrigen folgen in der
-   *   Reihenfolge des Bones.
-   * - Sprachcode — der Wert dieser Sprache. Ist er leer, springt die Anzeige
-   *   auf die erste befüllte Sprache und kennzeichnet das mit deren Flagge —
-   *   eine leere Zelle verschweigt sonst, dass der Eintrag in anderer Sprache
-   *   sehr wohl Inhalt hat.
-   * - nicht gesetzt — die erste Sprache des Bones, ohne Präfix (stabiles
-   *   Verhalten für Formatstrings und andere Bestandsnutzer).
+   * Multilingual bones (`bone.languages`) are controlled by `options.language`:
+   * - `"*"` — ALL filled languages, each with a flag prefix (`🇩🇪 value`),
+   *   joined with `languageSeparator` (default `", "`).
+   *   `options.primaryLanguage` comes first, the others follow in the
+   *   bone's order.
+   * - language code — the value of that language. If it's empty, the display falls back
+   *   to the first filled language and marks that with its flag —
+   *   an empty cell would otherwise hide that the entry does have content
+   *   in another language.
+   * - not set — the bone's first language, without prefix (stable
+   *   behavior for format strings and other existing users).
    *
-   * @param {*} value Wert aus dem Skel
-   * @param {object} bone Bone-Beschreibung aus der `structure`
+   * @param {*} value value from the skel
+   * @param {object} bone bone description from the `structure`
    * @param {{ language?: string, primaryLanguage?: string, locale?: string, boolTexts?: [string, string], separator?: string, languageSeparator?: string }} [options]
    */
   static boneToString(value, bone = {}, options = {}) {
@@ -254,7 +254,7 @@ export default class Utils {
         lang = languages.find((other) => !isEmpty(value[other])) ?? lang
       }
       const text = Utils.monolingualToString(value[lang], bone, options)
-      // Präfix nur, wenn eine BESTIMMTE Sprache gewünscht war und eine andere kam.
+      // Prefix only if a SPECIFIC language was requested and a different one came.
       return options.language && options.language !== lang && !isEmpty(value[lang])
         ? `${Utils.languageTag(lang)} ${text}`
         : text

@@ -53,18 +53,18 @@ import { useI18n } from "vue-i18n"
 import { ref, computed, watch, inject, onMounted, onBeforeUnmount } from "vue"
 import { DRAG_SESSION } from "./dragSession"
 
-// Schlanker NAVIGATIONS-Baum: nur Knoten (Name, Icon, Pfeil), Kinder werden
-// über `loadChildren` nachgeladen. Bewusst keine DataTable — Navigation ist
-// kein Datengrid. Als Drop-Ziel registriert er sich an der Drag-Session des
-// Browsers (immer "inside": in den getroffenen Ordner).
+// Lean NAVIGATION tree: only nodes (name, icon, arrow), children are loaded
+// via `loadChildren`. Deliberately no DataTable — navigation is not a data
+// grid. As a drop target it registers with the browser's drag session
+// (always "inside": into the folder that was hit).
 
 const props = defineProps({
-  /** Wurzeln (z. B. die Rootnodes) — { key, name, icon?, hasChildren? } */
+  /** Roots (e.g. the rootnodes) — { key, name, icon?, hasChildren? } */
   roots: { type: Array, default: () => [] },
-  /** Kinder eines Knotens holen: (node) => Promise<BrowserNode[]> */
+  /** Fetch the children of a node: (node) => Promise<BrowserNode[]> */
   loadChildren: { type: Function, default: null },
   label: { type: [String, null], default: null },
-  /** Container-Id in der Drag-Session */
+  /** Container id in the drag session */
   containerId: { type: String, default: "tree" },
 })
 const location = defineModel({ type: [String, Number, null], default: null })
@@ -76,8 +76,8 @@ const rootEl = ref(null)
 const expanded = ref(new Set())
 const loading = ref(new Set())
 const children = ref(new Map()) // String(key) → BrowserNode[]
-// Lokal eingefügte Knoten für noch nicht geladene Ebenen: werden beim ersten
-// Laden der Ebene hineingemerged (der Server kann kurz hinterherhinken).
+// Locally inserted nodes for levels not loaded yet: merged in when the level
+// is first loaded (the server may lag behind briefly).
 const pendingInserts = ref(new Map()) // String(key) → BrowserNode[]
 const bucketOf = (key) => children.value.get(String(key))
 const activeKey = ref(null)
@@ -105,7 +105,7 @@ watch(
   { immediate: true }
 )
 
-/** Die Wurzeln (Rootnodes) sind immer ausgeklappt — ohne ersten Klick. */
+/** The roots (rootnodes) are always expanded — without a first click. */
 async function expandRoots() {
   for (const root of props.roots ?? []) {
     if (expanded.value.has(root.key) || root.hasChildren === false) continue
@@ -128,9 +128,9 @@ async function fetchChildren(node, force = false) {
   loading.value = new Set(loading.value).add(node.key)
   try {
     const result = (await props.loadChildren(node)) ?? []
-    // Lokal (per Drag & Drop) hierher verschobene Knoten hineinmergen — der
-    // Server kann den Zug noch nicht kennen. Was er schon liefert, ist damit
-    // angekommen und braucht keinen Merker mehr.
+    // Merge in nodes moved here locally (via drag & drop) — the server may
+    // not know about the move yet. Whatever it already returns has thus
+    // arrived and no longer needs a marker.
     const bucketKey = String(node.key)
     const pending = pendingInserts.value.get(bucketKey) ?? []
     const merged = [...result]
@@ -168,7 +168,7 @@ async function toggle(node) {
   try {
     await fetchChildren(node)
   } catch {
-    return // Ebene nicht ladbar → zubleiben
+    return // level can't be loaded → stay collapsed
   }
   if ((bucketOf(node.key) ?? []).length) {
     next.add(node.key)
@@ -180,15 +180,15 @@ function open(node) {
   activeKey.value = node.key
   location.value = node.key
   emit("navigate", node)
-  void toggle(node) // aufklappen gehört zum Navigieren dazu; zuklappen macht nur der Pfeil
+  void toggle(node) // expanding is part of navigating; only the arrow collapses
 }
 
 /**
- * Knoten LOKAL aus seiner bisherigen Ebene nehmen und — wenn die Ziel-Ebene
- * schon geladen ist — dort einhängen. Kein Request: eine noch nicht geladene
- * Ziel-Ebene holt ihn beim ersten Aufklappen ohnehin frisch vom Server.
- * `node` darf ein voller BrowserNode sein (für Knoten, die der Baum selbst
- * noch nicht kennt, z. B. Ordnerzeilen aus der Liste) oder nur ein Schlüssel.
+ * Take a node LOCALLY out of its previous level and — if the target level is
+ * already loaded — attach it there. No request: a target level that isn't
+ * loaded yet fetches it fresh from the server on first expand anyway.
+ * `node` may be a full BrowserNode (for nodes the tree itself doesn't know
+ * yet, e.g. folder rows from the list) or just a key.
  */
 function moveNode(node, targetKey) {
   const key = typeof node === "object" && node !== null ? node.key : node
@@ -201,15 +201,15 @@ function moveNode(node, targetKey) {
     next.set(bucketKey, [...(next.get(bucketKey) ?? []), entry])
     children.value = next
   } else {
-    // Ziel-Ebene noch nie geladen: vormerken — beim ersten Laden wird der
-    // Knoten hineingemerged (siehe fetchChildren). Kein Request nötig.
+    // Target level never loaded: queue it — on first load the node is
+    // merged in (see fetchChildren). No request needed.
     const next = new Map(pendingInserts.value)
     next.set(bucketKey, [...(next.get(bucketKey) ?? []), entry])
     pendingInserts.value = next
   }
 }
 
-/** Knoten lokal aus allen geladenen Ebenen entfernen; liefert ihn zurück. */
+/** Remove a node locally from all loaded levels; returns it. */
 function removeNode(key) {
   let removed = null
   const next = new Map(children.value)
@@ -233,7 +233,7 @@ function removeNode(key) {
   return removed
 }
 
-/** Ebene eines Knotens verwerfen und neu holen (z. B. nach einem Move). */
+/** Discard a node's level and re-fetch it (e.g. after a move). */
 function reloadChildren(key) {
   const entry = visibleEntries.value.find((candidate) => String(candidate.node.key) === String(key))
   if (!entry) return Promise.resolve()
@@ -247,7 +247,7 @@ function reset() {
   void expandRoots()
 }
 
-// ── Tastatur (WAI-ARIA tree) ──────────────────────────────────────────────────
+// ── Keyboard (WAI-ARIA tree) ──────────────────────────────────────────────────
 function onKeydown(event) {
   const entries = visibleEntries.value
   const index = entries.findIndex((entry) => entry.node.key === activeKey.value)
@@ -292,12 +292,12 @@ function onKeydown(event) {
   event.preventDefault()
 }
 
-// ── Drag-Quelle: Knoten in die Liste (oder andere Knoten) ziehen ─────────────
-// Erst ab einer kleinen Bewegungsschwelle wird aus dem Klick ein Zug — Klicks
-// zum Navigieren bleiben Klicks.
+// ── Drag source: drag nodes into the list (or onto other nodes) ───────────────
+// Only past a small movement threshold does a click become a drag — clicks
+// for navigating stay clicks.
 function onPointerDown(node, event) {
   if (!session || event.button !== 0) return
-  // Wurzeln (Rootnodes) sind nicht verschiebbar.
+  // Roots (rootnodes) can't be moved.
   if (props.roots.some((root) => String(root.key) === String(node.key))) return
   const startX = event.clientX
   const startY = event.clientY
@@ -322,7 +322,7 @@ function onPointerDown(node, event) {
   window.addEventListener("pointerup", up)
 }
 
-// ── Drop-Ziel der Drag-Session ────────────────────────────────────────────────
+// ── Drop target of the drag session ───────────────────────────────────────────
 let unregister = null
 let hoverTimer = null
 let hoverKey = null
@@ -336,7 +336,7 @@ onMounted(() => {
       const row = hit.closest?.("[data-tree-key]")
       if (!row) return null
       const key = row.dataset.treeKey
-      // Über einem zugeklappten Ordner verweilen klappt ihn auf.
+      // Hovering over a collapsed folder expands it.
       if (hoverKey !== key) {
         hoverKey = key
         clearTimeout(hoverTimer)

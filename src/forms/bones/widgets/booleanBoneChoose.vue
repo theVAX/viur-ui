@@ -1,6 +1,6 @@
 <template>
-  <!-- readonly an der Gruppe: wa-radio-group markiert nur Radios, die selbst
-       nicht disabled sind — sonst wäre bei readonly keine Auswahl sichtbar -->
+  <!-- readonly on the group: wa-radio-group only marks radios that are not
+       disabled themselves — otherwise no selection would be visible when readonly -->
   <wa-radio-group
     :value="state.value"
     :disabled="boneState.readonly"

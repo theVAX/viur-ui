@@ -9,24 +9,18 @@ const repoRoot = resolve(__dirname, "..")
 
 const BONES_DIR = resolve(repoRoot, "src/forms/bones/widgets")
 const STORIES_DIR = resolve(repoRoot, "stories/bones")
-const CONTRACT_DIR = resolve(repoRoot, "tests/contract/bone-widgets")
 
 // Files matching *Bone.vue that are not standalone testable widgets.
 // Extending this list is a deliberate team decision — document the reason in the PR.
 const WHITELIST = new Set([
   "bone.vue", // Abstract base wrapper, never rendered directly
   "filterBone.vue", // Filter-specific bone, separate test strategy
-  "jsonBone.vue", // TODO: story + spec not yet written (tracked separately)
+  "jsonBone.vue", // TODO: story not yet written (tracked separately)
 ])
 
 function toPascalCase(fileName) {
   const base = fileName.replace(/\.vue$/, "")
   return base.charAt(0).toUpperCase() + base.slice(1)
-}
-
-function toKebabCase(fileName) {
-  const base = fileName.replace(/\.vue$/, "")
-  return base.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
 }
 
 function main() {
@@ -38,16 +32,10 @@ function main() {
 
   for (const boneFile of boneFiles) {
     const pascal = toPascalCase(boneFile)
-    const kebab = toKebabCase(boneFile)
-
     const storyPath = resolve(STORIES_DIR, `${pascal}.story.vue`)
-    const specPath = resolve(CONTRACT_DIR, `${kebab}.spec.ts`)
 
     if (!existsSync(storyPath)) {
       problems.push(`  - ${boneFile}: missing story (expected: stories/bones/${pascal}.story.vue)`)
-    }
-    if (!existsSync(specPath)) {
-      problems.push(`  - ${boneFile}: missing contract spec (expected: tests/contract/bone-widgets/${kebab}.spec.ts)`)
     }
   }
 

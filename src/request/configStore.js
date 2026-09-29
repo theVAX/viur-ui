@@ -32,7 +32,7 @@ import { reactive, computed, markRaw } from "vue"
 //     its dotted vi path ("user", "shop.order"). adminInfo carries `name`,
 //     `handler`, `icon`, `display`, `sortIndex`, `moduleGroup`, `views`, … (see
 //     viur-core `Module.adminInfo`).
-//   • `groups`: `configuration["admin.module.groups"]` (so rendert viur-core
+//   • `groups`: `configuration["admin.module.groups"]` (this is how viur-core renders
 //     `conf.admin.module_groups`) —
 //     `{ [groupKey]: { name, icon, sortIndex, moduleGroup? } }`. A group may
 //     itself name a parent group via `moduleGroup` (nested groups).
@@ -366,9 +366,9 @@ export const useConfigStore = defineStore("viurConfig", () => {
   const languages = computed(() => state.configuration["admin.languages"] ?? [])
   const moduleNames = computed(() => Object.keys(state.modules ?? {}))
   /**
-   * Gruppen der Modul-Navigation. viur-core rendert `conf.admin.module_groups`
-   * als PUNKT-Schlüssel `admin.module.groups` (Singular). Der Plural bleibt als
-   * Rückfallebene stehen, falls ein Projekt/eine Version ihn so ausliefert.
+   * Groups of the module navigation. viur-core renders `conf.admin.module_groups`
+   * as the DOTTED key `admin.module.groups` (singular). The plural stays as a
+   * fallback in case a project/version delivers it that way.
    */
   const groups = computed(
     () => state.configuration["admin.module.groups"] ?? state.configuration["admin.modules.groups"] ?? {}

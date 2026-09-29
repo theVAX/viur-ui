@@ -1,4 +1,4 @@
 import type { App } from "vue"
 
-/** Registriert die global per Namen genutzten Formular-Wrapper (`<bone>` usw.). */
+/** Registers the form wrappers used globally by name (`<bone>` etc.). */
 export declare function installViurForms(app: App): void

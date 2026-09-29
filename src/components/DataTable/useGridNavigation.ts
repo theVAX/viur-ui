@@ -1,35 +1,35 @@
-// Tastaturnavigation nach dem ARIA-Grid-Muster: Das ganze Gitter ist EIN
-// Tab-Stop, innerhalb wandert ein Roving-Tabindex über die Zellen.
+// Keyboard navigation following the ARIA grid pattern: the whole grid is ONE
+// tab stop; inside it a roving tabindex moves across the cells.
 //
-// Die Composable kennt nur Koordinaten (Zeile -1 = Kopfzeile, 0..n-1 = Body)
-// und ruft für alles Fachliche Callbacks der Komponente.
+// The composable only knows coordinates (row -1 = header row, 0..n-1 = body)
+// and calls the component's callbacks for all domain logic.
 
 import { nextTick, reactive, type Ref } from "vue"
 
 export interface GridNavigationOptions {
   rowCount: () => number
   colCount: () => number
-  /** Zeilen pro Seite für Bild auf/ab. */
+  /** Rows per page for Page Up/Down. */
   pageRows?: () => number
-  /** Enter auf einer Kopfzelle. */
+  /** Enter on a header cell. */
   onHeaderActivate?: (col: number, shift: boolean) => void
-  /** Enter auf einer Datenzelle. */
+  /** Enter on a data cell. */
   onCellActivate?: (row: number, col: number) => void
-  /** Leertaste auf einer Zeile. */
+  /** Space on a row. */
   onToggleSelect?: (row: number) => void
   /** Shift + ↑/↓ */
   onExtendSelection?: (row: number) => void
-  /** Strg + A */
+  /** Ctrl + A */
   onSelectAll?: () => void
-  /** Strg + C */
+  /** Ctrl + C */
   onCopy?: () => void
-  /** Shift + F10 / Kontextmenü-Taste */
+  /** Shift + F10 / context menu key */
   onContextMenu?: (row: number, col: number) => void
-  /** Alt + ↑/↓ auf einer Datenzeile (feste Reihenfolge). */
+  /** Alt + ↑/↓ on a data row (fixed order). */
   onMoveRow?: (row: number, delta: number) => void
-  /** Shift + ←/→ auf einer Kopfzelle. */
+  /** Shift + ←/→ on a header cell. */
   onMoveColumn?: (col: number, delta: number) => void
-  /** Alt + ←/→ auf einer Kopfzelle. */
+  /** Alt + ←/→ on a header cell. */
   onResizeColumn?: (col: number, delta: number) => void
 }
 
@@ -37,7 +37,7 @@ const RESIZE_STEP = 24
 
 export function useGridNavigation(scroller: Ref<HTMLElement | undefined>, options: GridNavigationOptions) {
   const state = reactive({
-    /** -1 = Kopfzeile. */
+    /** -1 = header row. */
     row: -1,
     col: 0,
   })

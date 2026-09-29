@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach, vi } from "vitest"
 import { resolveActions, isActionDisabled, setRequiredActionsForType } from "../../../src/forms/bones/actions/index.js"
 
-// Die Dialog-/Handler-Komponenten sind für die Auflösung egal (und SFCs, die
-// dieser Test-Aufbau nicht übersetzt).
+// The dialog/handler components don't matter for resolution (and are SFCs that
+// this test setup doesn't compile).
 vi.mock("../../../src/forms/bones/actions/Translation.vue", () => ({ default: {} }))
 vi.mock("../../../src/forms/bones/actions/Debug.vue", () => ({ default: {} }))
 vi.mock("../../../src/forms/bones/actions/DescribeImage.vue", () => ({ default: {} }))
@@ -10,8 +10,8 @@ vi.mock("../../../src/forms/bones/actions/Download.vue", () => ({ default: {}, h
 vi.mock("../../../src/forms/bones/actions/Placeholder.vue", () => ({ default: {}, handler: () => {} }))
 vi.mock("../../../src/forms/bones/actions/Delete.vue", () => ({ default: {}, handler: () => {} }))
 
-// Löschen und Download waren im Legacy Knöpfe IM Widget — ohne `boneactions`
-// und bei Download auch readonly. Jetzt sind sie Pflicht-Actions.
+// Delete and download are required actions — even without `boneactions`
+// and, for download, also when readonly.
 
 const relational = { type: "relational.tree.leaf.file", multiple: false, params: {} }
 const names = (actions) => actions.map((action) => action.arg)
@@ -54,11 +54,11 @@ describe("isActionDisabled", () => {
   })
 
   it("Löschen richtet sich nach dem EIGENEN Wert (je Sprache), nicht nach dem Bone", () => {
-    // der Bone insgesamt ist nicht leer — diese Sprache aber schon
+    // the bone as a whole isn't empty — but this language is
     const boneState = { readonly: false, isEmpty: false }
     expect(isActionDisabled(byArg("delete"), { value: "", boneState })).toBe(true)
     expect(isActionDisabled(byArg("delete"), { value: null, boneState })).toBe(true)
-    // geleertes Relation-Select
+    // cleared relation select
     expect(isActionDisabled(byArg("delete"), { value: { dest: undefined }, boneState })).toBe(true)
     expect(isActionDisabled(byArg("delete"), { value: file, boneState })).toBe(false)
   })

@@ -4,10 +4,10 @@ import { inject, toRaw, reactive, markRaw } from "vue"
 import Utils from "./bones/utils"
 
 /**
- * Tiefe Kopie reiner Daten (Skel-Werte), die Vue-Proxies auf JEDER Ebene
- * auflöst. structuredClone allein scheitert daran: ein Record-/using-Formular
- * bekommt den reaktiven Wert des Eltern-Bones, und `{ ...proxy }` behält die
- * verschachtelten Werte als Proxies. Andere Objekte (Date, File) bleiben geteilt.
+ * Deep copy of plain data (skel values) that resolves Vue proxies on EVERY
+ * level. structuredClone alone fails at this: a record/using form
+ * receives the reactive value of the parent bone, and `{ ...proxy }` keeps the
+ * nested values as proxies. Other objects (Date, File) remain shared.
  */
 function rawCopy(value) {
   const raw = toRaw(value)
@@ -33,8 +33,8 @@ export function useFormUtils(props, state) {
         path += `/${props.skeltype}`
       }
 
-      // Nur mit Key anhängen: ein SINGLETON hat genau einen Datensatz, sein
-      // `edit` kennt keinen Key. Ohne diese Prüfung entstand `/edit/undefined`.
+      // Only append with a key: a SINGLETON has exactly one entry, its
+      // `edit` takes no key. Without this check `/edit/undefined` resulted.
       if (["edit", "clone"].includes(props.action) || (isTree && props.action === "add")) {
         if (props.skelkey) {
           path += `/${props.skelkey}`
@@ -93,12 +93,12 @@ export function useFormUtils(props, state) {
       // normalizeEnvelope; accept `values` too for a raw body).
       const values = data["data"] !== undefined ? data["data"] : data["values"]
       if (updateStructure && data["structure"] != null) {
-        // Der `values`-Prop belegt ein frisch GERENDERTES Formular vor. Die
-        // Antwort auf ein Absenden spiegelt, was gesendet wurde — darüber darf
-        // er nicht erneut schreiben.
+        // The `values` prop prefills a freshly RENDERED form. The
+        // response to a submit mirrors what was sent — it must not
+        // overwrite that again.
         initForm(values, data["structure"], presetValues ? state.values : null)
-        // Neue Struktur = Server-Flags: visibleIf/readonlyIf/requiredIf/evaluate
-        // gleich wieder anwenden, nicht erst bei der nächsten Eingabe.
+        // New structure = server flags: apply visibleIf/readonlyIf/requiredIf/evaluate
+        // right away, not only on the next input.
         logics()
       } else if (values !== undefined) {
         state.skel = values
@@ -147,10 +147,10 @@ export function useFormUtils(props, state) {
     try {
       await fetchResult.execute()
       applyResponseState(fetchResult.data.value, { updateStructure: true, presetValues: true })
-      // Ein v1-Schritt bringt kein Ziel mit (kein `follow`, kein next_url, kein
-      // params.action_url) — dort wird der Schritt an DIESELBE URL
-      // zurückgeschickt, aus der er gerendert wurde. Ohne das stünde postUrl
-      // nach dem Rendern auf null und der Absenden-Knopf liefe ins Leere.
+      // A v1 step carries no target (no `follow`, no next_url, no
+      // params.action_url) — there the step is sent back to the SAME URL
+      // it was rendered from. Without this, postUrl would be
+      // null after rendering and the submit button would do nothing.
       if (!state.postUrl && url) {
         state.postUrl = url
       }
@@ -562,18 +562,18 @@ export function useFormUtils(props, state) {
     }
 
     state.skel = { ...skeldata, ...formvalues }
-    // Stand festhalten, wie er hereinkam: `state.skel` ist die Arbeitskopie und
-    // wird beim Tippen verändert. resetForm() stellt daraus wieder her, ohne
-    // erneut zu laden ("Änderungen verwerfen").
-    // markRaw: reine Lesedaten, kein reaktiver Proxy.
+    // Keep the state as it came in: `state.skel` is the working copy and
+    // changes while typing. resetForm() restores from this without
+    // reloading ("discard changes").
+    // markRaw: read-only data, no reactive proxy.
     state.pristine = markRaw(rawCopy(state.skel))
 
     state.categories = updateCategories()
   }
 
   /**
-   * Änderungen verwerfen: die Werte des letzten Server-Stands wieder einsetzen,
-   * OHNE neuen Request (dafür ist reload() da). Struktur und Kategorien bleiben.
+   * Discard changes: restore the values of the last server state,
+   * WITHOUT a new request (that's what reload() is for). Structure and categories remain.
    */
   function resetForm() {
     if (state.pristine === undefined || state.pristine === null) return

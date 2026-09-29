@@ -12,48 +12,48 @@
 <script setup>
 import { reactive, onMounted, inject } from "vue"
 /**
- * Anzeige-Widget für den internen Datenbankschlüssel eines Eintrags (Typ `key`).
+ * Display widget for an entry's internal database key (type `key`).
  *
- * Rendert ein immer deaktiviertes `<wa-input>`, da der Schlüssel nicht manuell
- * editiert werden kann. Der Wert wird direkt aus dem Skel übernommen und dient
- * ausschließlich zur Information. Unterstützt kein multiple und kein multilang.
+ * Renders an always-disabled `<wa-input>`, since the key cannot be edited
+ * manually. The value is taken directly from the skel and serves
+ * informational purposes only. Supports neither multiple nor multilang.
  *
  * @displayName KeyBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-key - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-key-default - Standard-Variante
- * @cssClass bone-widget-key-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-key-key`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-key - Identifies the bone type
+ * @cssClass bone-widget-key-default - Default variant
+ * @cssClass bone-widget-key-{name} - Dynamically set to the bone name, e.g. `bone-widget-key-key`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Schlüsselwert (URL-safe Base64-String). */
+  /** Current key value (URL-safe Base64 string). */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; nicht genutzt, da multiple nicht unterstützt wird. */
+  /** Index in the multiple array; unused, since multiple is not supported. */
   index: Number,
-  /** Sprach-Key; nicht genutzt, da multilang nicht unterstützt wird. */
+  /** Language key; unused, since multilang is not supported. */
   lang: String,
-  /** Readonly-Flag (wird nicht ausgewertet – der Bone ist immer disabled). */
+  /** Readonly flag (not evaluated – the bone is always disabled). */
   readonly: Boolean,
-  /** Zusätzliche Bone-Parameter. */
+  /** Additional bone parameters. */
   params: Object,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus (ohne Effekt, da das Element immer disabled ist). */
+  /** Sets the focus (no effect, since the element is always disabled). */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird beim Mount (Initialisierung) und bei change gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Schlüsselwert
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on mount (initialization) and on change.
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current key value
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

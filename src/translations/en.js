@@ -12,6 +12,7 @@ export default {
     list: "List",
     addEmpty: "New entry",
     no_entries: "No entries",
+    errors_summary: "Errors",
   },
   lang: "Language",
   bones: {
@@ -26,6 +27,13 @@ export default {
     },
     phone: {
       placeholder: "Phone/Fax",
+    },
+    password: {
+      mismatch: "The passwords do not match.",
+      empty: "The password is empty.",
+    },
+    text: {
+      openInNewWindow: "Open link in new window",
     },
   },
 
@@ -77,6 +85,10 @@ export default {
     collapseRow: "Collapse row",
     expandRow: "Expand row",
     noData: "No data",
+    noValues: "No values",
+    clear: "Clear",
+    filterEquals: "exactly …",
+    filterContains: "contains …",
     noResults: "No matches",
     filterFrom: "from",
     filterTo: "to",
@@ -108,6 +120,7 @@ export default {
     path: "Path",
     navigation: "Navigation",
     uploadHint: "Drop files here",
+    name: "Name",
   },
   form: {
     next: "Next",
@@ -121,6 +134,7 @@ export default {
       original: "Source language ({lang}):",
       target: "Target language ({lang}):",
       run: "Translate",
+      name: "Translate",
       applyNext: "Apply and go to next empty language",
       apply: "Apply target for {lang}",
     },
@@ -129,6 +143,23 @@ export default {
       instructions: "additional instructions",
       run: "Generate description",
       apply: "Apply description",
+      name: "Generate image description",
+      title: "Describe image",
+    },
+    debug: {
+      name: "Debug",
+      title: "Show bone debug information",
+      structure: "Bone structure",
+      value: "Bone value",
+      state: "Bone state",
+      context: "Context",
+    },
+    placeholder: {
+      name: "Placeholder",
+      title: "Placeholder (TODO: remove)",
+    },
+    delete: {
+      name: "Delete",
     },
   },
   messages: {

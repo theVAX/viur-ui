@@ -1,4 +1,4 @@
-// Öffentliche Oberfläche des Browser-Widgets.
+// Public surface of the browser widget.
 export { default as Browser } from "./Browser.vue"
 export { default as ViurBrowser } from "./ViurBrowser.vue"
 export { default as TreeNav } from "./TreeNav.vue"

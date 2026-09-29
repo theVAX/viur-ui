@@ -67,7 +67,7 @@ describe("brandColors", () => {
       "--wa-color-brand",
       "--wa-color-brand-on",
     ])
-    // Farbton und Sättigung bleiben, die Helligkeit kommt aus der Tabelle
+    // hue and saturation stay, the lightness comes from the table
     for (const [step, lightness] of BRAND_LIGHTNESS) {
       const [h, s] = oldColorConvert("#d00f1c", lightness)
       expect(colors[`--wa-color-brand-${step}`]).toBe(`hsl(${h},${s}%,${lightness}%)`)
@@ -78,7 +78,7 @@ describe("brandColors", () => {
   })
 
   it("dieselben Helligkeiten wie der alte Admin, in derselben Reihenfolge", () => {
-    // --sl-color-primary-50…950 im alten App.vue
+    // --sl-color-primary-50…950 in the old App.vue
     expect(BRAND_LIGHTNESS.map(([, lightness]) => lightness)).toEqual([83, 78, 68, 58, 48, 43, 38, 28, 18, 8, 3])
   })
 
@@ -109,10 +109,10 @@ describe("Helfer des alten Admins", () => {
     const store = useColorStore()
 
     expect(store.getPrimaryColor(43)).toBe("hsl(356,86.5%,43%)")
-    // 0 behält die eigene Helligkeit (wie bisher)
+    // 0 keeps its own lightness (as before)
     expect(store.getPrimaryColor()).toBe("hsl(356,86.5%,43.7%)")
     expect(store.getSecondaryColor(60)).toBe("hsl(0,0%,60%)")
-    // der Fokusring des alten Admins: getAlphaColor("primaryColor", 43, 40)
+    // the focus ring of the old admin: getAlphaColor("primaryColor", 43, 40)
     expect(store.getAlphaColor("primaryColor", 43, 40)).toBe("hsla(356,86.5%,43%,40%)")
   })
 
@@ -137,7 +137,7 @@ describe("applyBrandColor", () => {
     expect(document.head.querySelectorAll("style[data-viur-brand-color]")).toHaveLength(1)
     expect(style().textContent).not.toContain("hsl(356")
 
-    // Farbe fällt weg → WebAwesome-Standard
+    // color goes away → WebAwesome default
     configure({})
     await nextTick()
     expect(style()).toBeNull()

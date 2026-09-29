@@ -19,48 +19,48 @@
 <script setup>
 import { reactive, onMounted, computed, inject } from "vue"
 /**
- * Datums- und/oder Zeitfeld, gesteuert durch `bonestructure.date` und `bonestructure.time`.
+ * Date and/or time field, controlled by `bonestructure.date` and `bonestructure.time`.
  *
- * Rendert ein `<wa-input>` mit dem passenden `type`-Attribut:
- * - `date` wenn nur `date: true`
- * - `time` wenn nur `time: true`
- * - `datetime-local` wenn beide gesetzt sind
+ * Renders a `<wa-input>` with the matching `type` attribute:
+ * - `date` if only `date: true`
+ * - `time` if only `time: true`
+ * - `datetime-local` if both are set
  *
- * Bereinigt Zeitzonendaten aus dem Wert, bevor er ans Input weitergegeben wird.
- * Unterstützt mehrfache Werte (`multiple`), aber keine Mehrsprachigkeit.
+ * Strips timezone data from the value before it is passed to the input.
+ * Supports multiple values (`multiple`), but not multiple languages.
  *
  * @displayName DateBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-date - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-date-default - Standard-Variante
- * @cssClass bone-widget-date-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-date-publishedAt`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-date - Identifies the bone type
+ * @cssClass bone-widget-date-default - Default variant
+ * @cssClass bone-widget-date-{name} - Dynamically set to the bone name, e.g. `bone-widget-date-publishedAt`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert als ISO-String, z.B. `"2026-03-28"` oder `"10:30:00"`. */
+  /** Current bone value as an ISO string, e.g. `"2026-03-28"` or `"10:30:00"`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
+  /** Focuses the input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Eingabewert als ISO-String
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current input value as an ISO string
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

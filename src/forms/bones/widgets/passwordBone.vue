@@ -61,64 +61,67 @@
 <script setup>
 import { reactive, onMounted, computed, inject, watch, ref, watchEffect } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
+import { useI18n } from "vue-i18n"
 /**
- * Passwort-Eingabefeld mit Wiederholung und Stärke-Validierung.
+ * Password input field with confirmation and strength validation.
  *
- * Rendert `<wa-input type="password">` — mit Wiederholungs-Feld, WENN der Bone
- * überhaupt Passwort-Tests mitbringt (`bonestructure.tests`). Ein Login-Formular
- * liefert serverseitig einen rohen Passwort-Bone ohne Tests
- * (`PasswordBone(raw=True, tests=(), test_threshold=0)`); dort wäre eine
- * Wiederholung falsch — man tippt ein bestehendes Passwort ein, man setzt keins.
- * Im Readonly-Modus entfällt die Wiederholung ebenfalls. Passwort-Tests
- * werden über `boneState.bonestructure.tests` (Array aus `[regex, message, required]`
- * Tupeln) konfiguriert. `boneState.bonestructure.test_threshold` legt fest,
- * wie viele optionale Tests fehlschlagen dürfen.
+ * Renders `<wa-input type="password">` — with a confirmation field IF the bone
+ * comes with password tests at all (`bonestructure.tests`). A login form
+ * receives a raw password bone without tests from the server
+ * (`PasswordBone(raw=True, tests=(), test_threshold=0)`); a confirmation would be
+ * wrong there — you enter an existing password, you don't set one.
+ * In readonly mode the confirmation is omitted as well. Password tests
+ * are configured via `boneState.bonestructure.tests` (array of `[regex, message, required]`
+ * tuples). `boneState.bonestructure.test_threshold` defines
+ * how many optional tests may fail.
  *
  * @displayName PasswordBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-password - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-password-default - Standard-Variante
- * @cssClass bone-widget-password-{name} - Dynamisch gesetzt auf den Bone-Namen
- * @cssClass has-check - Gesetzt wenn nicht readonly; entfernt border-bottom-right-radius für nahtlosen Übergang zum Wiederholungs-Feld
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-password - Identifies the bone type
+ * @cssClass bone-widget-password-default - Default variant
+ * @cssClass bone-widget-password-{name} - Dynamically set to the bone name
+ * @cssClass has-check - Set when not readonly; removes border-bottom-right-radius for a seamless transition to the confirmation field
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert (wird in `state.value1` gespiegelt). */
+  /** Current bone value (mirrored in `state.value1`). */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das erste Passwort-Feld. */
+  /** Focuses the first password field after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Passwortwert (nur wenn beide Felder übereinstimmen und Tests bestanden)
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
-   * @arg {boolean} valid - `true` wenn Passwort gültig (Tests bestanden + Felder gleich)
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current password value (only if both fields match and the tests passed)
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
+   * @arg {boolean} valid - `true` if the password is valid (tests passed + fields equal)
    */
   "change",
 ])
+
+const { t } = useI18n()
 
 const boneState = inject("boneState")
 const state = reactive({
   value1: "",
   value2: null,
   equal: false,
-  // Wiederholung nur, wenn der Bone Tests mitbringt (= ein Passwort wird
-  // GESETZT). Beim Login liefert der Server einen rohen Bone ohne Tests.
+  // Confirmation only if the bone comes with tests (= a password is being
+  // SET). On login, the server delivers a raw bone without tests.
   needsConfirm: computed(() => !boneState.readonly && (boneState?.bonestructure?.["tests"]?.length ?? 0) > 0),
   passwordInfo: [],
   requiredPasswordInfo: [],
@@ -172,10 +175,10 @@ function testPassword(password) {
     }
   }
   if (state.needsConfirm && !state.equal) {
-    state.requiredPasswordInfo.push("Die eingegebenen Passwörter stimmen nicht überein.")
+    state.requiredPasswordInfo.push(t("bones.password.mismatch"))
   }
   if (!state.value1) {
-    state.requiredPasswordInfo.push("Das eingegebene Passwort ist leer.")
+    state.requiredPasswordInfo.push(t("bones.password.empty"))
   }
 }
 

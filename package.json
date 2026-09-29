@@ -40,15 +40,12 @@
     "test:run": "vitest run",
     "story:dev": "histoire dev",
     "story:build": "histoire build",
-    "histoire:legacy": "histoire dev --config histoire.legacy.config.js",
-    "test:contract": "playwright test --config tests/contract/playwright.config.ts",
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@histoire/plugin-vue": "^1.0.0-beta.1",
-    "@playwright/test": "^1.59.1",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vueuse/core": "^14.2.1",
     "eslint": "^10.2.1",

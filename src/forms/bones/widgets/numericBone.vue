@@ -32,46 +32,46 @@
 import { reactive, onMounted, computed, inject, ref, watchEffect } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
 /**
- * Numerisches Eingabefeld für Ganzzahlen und Dezimalwerte.
+ * Numeric input field for integers and decimal values.
  *
- * Rendert ein `<wa-input type="number">` und zeigt optional Hinweise zu
- * Mindest-/Höchstwert und Präzision an. Unterstützt Mehrsprachigkeit
- * (`languages`) und mehrfache Werte (`multiple`). Der Schritt (`step`) wird
- * aus `boneState.bonestructure.precision` berechnet.
+ * Renders a `<wa-input type="number">` and optionally shows hints about
+ * the minimum/maximum value and precision. Supports multiple languages
+ * (`languages`) and multiple values (`multiple`). The step (`step`) is
+ * calculated from `boneState.bonestructure.precision`.
  *
  * @displayName NumericBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-numeric - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-numeric-default - Standard-Variante
- * @cssClass bone-widget-numeric-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-numeric-amount`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-numeric - Identifies the bone type
+ * @cssClass bone-widget-numeric-default - Default variant
+ * @cssClass bone-widget-numeric-{name} - Dynamically set to the bone name, e.g. `bone-widget-numeric-amount`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert. */
+  /** Current bone value. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach 600 ms auf das Input-Element. */
+  /** Focuses the input element after 600 ms. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string} value - Aktueller Eingabewert (als String)
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
-   * @arg {boolean} [valid] - Validierungsstatus; fehlt beim Init-Event
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string} value - Current input value (as a string)
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
+   * @arg {boolean} [valid] - Validation status; missing on the init event
    */
   "change",
 ])

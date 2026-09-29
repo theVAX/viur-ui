@@ -2,10 +2,10 @@
 import { ref } from "vue"
 import { useListFetch, useListFetchAll, useViewFetch, useAddFetch, useEditFetch, useDeleteFetch } from "viur-ui"
 
-// ── List (paginiert) ──────────────────────────────────────────────────────────
+// ── List (paginated) ──────────────────────────────────────────────────────────
 const list = useListFetch("user", { params: { limit: 5 } })
 
-// ── List All (alle Seiten automatisch) ───────────────────────────────────────
+// ── List All (all pages automatically) ───────────────────────────────────────
 const listAll = useListFetchAll("user", { params: { limit: 5 } })
 
 // ── View ──────────────────────────────────────────────────────────────────────

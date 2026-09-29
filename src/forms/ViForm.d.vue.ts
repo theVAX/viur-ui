@@ -1,52 +1,52 @@
 import type { DefineComponent } from "vue"
 
-/** Props von ViForm.vue (siehe defineProps dort — hier die gebräuchlichen). */
+/** Props of ViForm.vue (see defineProps there — the common ones here). */
 export interface ViFormProps {
-  /** Modulname bzw. Punkt-Pfad ("user", "shop.order"). */
+  /** Module name or dot path ("user", "shop.order"). */
   module?: string
-  /** Aktion unterhalb des Moduls ("add", "edit", "login", "auth_.../login"). */
+  /** Action below the module ("add", "edit", "login", "auth_.../login"). */
   action?: string | null
-  /** Untertyp gruppierter Listen. */
+  /** Subtype of grouped lists. */
   group?: string | null
-  /** Schlüssel des Datensatzes für edit/clone — ein Singleton braucht keinen. */
+  /** Key of the entry for edit/clone — a singleton doesn't need one. */
   skelkey?: string | null
-  /** Baum-Typ ("node" | "leaf"). */
+  /** Tree type ("node" | "leaf"). */
   skeltype?: string | null
-  /** skey mitsenden (Standard: true). */
+  /** Send the skey along (default: true). */
   secure?: boolean
   /**
-   * Feedback in den Message-Store schreiben (Speichern erfolgreich, Login
-   * fehlgeschlagen, …). Wirkt nur, wenn die App Pinia installiert hat;
-   * `false` hält dieses Formular stumm. Standard: true.
+   * Write feedback to the message store (save successful, login
+   * failed, …). Only takes effect if the app has installed Pinia;
+   * `false` keeps this form silent. Default: true.
    */
   useMessageStore?: boolean
-  /** Fertige Struktur/Werte statt eines Requests. */
+  /** Ready-made structure/values instead of a request. */
   skel?: Record<string, any> | string | null
   structure?: Record<string, any> | unknown[] | null
   values?: Record<string, any> | null
-  /** Nur diese Bones zeigen. */
+  /** Show only these bones. */
   bones?: string[]
-  /** Zusätzliche Daten für den AUFBAU des Formulars (z. B. `{ bounce: 1 }`). */
+  /** Additional data for BUILDING the form (e.g. `{ bounce: 1 }`). */
   params?: Record<string, any>
-  /** Abweichende Adresse für den Aufbau. */
+  /** Alternative URL for building the form. */
   fetchUrl?: string | null
-  /** Renderer der Requests (Standard: VITE_DEFAULT_RENDERER). */
+  /** Renderer of the requests (default: VITE_DEFAULT_RENDERER). */
   renderer?: string
-  /** Protokollversion festnageln. */
+  /** Pin the protocol version. */
   version?: string | number | null
   useCategories?: boolean
   collapsedCategories?: string[]
   categoryDefaultname?: string
   readonly?: boolean
-  /** Bone-Action-Leisten anzeigen (Pflicht-Actions erscheinen immer). */
+  /** Show bone action bars (required actions always appear). */
   boneactions?: boolean
   /**
-   * Formular-weite Action-Konfiguration: Einträge wie `bone.params.actions`
-   * (`"-name"` deaktiviert explizit, auch Pflicht-Actions). Array = alle
-   * Bones; Objekt = pro Bone-Name, `"*"` für alle.
+   * Form-wide action configuration: entries like `bone.params.actions`
+   * (`"-name"` explicitly disables, even required actions). Array = all
+   * bones; object = per bone name, `"*"` for all.
    */
   actions?: (string | Record<string, any>)[] | Record<string, (string | Record<string, any>)[]> | null
-  /** Mehrstufigen Ablauf fahren (Login, Assistenten). */
+  /** Run a multi-step flow (login, wizards). */
   multistep?: boolean
   showSteps?: boolean
   submitLabel?: string
@@ -54,16 +54,16 @@ export interface ViFormProps {
   backLabel?: string
 }
 
-/** Zustand des Formulars, wie ihn `state` freigibt. */
+/** State of the form as exposed by `state`. */
 export interface ViFormState {
   loading: boolean
   failed: unknown
   skel: Record<string, any>
-  /** Werte des letzten Server-Stands (Grundlage von resetForm). */
+  /** Values of the last server state (basis for resetForm). */
   pristine: Record<string, any> | null
   structure: Record<string, any> | null
   errors: { fieldPath?: string[]; errorMessage?: string; severity?: number }[]
-  /** v2-Status der letzten Antwort: "init" | "success" | "rejected" | … */
+  /** v2 status of the last response: "init" | "success" | "rejected" | … */
   status: string | null
   actionname: string | null
   actionparams: Record<string, any> | null
@@ -73,31 +73,31 @@ export interface ViFormState {
   [key: string]: unknown
 }
 
-/** Was ViForm per defineExpose freigibt. */
+/** What ViForm exposes via defineExpose. */
 export interface ViFormApi {
-  /** Werte abschicken (POST auf die Adresse des Formulars). */
+  /** Submit the values (POST to the form's URL). */
   sendData: (
     alternativeUrl?: string | null,
     additionalData?: Record<string, any> | null,
     headers?: Record<string, string> | null,
     removeKeyFromDataset?: boolean
   ) => Promise<unknown>
-  /** Formular (neu) vom Server holen. */
+  /** (Re)fetch the form from the server. */
   fetchData: (
     alternativeUrl?: string | null,
     additionalData?: Record<string, any> | null,
     headers?: Record<string, string> | null
   ) => Promise<unknown>
-  /** Schritt eines mehrstufigen Ablaufs rendern. */
+  /** Render a step of a multi-step flow. */
   loadStep: (url?: string | null) => Promise<unknown>
-  /** Aktuellen Schritt abschicken und ggf. zum nächsten gehen. */
+  /** Submit the current step and advance to the next one if applicable. */
   submitStep: () => Promise<unknown>
-  /** Einen Schritt zurück. */
+  /** Go back one step. */
   back: () => Promise<unknown> | void
   updateSkel: (values: Record<string, any>) => void
-  /** Von vorn aufbauen — holt das Formular neu vom Server. */
+  /** Rebuild from scratch — refetches the form from the server. */
   reload: () => void
-  /** Änderungen verwerfen: Werte des letzten Server-Stands ohne neuen Request. */
+  /** Discard changes: values of the last server state without a new request. */
   resetForm: () => void
   state: ViFormState
 }

@@ -13,8 +13,8 @@
         @keypress.enter="updateValue"
       ></component>
     </div>
-    <!-- Pflicht-Actions (Löschen, Download …) auch ohne `boneactions`; am
-         Wert DIESES Eintrags, bei Mehrsprachigkeit also seiner Sprache -->
+    <!-- Required actions (delete, download …) even without `boneactions`; on the
+         value of THIS entry, i.e. of its language when multilingual -->
     <div
       v-if="(boneactions && boneState?.hasActions) || boneState?.hasRequiredActions"
       class="wa-cluster wa-gap-xs"

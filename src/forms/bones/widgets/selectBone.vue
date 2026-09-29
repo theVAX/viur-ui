@@ -26,48 +26,48 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 /**
- * Dropdown-Auswahlfeld für vordefinierte Werte (Typ `select`).
+ * Dropdown select field for predefined values (type `select`).
  *
- * Rendert ein `<wa-select>` mit `<wa-option>`-Einträgen, die aus
- * `boneState.bonestructure.values` generiert werden. `values` kann ein Array
- * von `[key, label]`-Tupeln oder ein Objekt `{ key: label }` sein.
- * Bei aktiviertem `multiple` können mehrere Optionen gleichzeitig gewählt werden.
- * Der Bone-Typ `select.choose` wird durch die separate Komponente `SelectBoneChoose`
- * abgehandelt und rendert Radio-Buttons bzw. Checkboxen.
- * Bei `boneState.label === "placeholder"` wird der Bone-Name als Placeholder angezeigt.
+ * Renders a `<wa-select>` with `<wa-option>` entries generated from
+ * `boneState.bonestructure.values`. `values` can be an array
+ * of `[key, label]` tuples or an object `{ key: label }`.
+ * With `multiple` enabled, several options can be selected at once.
+ * The bone type `select.choose` is handled by the separate component `SelectBoneChoose`
+ * and renders radio buttons or checkboxes.
+ * With `boneState.label === "placeholder"`, the bone name is shown as a placeholder.
  *
  * @displayName SelectBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-select - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-select-default - Standard-Variante (Dropdown)
- * @cssClass bone-widget-select-{name} - Dynamisch gesetzt auf den Bone-Namen, z.B. `bone-widget-select-status`
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-select - Identifies the bone type
+ * @cssClass bone-widget-select-default - Default variant (dropdown)
+ * @cssClass bone-widget-select-{name} - Dynamically set to the bone name, e.g. `bone-widget-select-status`
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert (String, Array bei multiple). */
+  /** Current bone value (string, array with multiple). */
   value: null,
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key bei mehrsprachigen Bones, z.B. `"de"`. */
+  /** Language key for multilingual bones, e.g. `"de"`. */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus auf das Select-Element (aktuell nicht implementiert). */
+  /** Focuses the select element (currently not implemented). */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {string|string[]} value - Gewählter Wert oder Array bei multiple
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {string|string[]} value - Selected value, or array with multiple
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

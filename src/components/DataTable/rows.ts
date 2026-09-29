@@ -1,6 +1,6 @@
-// Reine Zeilen-Pipeline: Filter → Suche → Sortierung → Baum/Gruppen →
-// Paginierung → flache Anzeigezeilen. Ebenfalls Vue-frei und damit direkt
-// testbar; die Komponente ruft das Ganze nur in einem computed auf.
+// Pure row pipeline: filter → search → sort → tree/groups →
+// pagination → flat display rows. Also Vue-free and therefore directly
+// testable; the component just calls the whole thing inside a computed.
 
 import { aggregateColumn, defaultText, findColumn, rowMatchesFilters, rowMatchesSearch, sortRows } from "./columns"
 import type { ColumnFacets, DisplayRow, FilterEntry, ResolvedColumn, Row, RowKey, RowNode, SortEntry } from "./types"
@@ -15,24 +15,24 @@ export interface BuildRowsOptions<R extends Row = Row> {
   filters?: FilterEntry[]
   search?: string
   searchFn?: ((value: unknown, term: string, row: R) => boolean) | null
-  /** Baumdaten: Feldname oder Funktion, die die Kinder liefert. */
+  /** Tree data: field name or function that returns the children. */
   childRows?: ChildRowsAccessor<R> | null
-  /** Elternzeile bleibt sichtbar, wenn ein Nachfahre passt. */
+  /** Parent row stays visible when a descendant matches. */
   filterFromLeafRows?: boolean
-  /** Gruppierung nach einer oder mehreren Spalten-ids (ohne Wirkung bei Baumdaten). */
+  /** Grouping by one or more column ids (no effect on tree data). */
   groupBy?: string[]
-  /** Feld mit stabiler Zeilen-id. Ohne das werden Indexpfade benutzt ("0", "0.1"). */
+  /** Field with a stable row id. Without it, index paths are used ("0", "0.1"). */
   rowKey?: string | null
 }
 
 export interface BuiltRows<R extends Row = Row> {
-  /** Hierarchie nach Filter/Sortierung/Gruppierung. */
+  /** Hierarchy after filtering/sorting/grouping. */
   nodes: RowNode<R>[]
-  /** Alle Datenzeilen in Anzeigereihenfolge (auch eingeklappte). */
+  /** All data rows in display order (including collapsed ones). */
   dataRows: R[]
-  /** Nur oberste Ebene — für Fußzeilen-Funktionen bei Baumdaten. */
+  /** Top level only — for footer functions with tree data. */
   topLevelRows: R[]
-  /** Zeilen im Ergebnis (oberste Ebene bzw. Gruppen) über alle Seiten. */
+  /** Rows in the result (top level or groups) across all pages. */
   filteredCount: number
   facets: Record<string, ColumnFacets>
 }
@@ -51,7 +51,7 @@ function keyOf<R extends Row>(row: R, rowKey: string | null | undefined, path: s
   return path
 }
 
-/** Datenzeilen (mit Kindern) in Knoten überführen — Filter und Sortierung inklusive. */
+/** Convert data rows (with children) into nodes — filtering and sorting included. */
 function buildDataNodes<R extends Row>(
   rows: R[],
   options: BuildRowsOptions<R>,
@@ -67,8 +67,8 @@ function buildDataNodes<R extends Row>(
     const selfMatches = rowMatchesFilters(row, filters, columns) && rowMatchesSearch(row, search, columns, searchFn)
 
     const rawChildren = childrenOf(row, childRows)
-    // Bei filterFromLeafRows zählt der Treffer eines Nachfahren; sonst nimmt
-    // eine nicht passende Zeile ihren ganzen Teilbaum mit.
+    // With filterFromLeafRows a descendant's match counts; otherwise a
+    // non-matching row takes its whole subtree with it.
     const children = rawChildren.length ? buildDataNodes(rawChildren, options, depth + 1, path) : []
 
     if (!selfMatches && !(filterFromLeafRows && children.length)) return
@@ -84,7 +84,7 @@ function buildDataNodes<R extends Row>(
   return nodes
 }
 
-/** Datenknoten nach einer oder mehreren Spalten gruppieren. */
+/** Group data nodes by one or more columns. */
 function groupNodes<R extends Row>(
   nodes: RowNode<R>[],
   groupBy: string[],
@@ -139,7 +139,7 @@ function collectDataRows<R extends Row>(nodes: RowNode<R>[], into: R[] = []): R[
   return into
 }
 
-/** Facetten je filterbarer Spalte — jeweils ohne den eigenen Filter. */
+/** Facets per filterable column — each without its own filter. */
 function buildFacets<R extends Row>(options: BuildRowsOptions<R>): Record<string, ColumnFacets> {
   const { columns, filters = [], search = "", searchFn, childRows } = options
   const flat = flattenData(options.data, childRows)
@@ -182,7 +182,7 @@ export function buildRows<R extends Row>(options: BuildRowsOptions<R>): BuiltRow
   }
 }
 
-/** Eine Seite aus der obersten Ebene schneiden (Teilbäume bleiben bei ihrem Elternteil). */
+/** Slice one page from the top level (subtrees stay with their parent). */
 export function paginateNodes<R extends Row>(nodes: RowNode<R>[], page: number, pageSize: number): RowNode<R>[] {
   if (pageSize <= 0) return nodes
   const start = page * pageSize
@@ -191,29 +191,29 @@ export function paginateNodes<R extends Row>(nodes: RowNode<R>[], page: number, 
 
 export interface FlattenOptions<R extends Row = Row> {
   isExpanded: (key: RowKey) => boolean
-  /** Zeilen bekommen ein Detail-Panel (eigene Zeile unter der Datenzeile). */
+  /** Rows get a detail panel (a separate row below the data row). */
   withDetail?: boolean
   /**
-   * Für nachgeladene Ebenen: Zeile gilt als aufklappbar, obwohl (noch) keine
-   * Kinder in den Daten stehen. Beim Nachladen weiß man vorher nicht, ob es
-   * welche gibt — der Pfeil muss trotzdem von Anfang an da sein.
+   * For lazily loaded levels: the row counts as expandable even though there
+   * are no children in the data (yet). When lazy loading, you don't know in
+   * advance whether there are any — the arrow must still be there from the start.
    */
   mayHaveChildren?: (node: RowNode<R>) => boolean
 }
 
 /**
- * Hierarchie zu einer flachen Renderliste machen: eingeklappte Teilbäume
- * fallen weg, aufgeklappte Detail-Panels kommen als eigene Zeile dazu.
+ * Turn the hierarchy into a flat render list: collapsed subtrees are
+ * dropped, expanded detail panels are added as separate rows.
  */
 export function flattenNodes<R extends Row>(nodes: RowNode<R>[], options: FlattenOptions<R>): DisplayRow<R>[] {
   const out: DisplayRow<R>[] = []
   let dataIndex = 0
 
   /**
-   * `lines` sind die Durchlauf-Spalten links des eigenen Winkels: je Eintrag
-   * eine Spalte, in der eine senkrechte Linie durchläuft, weil der Vorfahre der
-   * NÄCHSTEN Ebene noch ein Geschwister hat (siehe `DisplayRow.ancestorLines`).
-   * Nach dem letzten Kind bleibt die Spalte leer.
+   * `lines` are the pass-through columns left of the row's own connector: one
+   * column per entry in which a vertical line runs through, because the ancestor
+   * of the NEXT level still has a sibling (see `DisplayRow.ancestorLines`).
+   * After the last child the column stays empty.
    */
   const walk = (list: RowNode<R>[], lines: boolean[]): void => {
     list.forEach((node, position) => {
@@ -254,8 +254,8 @@ export function flattenNodes<R extends Row>(nodes: RowNode<R>[], options: Flatte
       })
 
       if (node.kind === "data" && options.withDetail && !hasChildren) out.push(detailRow())
-      // Wurzeln erzeugen keine Durchlauf-Spalte (zwischen Wurzeln gibt es keine
-      // Linie); ab Ebene 1 kommt je Ebene eine dazu.
+      // Roots create no pass-through column (there is no line between roots);
+      // from level 1 on, one is added per level.
       else if (hasChildren) {
         walk(node.children, node.depth === 0 ? [] : [...lines, !isLastChild])
       } else if (options.withDetail) out.push(detailRow())
@@ -266,9 +266,9 @@ export function flattenNodes<R extends Row>(nodes: RowNode<R>[], options: Flatte
   return out
 }
 
-// ── Auswahl (Baum/Gruppen) ────────────────────────────────────────────
+// ── Selection (tree/groups) ───────────────────────────────────────────
 
-/** Alle Datenschlüssel eines Knotens inklusive Nachfahren. */
+/** All data keys of a node including descendants. */
 export function collectKeys<R extends Row>(node: RowNode<R>, into: RowKey[] = []): RowKey[] {
   if (node.kind === "data") into.push(node.key)
   for (const child of node.children) collectKeys(child, into)
@@ -277,7 +277,7 @@ export function collectKeys<R extends Row>(node: RowNode<R>, into: RowKey[] = []
 
 export type SelectionState = "checked" | "indeterminate" | "unchecked"
 
-/** Zustand der Checkbox eines Knotens (Elternteil spiegelt seine Kinder). */
+/** Checkbox state of a node (parent mirrors its children). */
 export function selectionStateFor<R extends Row>(node: RowNode<R>, selected: Set<RowKey>): SelectionState {
   const keys = collectKeys(node)
   if (!keys.length) return "unchecked"
@@ -286,24 +286,23 @@ export function selectionStateFor<R extends Row>(node: RowNode<R>, selected: Set
   return hits === keys.length ? "checked" : "indeterminate"
 }
 
-// ── Flache Liste zu Baum ──────────────────────────────────────────────
+// ── Flat list to tree ─────────────────────────────────────────────────
 
 export interface NestedTree<R extends Row = Row> {
-  /** Zeilen der obersten Ebene, in Eingabereihenfolge. */
+  /** Top-level rows, in input order. */
   roots: R[]
-  /** Kinder je Zeilenschlüssel. */
+  /** Children per row key. */
   children: Map<RowKey, R[]>
 }
 
 /**
- * Aus einer FLACHEN Liste mit Eltern-Verweis (ViUR: `parententry`) die
- * Hierarchie bauen.
+ * Build the hierarchy from a FLAT list with parent references (ViUR:
+ * `parententry`).
  *
- * Grundsatz: es geht nichts verloren. Zeilen ohne Elternwert sind Wurzeln;
- * Zeilen, deren Elternteil nicht in den Daten steckt (Waisen — etwa weil nur
- * eine Seite geladen ist), ebenfalls. Auch Zyklen (A → B → A, oder eine Zeile
- * als ihr eigener Elternteil) landen als Wurzel, statt die Liste zu sprengen
- * oder Zeilen verschwinden zu lassen.
+ * Principle: nothing gets lost. Rows without a parent value are roots; so are
+ * rows whose parent isn't in the data (orphans — e.g. because only one page
+ * is loaded). Cycles (A → B → A, or a row that is its own parent) also end
+ * up as roots, instead of blowing up the list or making rows disappear.
  */
 export function nestByParent<R extends Row>(rows: R[], rowKey: string, parentField: string): NestedTree<R> {
   const byKey = new Map<RowKey, R>()
@@ -331,8 +330,8 @@ export function nestByParent<R extends Row>(rows: R[], rowKey: string, parentFie
     attached.add(row)
   }
 
-  // Zyklen: alles, was zwar einen Elternteil hat, aber von keiner Wurzel aus
-  // erreichbar ist, wird selbst zur Wurzel — sonst wäre es unsichtbar.
+  // Cycles: anything that has a parent but isn't reachable from any root
+  // becomes a root itself — otherwise it would be invisible.
   const reachable = new Set<R>()
   const walk = (list: R[]): void => {
     for (const row of list) {
@@ -346,7 +345,7 @@ export function nestByParent<R extends Row>(rows: R[], rowKey: string, parentFie
 
   for (const row of rows) {
     if (!attached.has(row) || reachable.has(row)) continue
-    // Kante zum (kreisenden) Elternteil kappen und als Wurzel führen.
+    // Cut the edge to the (cyclic) parent and treat it as a root.
     const parent = row[parentField] as RowKey
     const siblings = children.get(parent)
     if (siblings) {
@@ -360,18 +359,18 @@ export function nestByParent<R extends Row>(rows: R[], rowKey: string, parentFie
   return { roots, children }
 }
 
-// ── Position im Baum ──────────────────────────────────────────────────
+// ── Position in the tree ──────────────────────────────────────────────
 
 export interface NodeLocation<R extends Row = Row> {
   node: RowNode<R>
-  /** Schlüssel der Elternzeile; null auf der obersten Ebene. */
+  /** Key of the parent row; null on the top level. */
   parentKey: RowKey | null
-  /** Geschwister einschließlich des Knotens selbst, in Anzeigereihenfolge. */
+  /** Siblings including the node itself, in display order. */
   siblings: RowNode<R>[]
   index: number
 }
 
-/** Knoten samt Elternteil und Geschwistern suchen. */
+/** Find a node along with its parent and siblings. */
 export function locateNode<R extends Row>(
   nodes: RowNode<R>[],
   key: RowKey,
@@ -388,9 +387,9 @@ export function locateNode<R extends Row>(
 }
 
 /**
- * Liegt `candidateKey` im Teilbaum von `ancestorKey`? Verhindert, dass eine
- * Zeile in ihren eigenen Nachfahren gezogen wird — der Teilbaum hinge sonst
- * an sich selbst und wäre aus der Ansicht verschwunden.
+ * Is `candidateKey` in the subtree of `ancestorKey`? Prevents a row from
+ * being dragged into its own descendant — the subtree would otherwise hang
+ * from itself and disappear from the view.
  */
 export function isDescendant<R extends Row>(nodes: RowNode<R>[], ancestorKey: RowKey, candidateKey: RowKey): boolean {
   const ancestor = locateNode(nodes, ancestorKey)
@@ -399,32 +398,32 @@ export function isDescendant<R extends Row>(nodes: RowNode<R>[], ancestorKey: Ro
   return walk(ancestor.node.children)
 }
 
-// ── Feste Reihenfolge (numerische Ordnungsspalte) ─────────────────────
+// ── Fixed order (numeric order column) ────────────────────────────────
 
 export interface OrderValue {
-  /** Neuer Wert für die Ordnungsspalte der verschobenen Zeile. */
+  /** New value for the order column of the moved row. */
   order: number
   /**
-   * true, wenn die beiden Nachbarn NICHT unterscheidbar sind — praktisch immer
-   * dann, wenn mehrere Datensätze denselben Ordnungswert tragen (frisch
-   * angelegte Einträge mit Default 0 etwa). Die Mitte wäre dort wieder derselbe
-   * Wert, die Zeile würde also nicht sichtbar wandern; stattdessen wird hinter
-   * dem Block eingeordnet und die Anwendung kann neu durchnummerieren.
+   * true if the two neighbors are NOT distinguishable — in practice whenever
+   * several records carry the same order value (e.g. freshly created entries
+   * with default 0). The midpoint there would be the same value again, so the
+   * row wouldn't visibly move; instead it is placed after the block and the
+   * application can renumber.
    *
-   * Bei verteilten Fließkommawerten passiert das nicht: zwischen zwei Werten
-   * liegen rund 50 Halbierungen, bevor die Genauigkeit ausgeht.
+   * This doesn't happen with spread-out floating-point values: there are about
+   * 50 halvings between two values before precision runs out.
    */
   needsReindex: boolean
 }
 
 /**
- * Neuen Ordnungswert für eine Einfügeposition bestimmen — dieselbe Rechnung wie
- * im admin4: `(prev + next) / 2`, an den Rändern ±Schritt.
+ * Determine a new order value for an insert position — the same calculation as
+ * in admin4: `(prev + next) / 2`, ±step at the edges.
  *
- * `values` sind die Ordnungswerte der Zielliste OHNE die verschobene Zeile,
- * aufsteigend; `index` ist die Einfügeposition (0 = ganz vorn, values.length =
- * ganz hinten). Die Mitte zwischen den Nachbarn heißt: beim Verschieben muss
- * genau EIN Datensatz gespeichert werden, nicht die ganze Liste.
+ * `values` are the order values of the target list WITHOUT the moved row,
+ * ascending; `index` is the insert position (0 = very front, values.length =
+ * very end). Using the midpoint between neighbors means: when moving, exactly
+ * ONE record has to be saved, not the whole list.
  */
 export function orderValueFor(values: number[], index: number, step = 1): OrderValue {
   const clean = values.filter((value) => Number.isFinite(value))
@@ -439,8 +438,8 @@ export function orderValueFor(values: number[], index: number, step = 1): OrderV
   const previous = clean[position - 1]
   const next = clean[position]
   const middle = previous + (next - previous) / 2
-  // Gleiche (oder nicht unterscheidbare) Nachbarn: die Mitte träfe einen von
-  // beiden — dann hinter dem Block einordnen, statt still nichts zu tun.
+  // Equal (or indistinguishable) neighbors: the midpoint would hit one of
+  // them — so place it after the block instead of silently doing nothing.
   const needsReindex = middle <= previous || middle >= next
   return { order: needsReindex ? previous + step : middle, needsReindex }
 }

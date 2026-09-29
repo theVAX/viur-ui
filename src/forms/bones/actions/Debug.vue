@@ -1,21 +1,21 @@
 <template>
   <div class="debug-wrapper">
     <wa-details
-      summary="Bone Structure"
+      :summary="t('actions.debug.structure')"
       open
     >
       <pre>{{ stringify(params.bone) }}</pre>
     </wa-details>
     <wa-details
-      summary="Bone Value"
+      :summary="t('actions.debug.value')"
       open
     >
       <pre>{{ stringify(params.value) }}</pre>
     </wa-details>
-    <wa-details summary="Bone State">
+    <wa-details :summary="t('actions.debug.state')">
       <pre>{{ stringify(params.boneState) }}</pre>
     </wa-details>
-    <wa-details summary="Context">
+    <wa-details :summary="t('actions.debug.context')">
       <pre>{{ stringify({ name: params.name, lang: params.lang, index: params.index }) }}</pre>
     </wa-details>
   </div>
@@ -50,8 +50,8 @@ const props = defineProps({
 const emit = defineEmits(["close", "next"])
 
 /**
- * Stringifiziert ein Objekt für die Debug-Anzeige.
- * Überspringt interne Felder (`_*`) und behandelt Zyklen.
+ * Stringifies an object for the debug display.
+ * Skips internal fields (`_*`) and handles cycles.
  */
 function stringify(obj) {
   const seen = new WeakSet()

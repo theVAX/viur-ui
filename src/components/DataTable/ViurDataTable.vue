@@ -1,7 +1,7 @@
 <template>
   <div class="vi-vdt">
-    <!-- Struktur kam nicht an (Recht fehlt, unerwartete Antwort): Spalten sind
-         dann aus den Daten abgeleitet — Hinweis bleibt stehen. -->
+    <!-- Structure didn't arrive (missing permission, unexpected response): columns
+         are then derived from the data — the notice stays visible. -->
     <wa-callout
       v-if="notice"
       class="vi-vdt-notice"
@@ -55,59 +55,59 @@ import { useI18n } from "vue-i18n"
 import DataTable from "./DataTable.vue"
 import { columnsFromStructure } from "./viurColumns"
 
-// ViurDataTable: dünner ViUR-Wrapper um die DataTable für LIST-Module
-// (Pendant zum ViurBrowser für Baum-Module): `module` rein, fertig. Enthält die komplette
-// Listen-Mechanik — Server-Sortierung/-Suche, Cursor-Nachladen, Lokal-Modus
-// (alles geladen → Sortieren/Filtern/Suchen clientseitig), Spalten aus der
-// Struktur, Feld-Sichtbarkeit inkl. optionaler Persistenz und optionalem
-// X-VIUR-BONELIST (Server serialisiert nur die sichtbaren Felder).
+// ViurDataTable: thin ViUR wrapper around the DataTable for LIST modules
+// (counterpart to ViurBrowser for tree modules): pass `module`, done. Contains the complete
+// list mechanics — server sorting/search, cursor-based loading, local mode
+// (everything loaded → sorting/filtering/searching client-side), columns from the
+// structure, field visibility incl. optional persistence and optional
+// X-VIUR-BONELIST (server serializes only the visible fields).
 
 const props = defineProps({
   module: { type: String, required: true },
   renderer: { type: String, default: null },
-  /** Untertyp gruppierter Listen (Handler `list.grouped`). */
+  /** Subtype of grouped lists (handler `list.grouped`). */
   group: { type: String, default: null },
-  /** Zusätzliche Request-Parameter — bei JEDEM Abruf gespreadet (z.B. der
-   *  Server-Context als @-Parameter). Änderungen greifen ab dem nächsten
-   *  Abruf; sofort neu laden macht `refresh()`. */
+  /** Additional request parameters — spread into EVERY fetch (e.g. the
+   *  server context as @ parameters). Changes take effect from the next
+   *  fetch; `refresh()` reloads immediately. */
   params: { type: Object, default: () => ({}) },
-  /** Spalten; ohne Angabe aus der viewSkel-Struktur abgeleitet. */
+  /** Columns; if not given, derived from the viewSkel structure. */
   columns: { type: Array, default: null },
-  /** Nur diese Bones als Spalten (bei abgeleiteten Spalten). */
+  /** Only these bones as columns (for derived columns). */
   bones: { type: Array, default: null },
-  /** Zugängliche Beschriftung; Standard: Modulname. */
+  /** Accessible label; default: module name. */
   label: { type: String, default: null },
   selectable: { type: [String, Boolean], default: "multiple" },
-  /** Einträge je Nachladen (ViUR `limit`). */
+  /** Entries per load (ViUR `limit`). */
   pageSize: { type: Number, default: 50 },
   /**
-   * Obergrenze für den Lokal-Modus: darüber bleiben Sortieren/Filtern/Suchen
-   * beim Server (der erste lokale Suchlauf schickt jede Zeile durch den
-   * Bone-Formatter — fünfstellig friert das den Main-Thread ein).
+   * Upper limit for local mode: above it, sorting/filtering/searching stay
+   * with the server (the first local search sends every row through the
+   * bone formatter — at five digits that freezes the main thread).
    */
   localModeLimit: { type: Number, default: 5_000 },
-  /** X-VIUR-BONELIST senden, wenn Felder abgewählt sind. NUR aktivieren, wenn
-   *  das Modul es serverseitig trägt ("*"-Subskel) — sonst antwortet der
-   *  Core mit 400. */
+  /** Send X-VIUR-BONELIST when fields are deselected. ONLY enable if
+   *  the module supports it server-side ("*" subskel) — otherwise the
+   *  core responds with 400. */
   bonelist: { type: Boolean, default: false },
-  /** localStorage-Key der Feld-Sichtbarkeit (gespeichert wird die
-   *  HIDDEN-Liste: neue Server-Felder erscheinen automatisch); null = keine
-   *  Persistenz. */
+  /** localStorage key for field visibility (the HIDDEN list is
+   *  stored: new server fields appear automatically); null = no
+   *  persistence. */
   storageKey: { type: String, default: null },
-  /** Sprache/Locale für Bone-Darstellung in den Spalten. */
+  /** Language/locale for bone rendering in the columns. */
   language: { type: String, default: null },
-  /** Steht bei language="*" vorn (üblicherweise die UI-Sprache). */
+  /** Comes first with language="*" (usually the UI language). */
   primaryLanguage: { type: String, default: null },
   locale: { type: String, default: null },
-  /** Spalten per Griff in der Kopfzeile breiter/schmaler ziehen. Anders als
-   *  bei der nackten DataTable (dort Opt-in) hier standardmäßig AN — die
-   *  ViurDataTable ist das Komfort-Widget. */
+  /** Drag columns wider/narrower via a handle in the header. Unlike the
+   *  bare DataTable (opt-in there), ON by default here — the
+   *  ViurDataTable is the convenience widget. */
   resizable: { type: Boolean, default: true },
-  /** Spalten per Drag umsortieren. */
+  /** Reorder columns via drag. */
   reorderable: { type: Boolean, default: true },
-  /** Spalten links/rechts anpinnen. */
+  /** Pin columns left/right. */
   pinnable: { type: Boolean, default: true },
-  /** Wird an die DataTable durchgereicht (überschreibt Einzel-Props). */
+  /** Passed through to the DataTable (overrides individual props). */
   tableProps: { type: Object, default: () => ({}) },
 })
 
@@ -119,12 +119,12 @@ const selectedKeys = defineModel("selectedKeys", { type: Array, default: () => [
 
 const sort = ref([])
 const limit = ref(Math.min(99, Number(props.params?.limit ?? props.pageSize) || 50))
-/** Serverseitiger Suchbegriff (ViUR `search`); leer = aus. */
+/** Server-side search term (ViUR `search`); empty = off. */
 const serverSearch = ref("")
-/** Client-Suche/-Filter — greifen NUR im vollständig geladenen Zustand. */
+/** Client search/filters — apply ONLY in the fully loaded state. */
 const clientSearch = ref("")
 const clientFilters = ref([])
-/** Ausgeblendete Spalten (Feldnamen). */
+/** Hidden columns (field names). */
 const hiddenFields = ref(loadHiddenFields())
 
 const list = useListFetch(props.module, {
@@ -137,7 +137,7 @@ const list = useListFetch(props.module, {
 
 const rows = computed(() => list.data.value)
 
-/** Alles geladen und klein genug → Lokal-Modus (Client-Pipeline der Tabelle). */
+/** Everything loaded and small enough → local mode (the table's client pipeline). */
 const allLoaded = computed(
   () =>
     rows.value.length > 0 &&
@@ -155,6 +155,7 @@ const effectiveColumns = computed(() => {
     ...(props.locale ? { locale: props.locale } : {}),
     exclude: ["key"],
     local: allLoaded.value,
+    boolTexts: [t("bones.bool.true"), t("bones.bool.false")],
   })
   if (derived.length) {
     return derived.map((column) => ({
@@ -171,7 +172,7 @@ const notice = computed(() =>
     : ""
 )
 
-/** Notfall-Spalten: die Felder des ersten Datensatzes, unformatiert. */
+/** Fallback columns: the fields of the first record, unformatted. */
 function fallbackColumns(row) {
   if (!row) return []
   return Object.keys(row)
@@ -179,7 +180,7 @@ function fallbackColumns(row) {
     .map((field) => ({ field, label: field, sortable: false, minWidth: 120, flex: 1 }))
 }
 
-/** Abrufparameter: props.params (Context etc.) + Suche + Sortierung + limit. */
+/** Fetch parameters: props.params (context etc.) + search + sorting + limit. */
 function requestParams(sortEntries = sort.value) {
   const params = { ...props.params, limit: limit.value }
   if (serverSearch.value) params.search = serverSearch.value
@@ -210,9 +211,9 @@ async function onLoadMore({ pages }) {
   await list.next(pages).catch(() => null)
 }
 
-// Zurück im Server-Modus (Reload, neuer Cursor, Server-Suche): lokale
-// Verfeinerungen zurücksetzen und Sortierungen entfernen, die der Server
-// nicht kann (nur indizierte, einwertige Bones).
+// Back in server mode (reload, new cursor, server search): reset local
+// refinements and remove sortings the server can't handle
+// (only indexed, single-valued bones).
 watch(allLoaded, (local) => {
   if (local) return
   clientSearch.value = ""
@@ -223,7 +224,7 @@ watch(allLoaded, (local) => {
   })
 })
 
-// ── Feld-Sichtbarkeit (+ optionale Persistenz, + optionale Bonelist) ─────────
+// ── Field visibility (+ optional persistence, + optional bonelist) ──────────
 function loadHiddenFields() {
   if (!props.storageKey) return []
   try {
@@ -244,7 +245,7 @@ function bonelistHeader() {
 }
 
 const columnsApi = {
-  /** Alle ein-/ausblendbaren Spalten mit aktuellem Zustand. */
+  /** All showable/hideable columns with their current state. */
   all: () =>
     effectiveColumns.value
       .filter((column) => column.hideable !== false)
@@ -253,7 +254,7 @@ const columnsApi = {
         label: String(column.label ?? column.field ?? column.id),
         hidden: column.hidden === true,
       })),
-  /** Sichtbare Spalten setzen (persistiert; mit Bonelist folgt ein Reload). */
+  /** Set visible columns (persisted; with bonelist a reload follows). */
   apply: (visibleIds) => {
     const visible = new Set(visibleIds)
     hiddenFields.value = effectiveColumns.value
@@ -263,14 +264,14 @@ const columnsApi = {
       try {
         localStorage.setItem(props.storageKey, JSON.stringify(hiddenFields.value))
       } catch {
-        // localStorage kann fehlen (Privatmodus) — dann eben nicht persistent.
+        // localStorage may be missing (private mode) — then just not persistent.
       }
     }
     if (props.bonelist) void list.filter(requestParams()).catch(() => null)
   },
 }
 
-/** Serverseitige Suche — bzw. lokal, wenn alles geladen ist. */
+/** Server-side search — or local, if everything is loaded. */
 function search(term) {
   const trimmed = String(term ?? "").trim()
   if (allLoaded.value) {
@@ -281,12 +282,12 @@ function search(term) {
   }
 }
 
-/** Von vorn laden — mit den AKTUELLEN props.params (Context etc.). */
+/** Load from the start — with the CURRENT props.params (context etc.). */
 function refresh() {
   return list.filter(requestParams())
 }
 
-/** Beschriftung eines Eintrags: erster Textwert seiner Spalten, sonst der Key. */
+/** Label of an entry: first text value of its columns, otherwise the key. */
 function entryTitle(key) {
   const row = rows.value.find((entry) => String(entry.key) === String(key))
   if (!row) return String(key)

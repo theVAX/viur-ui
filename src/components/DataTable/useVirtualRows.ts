@@ -1,10 +1,10 @@
-// Virtualisierung: nur das sichtbare Fenster (plus Overscan) rendert.
+// Virtualization: only the visible window (plus overscan) is rendered.
 //
-// Höhen sind nicht überall gleich — Detail-Panels dürfen beliebig hoch sein.
-// Deshalb wird ein Präfixsummen-Array über die Zeilenhöhen geführt (gemessene
-// Höhen überschreiben die Standardhöhe) und darin binär gesucht. Das Fenster
-// wird über Padding oben/unten positioniert, nicht über absolute Positionen —
-// so bleiben Grid-Spalten und Sticky-Pinning unangetastet.
+// Heights are not the same everywhere — detail panels may be arbitrarily tall.
+// That's why a prefix-sum array over the row heights is maintained (measured
+// heights override the default height) and binary-searched. The window
+// is positioned via top/bottom padding, not via absolute positions —
+// so grid columns and sticky pinning remain untouched.
 
 import { computed, reactive, type Ref } from "vue"
 import type { DisplayRow, Row } from "./types"
@@ -25,7 +25,7 @@ export function useVirtualRows<R extends Row = Row>(
   const state = reactive({
     scrollTop: 0,
     viewportHeight: 0,
-    /** Gemessene Höhen (nur für Zeilen, die von der Standardhöhe abweichen). */
+    /** Measured heights (only for rows that deviate from the default height). */
     heights: {} as Record<string, number>,
 
     offsets: computed((): number[] => {
@@ -74,7 +74,7 @@ export function useVirtualRows<R extends Row = Row>(
     }),
   })
 
-  /** Größter Index, dessen Offset <= position ist (binäre Suche). */
+  /** Largest index whose offset is <= position (binary search). */
   function findIndex(offsets: number[], position: number): number {
     let low = 0
     let high = offsets.length - 1
@@ -97,7 +97,7 @@ export function useVirtualRows<R extends Row = Row>(
     syncViewport()
   }
 
-  /** Höhe einer abweichenden Zeile (Detail-Panel) hinterlegen. */
+  /** Store the height of a deviating row (detail panel). */
   function measureRow(key: string, height: number): void {
     if (height <= 0) return
     if (Math.abs((state.heights[key] ?? 0) - height) < 1) return

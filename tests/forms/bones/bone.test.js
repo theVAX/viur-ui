@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
 
-// ─── Helpers (exakt aus bone.vue übernommen) ──────────────────────────────────
+// ─── Helpers (taken verbatim from bone.vue) ───────────────────────────────────
 
 /**
- * Prüft ob ein Objekt ausschließlich null-Werte oder leere Arrays enthält.
- * Identisch mit isObjectEmpty in bone.vue.
+ * Checks whether an object contains only null values or empty arrays.
+ * Identical to isObjectEmpty in bone.vue.
  */
 function isObjectEmpty(obj) {
   for (const [, value] of Object.entries(obj)) {
@@ -20,7 +20,7 @@ function isObjectEmpty(obj) {
 }
 
 /**
- * Filtert Fehler nach fieldPath und Severity — Logik aus dem errorMessages-computed in bone.vue.
+ * Filters errors by fieldPath and severity — logic from the errorMessages computed in bone.vue.
  */
 function filterErrors(errors, name, { multilanguage, multiple, required }) {
   let result = []
@@ -40,7 +40,7 @@ function filterErrors(errors, name, { multilanguage, multiple, required }) {
 }
 
 /**
- * Simuliert updateValue aus bone.vue: mutiert state, gibt emittierte Events zurück.
+ * Simulates updateValue from bone.vue: mutates state, returns emitted events.
  */
 function simulateUpdateValue(state, name, val, lang = null, index = null, valid = true) {
   const emitted = []
@@ -165,7 +165,7 @@ describe("bone.vue – errorMessages filter", () => {
   })
 })
 
-// ─── updateValue Zustandslogik ────────────────────────────────────────────────
+// ─── updateValue state logic ──────────────────────────────────────────────────
 
 describe("bone.vue – updateValue", () => {
   it("setzt skalaren bonevalue und feuert Event", () => {

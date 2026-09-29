@@ -39,46 +39,46 @@
 <script setup>
 import { reactive, onMounted, inject, computed } from "vue"
 /**
- * Koordinaten-Eingabe für geografische Punkte (Breitengrad / Längengrad).
+ * Coordinate input for geographic points (latitude / longitude).
  *
- * Rendert zwei `<wa-input type="number">` Felder für Latitude und Longitude.
- * Die erlaubten Wertebereiche werden über `boneState.bonestructure.boundslat`
- * und `boneState.bonestructure.boundslng` gesteuert. Unterstützt weder
- * Mehrsprachigkeit noch Mehrfachwerte.
+ * Renders two `<wa-input type="number">` fields for latitude and longitude.
+ * The allowed value ranges are controlled via `boneState.bonestructure.boundslat`
+ * and `boneState.bonestructure.boundslng`. Supports neither
+ * multiple languages nor multiple values.
  *
  * @displayName SpatialBone
  *
- * @cssClass bone-widget - Basis-Klasse aller Bone-Widgets
- * @cssClass bone-widget-spatial - Kennzeichnet den Bone-Typ
- * @cssClass bone-widget-spatial-default - Standard-Variante
- * @cssClass bone-widget-spatial-{name}-lat - Dynamisch gesetzt für das Breiten­grad-Feld
- * @cssClass bone-widget-spatial-{name}-long - Dynamisch gesetzt für das Längen­grad-Feld
+ * @cssClass bone-widget - Base class of all bone widgets
+ * @cssClass bone-widget-spatial - Identifies the bone type
+ * @cssClass bone-widget-spatial-default - Default variant
+ * @cssClass bone-widget-spatial-{name}-lat - Dynamically set for the latitude field
+ * @cssClass bone-widget-spatial-{name}-long - Dynamically set for the longitude field
  */
 defineOptions({
   inheritAttrs: false,
 })
 const props = defineProps({
-  /** Bone-Name – wird in jedem `change`-Event als erstes Argument übergeben. */
+  /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Aktueller Bone-Wert als Array `[lat, lng]` oder Objekt `{ lat, lng }`. */
+  /** Current bone value as an array `[lat, lng]` or an object `{ lat, lng }`. */
   value: [Object, String, Number, Boolean, Array],
-  /** Index im Multiple-Array; `undefined` bei Einzelwert. */
+  /** Index in the multiple array; `undefined` for a single value. */
   index: Number,
-  /** Sprach-Key (SpatialBone unterstützt kein multilang). */
+  /** Language key (SpatialBone does not support multilang). */
   lang: String,
-  /** Bone-Struktur (aktuell nicht aktiv genutzt). */
+  /** Bone structure (currently not actively used). */
   bone: Object,
-  /** Setzt den Fokus nach dem Mount auf das erste Input-Element. */
+  /** Focuses the first input element after mount. */
   autofocus: Boolean,
 })
 
 const emit = defineEmits([
   /**
-   * Wird bei jeder Wertänderung sowie beim Mount (Initialisierung) gefeuert.
-   * @arg {string} name - Bone-Name
-   * @arg {[number, number]} value - Koordinaten als `[lat, lng]`
-   * @arg {string|undefined} lang - Sprach-Key
-   * @arg {number|undefined} index - Index im Multiple-Array
+   * Fired on every value change and on mount (initialization).
+   * @arg {string} name - Bone name
+   * @arg {[number, number]} value - Coordinates as `[lat, lng]`
+   * @arg {string|undefined} lang - Language key
+   * @arg {number|undefined} index - Index in the multiple array
    */
   "change",
 ])

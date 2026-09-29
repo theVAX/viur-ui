@@ -349,3 +349,12 @@ export declare function skelDataToFormData(
  *  (vue-i18n is required; the components translate with t() without fallbacks). */
 export declare const deTranslations: Record<string, any>
 export declare const enTranslations: Record<string, any>
+
+// ─── Safe HTML ────────────────────────────────────────────────────────────────
+
+/** Sanitizes an HTML string with DOMPurify (scripts, event handlers and javascript: URLs removed). */
+export declare function sanitizeHtml(value: unknown): string
+/** Vue plugin: registers the `v-safe-html` directive and `$sanitizeHtml`. */
+export declare const safeHtml: import("vue").Plugin
+/** The `v-safe-html` directive for local registration (`import { vSafeHtml }` in `<script setup>`). */
+export declare const vSafeHtml: import("vue").ObjectDirective<HTMLElement, unknown>

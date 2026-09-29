@@ -12,9 +12,8 @@ export default class Utils {
   }
 
   static stripHtml(html) {
-    const div = document.createElement("div")
-    div.innerHTML = html
-    return div.textContent || div.innerText || ""
+    // DOMParser builds an inert document: no scripts or event handlers run (unlike innerHTML)
+    return new DOMParser().parseFromString(String(html ?? ""), "text/html").body.textContent || ""
   }
 
   static unescape(value) {

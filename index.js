@@ -44,3 +44,6 @@ export { default as enTranslations } from "./src/translations/en.js"
 
 // Display of bone values
 export { default as boneLogic } from "./src/forms/bones/view/boneLogic.js"
+
+// Safe HTML rendering (DOMPurify): v-safe-html directive + sanitizeHtml()
+export { default as safeHtml, sanitizeHtml, vSafeHtml } from "./src/vite/safeHtml.js"

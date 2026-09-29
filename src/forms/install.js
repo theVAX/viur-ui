@@ -1,4 +1,5 @@
 import { defineAsyncComponent } from "vue"
+import safeHtml from "../vite/safeHtml.js"
 
 // --------------------------------------------------------------------------- //
 // Global registration of the form wrappers                                    //
@@ -17,6 +18,11 @@ import { defineAsyncComponent } from "vue"
 //
 // Keeping the list here instead of in every consumer means a rename inside the
 // package cannot silently break the apps that embed the forms.
+//
+// Also installs `safeHtml` (v-safe-html + $sanitizeHtml). Importing this module
+// sets `window.__sanitizeHtml`, which an app-side v-html compiler transform can
+// call. v-html itself is compiled into an innerHTML prop at build time and can't
+// be replaced at runtime — that override belongs in the app's vite.config.js.
 //
 //   import { installViurForms } from "viur-ui/src/forms/install.js"
 //   installViurForms(app)
@@ -40,4 +46,5 @@ export function installViurForms(app) {
   for (const [name, loader] of Object.entries(components)) {
     if (!app.component(name)) app.component(name, defineAsyncComponent(loader))
   }
+  if (!app.directive("safe-html")) app.use(safeHtml)
 }

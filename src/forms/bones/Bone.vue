@@ -643,21 +643,38 @@ provide("formatString", formatString)
 
 <style scoped>
 @layer foundation.form {
-  /* Bone wrapper: label left, content right (stacked on mobile) */
+  /* Bone wrapper: label left, content right. Wraps below the label as soon as the
+     content gets less than 20rem in its own container (not the viewport), so nested
+     forms stack too. The content's huge flex-grow keeps the label at ~235px while
+     side by side; once wrapped, the label spans the full width. */
   .bone {
-    display: grid;
-    grid-template-columns: 235px 1fr;
-    grid-gap: var(--wa-space-s);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--wa-space-s);
     margin-bottom: 20px;
+
+    & > :deep(.bone-label) {
+      flex: 1 1 235px;
+    }
+
+    & > .bone-inner {
+      flex: 999 1 20rem;
+      min-width: 0;
+    }
+
+    & > .bone-label-info {
+      flex-basis: 100%;
+    }
 
     /* Label above the content or none at all: one column at every width */
     &.is-label-top,
     &.is-label-hide {
-      grid-template-columns: 1fr;
-    }
+      flex-direction: column;
+      flex-wrap: nowrap;
 
-    @media (max-width: 900px) {
-      grid-template-columns: 1fr;
+      & > .bone-inner {
+        flex: 1 1 auto;
+      }
     }
   }
   .bone-label-required {

@@ -42,7 +42,7 @@ import { installViurForms } from "viur-ui/src/forms/install.js"
 
 app.use(createPinia())
 app.use(i18n)
-installViurForms(app)
+installViurForms(app) // also registers v-safe-html (DOMPurify) and $sanitizeHtml
 ```
 
 Translations: merge the package messages before your app's own (app keys win):
@@ -53,6 +53,23 @@ i18n.global.mergeLocaleMessage("en", enTranslations)
 ```
 
 `installViurForms` registers these global names (async), skipping names that are already taken: `ViForm`, `vi-form`, `vi-form-category`, `Bone`, `bone`, `bone-label`, `bone-actions`, `bone-single-entry`, `bone-multiple-list`, `bone-multiple-wrapper`, `bone-nested-wrapper`. The package imports its wrappers locally, so running alongside `@viur/vue-utils` (e.g. a global `Bone` from there) doesn't affect viur-ui forms — but your own templates resolve whichever component owns the name.
+
+## Safe HTML (recommended)
+
+Route every `v-html` through DOMPurify at compile time — your templates and viur-ui's, without changes:
+
+```js
+import vue from "@vitejs/plugin-vue"
+import { sanitizeVHtml } from "viur-ui/src/vite/sanitizeVHtml.js"
+
+export default {
+  plugins: [vue({ template: { compilerOptions: { directiveTransforms: { html: sanitizeVHtml } } } })],
+}
+```
+
+`installViurForms(app)` provides the runtime sanitizer (`window.__sanitizeHtml`); call it before mounting. Without it, rendering throws rather than outputting unsanitized HTML. `v-safe-html` is then redundant.
+
+Not covered: SSR, `innerHTML` in JS, `h("div", { innerHTML })` — use `sanitizeHtml()` there. Don't decode HTML entities before sanitizing.
 
 ## ViForm
 

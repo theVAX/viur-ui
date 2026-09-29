@@ -12,13 +12,15 @@
   >
     <div
       slot="summary"
-      v-html="name"
+      v-safe-html="name"
     ></div>
     <slot></slot>
   </wa-details>
 </template>
 
 <script setup>
+import { vSafeHtml } from "../vite/safeHtml.js"
+
 const props = defineProps({
   // String shown a Category
   name: {

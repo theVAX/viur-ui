@@ -9,7 +9,6 @@
   "dependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.1",
     "@codemirror/language-data": "^6.5.2",
-    "@viur/shoelace": "^1.0.15-v2.20.1",
     "@viur/webawesome": "^0.10.0",
     "@vueuse/core": "^14.2.1",
     "ckeditor5": "^47.6.1",

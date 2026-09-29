@@ -1,5 +1,5 @@
-import type { CellBadge, DataTableColumn, Row } from "./types"
-import { compareValues, firstValueOf } from "./columns"
+import type { CellBadge, DataTableColumn, Row } from "./types.ts"
+import { compareValues, firstValueOf } from "./columns.ts"
 // @ts-expect-error – JS module without types
 import Utils from "../../forms/bones/utils.js"
 

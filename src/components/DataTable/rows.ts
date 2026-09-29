@@ -2,9 +2,9 @@
 // pagination → flat display rows. Also Vue-free and therefore directly
 // testable; the component just calls the whole thing inside a computed.
 
-import { aggregateColumn, defaultText, findColumn, rowMatchesFilters, rowMatchesSearch, sortRows } from "./columns"
-import type { ColumnFacets, DisplayRow, FilterEntry, ResolvedColumn, Row, RowKey, RowNode, SortEntry } from "./types"
-import { computeFacets, isEmptyFilter } from "./columns"
+import { aggregateColumn, defaultText, findColumn, rowMatchesFilters, rowMatchesSearch, sortRows } from "./columns.ts"
+import type { ColumnFacets, DisplayRow, FilterEntry, ResolvedColumn, Row, RowKey, RowNode, SortEntry } from "./types.ts"
+import { computeFacets, isEmptyFilter } from "./columns.ts"
 
 export type ChildRowsAccessor<R extends Row = Row> = string | ((row: R) => R[] | undefined | null)
 

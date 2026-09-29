@@ -31,7 +31,7 @@
 
 <script setup>
 import { reactive, computed, onMounted, inject } from "vue"
-import { resolveActions, isActionDisabled, getActionHandler, formConfiguredActions } from "./actions"
+import { resolveActions, isActionDisabled, getActionHandler, formConfiguredActions } from "./actions/index.js"
 import ActionDialog from "./actions/ActionDialog.vue"
 
 const emit = defineEmits(["change"])

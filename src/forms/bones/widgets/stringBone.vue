@@ -22,7 +22,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed, watchEffect, ref } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
-import Utils from "../utils"
+import Utils from "../utils.js"
 /**
  * Single-line text field for simple strings.
  *

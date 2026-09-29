@@ -47,7 +47,7 @@ import {
   provide,
   unref,
 } from "vue"
-import { getBoneWidget } from "./index"
+import { getBoneWidget } from "./index.js"
 import ViForm from "../ViForm.vue"
 import { useTimeoutFn } from "@vueuse/core"
 

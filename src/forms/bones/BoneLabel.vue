@@ -37,7 +37,7 @@
 
 <script setup>
 import { reactive, inject, computed, unref } from "vue"
-import { buildBoneDomId } from "./utils"
+import { buildBoneDomId } from "./utils.js"
 const props = defineProps({
   name: String,
   value: Object,

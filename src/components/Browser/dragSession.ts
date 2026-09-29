@@ -1,6 +1,6 @@
 import { reactive } from "vue"
 import type { InjectionKey } from "vue"
-import type { RowKey } from "../DataTable/types"
+import type { RowKey } from "../DataTable/types.ts"
 
 // --------------------------------------------------------------------------- //
 // Drag session — shared dragging between panels (list ↔ tree)                 //

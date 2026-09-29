@@ -1,5 +1,5 @@
 import type { DefineComponent, Ref } from "vue"
-import type { Row, RowKey } from "./types"
+import type { Row, RowKey } from "./types.ts"
 
 /** Props of ViurDataTable.vue (see defineProps there). */
 export interface ViurDataTableProps {

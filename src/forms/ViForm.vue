@@ -146,11 +146,12 @@
 
 <script setup>
 import { useI18n } from "vue-i18n"
-import { useFormUtils } from "./utils"
+import { useFormUtils } from "./utils.js"
 import { v1SelectionFollow } from "../request/index.js"
 import { reactive, watch, onBeforeMount, computed, provide, ref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
+import Bone from "./bones/Bone.vue"
 
 const emit = defineEmits(["change", "keypress-enter", "failed", "success", "step-change"])
 

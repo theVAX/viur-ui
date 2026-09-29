@@ -125,9 +125,9 @@
 <script setup>
 import { useI18n } from "vue-i18n"
 import { ref, computed, provide, watch } from "vue"
-import { DataTable } from "../DataTable"
+import { DataTable } from "../DataTable/index.ts"
 import TreeNav from "./TreeNav.vue"
-import { createDragSession, dropModeFor, DRAG_SESSION } from "./dragSession"
+import { createDragSession, dropModeFor, DRAG_SESSION } from "./dragSession.ts"
 
 // --------------------------------------------------------------------------- //
 // Browser — tree for navigation + DataTable as list                            //

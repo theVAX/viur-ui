@@ -1,7 +1,7 @@
 // Public surface of the DataTable widget.
 export { default as DataTable } from "./DataTable.vue"
 export { default as ColumnFilterPanel } from "./ColumnFilterPanel.vue"
-export * from "./types"
+export * from "./types.ts"
 export {
   aggregate,
   aggregateColumn,
@@ -19,7 +19,7 @@ export {
   rowMatchesFilters,
   rowMatchesSearch,
   sortRows,
-} from "./columns"
+} from "./columns.ts"
 export {
   buildRows,
   collectKeys,
@@ -37,10 +37,10 @@ export {
   type NodeLocation,
   type OrderValue,
   type SelectionState,
-} from "./rows"
-export { useColumnLayout, type ColumnLayout, type LayoutColumn } from "./useColumnLayout"
-export { useGridNavigation } from "./useGridNavigation"
-export { useVirtualRows } from "./useVirtualRows"
+} from "./rows.ts"
+export { useColumnLayout, type ColumnLayout, type LayoutColumn } from "./useColumnLayout.ts"
+export { useGridNavigation } from "./useGridNavigation.ts"
+export { useVirtualRows } from "./useVirtualRows.ts"
 export {
   badgesForBone,
   boneFamily,
@@ -52,7 +52,7 @@ export {
   type BoneDescription,
   type BoneStructure,
   type ColumnsFromStructureOptions,
-} from "./viurColumns"
+} from "./viurColumns.ts"
 // ViurDataTable is (like ViurBrowser) a JS SFC — its types live in
 // ViurDataTable.d.vue.ts (import: ".../DataTable/ViurDataTable.d.vue", as
 // with ViForm).

@@ -53,7 +53,7 @@ import { computed, ref, watch } from "vue"
 import { useListFetch } from "../../request/index.js"
 import { useI18n } from "vue-i18n"
 import DataTable from "./DataTable.vue"
-import { columnsFromStructure } from "./viurColumns"
+import { columnsFromStructure } from "./viurColumns.ts"
 
 // ViurDataTable: thin ViUR wrapper around the DataTable for LIST modules
 // (counterpart to ViurBrowser for tree modules): pass `module`, done. Contains the complete

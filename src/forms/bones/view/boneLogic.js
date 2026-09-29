@@ -1,4 +1,4 @@
-import Utils from "../utils"
+import Utils from "../utils.js"
 import { computed, reactive } from "vue"
 
 export const languageMap = [

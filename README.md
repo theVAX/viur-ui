@@ -25,6 +25,14 @@ export default {
 
 Env: `VITE_API_URL`, `VITE_DEFAULT_RENDERER` (`json` | `vi`).
 
+## Vitest
+
+```js
+test: {
+  server: { deps: { inline: ["viur-ui"] } }, // package .js files import .vue — Node can't load those
+}
+```
+
 ## Setup
 
 ```js
@@ -33,9 +41,26 @@ import { deTranslations, enTranslations } from "viur-ui"
 import { installViurForms } from "viur-ui/src/forms/install.js"
 
 app.use(createPinia())
-app.use(createI18n({ legacy: false, locale: "de", messages: { de: deTranslations, en: enTranslations } }))
-installViurForms(app) // ViForm, Bone, BoneLabel, … (async)
+app.use(i18n)
+installViurForms(app)
 ```
+
+Translations: merge the package messages before your app's own (app keys win):
+
+```js
+i18n.global.mergeLocaleMessage("de", deTranslations)
+i18n.global.mergeLocaleMessage("en", enTranslations)
+```
+
+`installViurForms` registers these global names (async), skipping names that are already taken: `ViForm`, `vi-form`, `vi-form-category`, `Bone`, `bone`, `bone-label`, `bone-actions`, `bone-single-entry`, `bone-multiple-list`, `bone-multiple-wrapper`, `bone-nested-wrapper`. The package imports its wrappers locally, so running alongside `@viur/vue-utils` (e.g. a global `Bone` from there) doesn't affect viur-ui forms — but your own templates resolve whichever component owns the name.
+
+## ViForm
+
+```vue
+<ViForm module="user" action="edit" :skelkey="key" />
+```
+
+Props, state and exposed API: [`src/forms/ViForm.d.vue.ts`](./src/forms/ViForm.d.vue.ts).
 
 ## API
 

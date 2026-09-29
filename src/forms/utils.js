@@ -1,7 +1,7 @@
 import { createControllerFetch, normalizeEnvelope, normalizeStructure } from "../request/index.js"
 import Logics from "logics-js"
 import { inject, toRaw, reactive, markRaw } from "vue"
-import Utils from "./bones/utils"
+import Utils from "./bones/utils.js"
 
 /**
  * Deep copy of plain data (skel values) that resolves Vue proxies on EVERY

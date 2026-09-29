@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed } from "vue"
-import { getActionComponent } from "./index"
+import { getActionComponent } from "./index.js"
 
 const props = defineProps({
   open: Boolean,

@@ -40,7 +40,7 @@ import { ref, computed, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Browser from "./Browser.vue"
 import { useTreeFetch, useListFetch, useListRootNodesFetch, useMoveFetch, uploadFile } from "../../request/index.js"
-import { columnsFromStructure } from "../DataTable/viurColumns"
+import { columnsFromStructure } from "../DataTable/viurColumns.ts"
 
 // Thin ViUR wrapper around the generic browser: pass in `module`, done.
 // Rootnodes via /listRootNodes, contents of the location via useTreeFetch

@@ -10,5 +10,5 @@ export {
   type DragPayload,
   type DragContainer,
   type DropTarget,
-} from "./dragSession"
-export type { BrowserNode, BrowserMovePayload, BrowserUploadPayload } from "./types"
+} from "./dragSession.ts"
+export type { BrowserNode, BrowserMovePayload, BrowserUploadPayload } from "./types.ts"

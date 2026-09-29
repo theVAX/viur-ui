@@ -141,9 +141,9 @@ import {
 } from "vue"
 import wrapperMultiple from "./BoneMultipleWrapper.vue"
 import BoneLabel from "./BoneLabel.vue"
-import { BoneHasMultipleHandling, getBoneActionbar } from "./index"
+import { BoneHasMultipleHandling, getBoneActionbar } from "./index.js"
 import rawBone from "./rawBone.vue"
-import Utils, { buildBoneDomId } from "./utils"
+import Utils, { buildBoneDomId } from "./utils.js"
 import { VueDraggable } from "vue-draggable-plus"
 import BoneActions from "./BoneActions.vue"
 

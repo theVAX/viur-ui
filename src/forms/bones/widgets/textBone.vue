@@ -75,7 +75,7 @@ import {
 } from "ckeditor5"
 import coreTranslations from "ckeditor5/translations/de.js"
 import "ckeditor5/ckeditor5.css"
-import { ViURUploadAdapterPlugin } from "../uploadAdapter"
+import { ViURUploadAdapterPlugin } from "../uploadAdapter.js"
 
 /**
  * Multi-line text field for longer content, either as a textarea or a rich-text editor (CKEditor 5).

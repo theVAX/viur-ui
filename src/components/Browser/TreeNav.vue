@@ -51,7 +51,7 @@
 <script setup>
 import { useI18n } from "vue-i18n"
 import { ref, computed, watch, inject, onMounted, onBeforeUnmount } from "vue"
-import { DRAG_SESSION } from "./dragSession"
+import { DRAG_SESSION } from "./dragSession.ts"
 
 // Lean NAVIGATION tree: only nodes (name, icon, arrow), children are loaded
 // via `loadChildren`. Deliberately no DataTable — navigation is not a data

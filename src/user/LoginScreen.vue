@@ -138,8 +138,7 @@
           @failed="onFailed"
         >
           <!-- Pass the form's own slots through so an app can supply its own
-               chrome (the default action bar is Shoelace; a WebAwesome app
-               replaces it here). Only forwarded when the consumer provides the
+               chrome (e.g. its own action bar). Only forwarded when the consumer provides the
                slot, otherwise ViForm keeps its default. -->
           <template
             v-if="$slots.actions"

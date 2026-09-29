@@ -3,7 +3,7 @@
 // (analogous to the component rule), so the component only has to render.
 
 import { computed, reactive } from "vue"
-import type { PinSide, ResolvedColumn, Row } from "./types"
+import type { PinSide, ResolvedColumn, Row } from "./types.ts"
 
 const DEFAULT_WIDTH = 160
 const DEFAULT_MIN_WIDTH = 64

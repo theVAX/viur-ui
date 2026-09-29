@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n"
 import { computed, reactive } from "vue"
-import type { ColumnFacets, FilterOption, ResolvedColumn } from "./types"
+import type { ColumnFacets, FilterOption, ResolvedColumn } from "./types.ts"
 
 const { t } = useI18n()
 

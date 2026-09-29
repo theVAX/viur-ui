@@ -1,4 +1,4 @@
 :root {
-  --vi-border-color: var(--sl-color-neutral-300);
-  --vi-background-color: var(--sl-color-neutral-0);
+  --vi-border-color: var(--wa-color-surface-border);
+  --vi-background-color: var(--wa-color-surface-default);
 }

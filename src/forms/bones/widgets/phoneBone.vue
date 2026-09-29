@@ -34,7 +34,7 @@
 <script setup>
 import { reactive, onMounted, inject, computed, watchEffect, ref } from "vue"
 import { useTimeoutFn } from "@vueuse/core"
-import Utils from "../utils"
+import Utils from "../utils.js"
 import jsonData from "../country_information.json"
 import parsePhoneNumber from "libphonenumber-js/min"
 import { AsYouType, validatePhoneNumberLength } from "libphonenumber-js/min"

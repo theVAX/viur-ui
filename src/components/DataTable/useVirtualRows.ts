@@ -7,7 +7,7 @@
 // so grid columns and sticky pinning remain untouched.
 
 import { computed, reactive, type Ref } from "vue"
-import type { DisplayRow, Row } from "./types"
+import type { DisplayRow, Row } from "./types.ts"
 
 export interface VirtualRowsOptions<R extends Row = Row> {
   rows: () => DisplayRow<R>[]

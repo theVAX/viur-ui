@@ -97,6 +97,7 @@
 <script setup>
 import { reactive, onMounted, inject, ref } from "vue"
 import { downloadUrlFor, uploadFile } from "../../../request/index.js"
+import BoneActions from "../BoneActions.vue"
 /**
  * File upload widget for bones of type `relational.tree.leaf.file.file`.
  *

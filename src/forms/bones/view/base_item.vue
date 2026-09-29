@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import boneLogic from "./boneLogic"
+import boneLogic from "./boneLogic.js"
 import { computed, defineComponent, reactive } from "vue"
 import { useI18n } from "vue-i18n"
 

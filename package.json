@@ -24,7 +24,6 @@
   "peerDependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@codemirror/language-data": "^6.5.2",
-    "@viur/shoelace": ">=1.0.0-0",
     "@viur/webawesome": ">=0.10.0",
     "@vueuse/core": "^12.4.0",
     "ckeditor5": "^45.2.0",

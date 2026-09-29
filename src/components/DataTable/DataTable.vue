@@ -722,11 +722,11 @@
 import { useI18n } from "vue-i18n"
 import { computed, inject, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch, shallowRef } from "vue"
 import ColumnFilterPanel from "./ColumnFilterPanel.vue"
-import { useColumnLayout, type LayoutColumn } from "./useColumnLayout"
-import { useGridNavigation } from "./useGridNavigation"
-import { useVirtualRows } from "./useVirtualRows"
-import { DRAG_SESSION } from "../Browser/dragSession"
-import { aggregateColumn, defaultText, findColumn, isEmptyFilter, nextSortState, resolveColumns } from "./columns"
+import { useColumnLayout, type LayoutColumn } from "./useColumnLayout.ts"
+import { useGridNavigation } from "./useGridNavigation.ts"
+import { useVirtualRows } from "./useVirtualRows.ts"
+import { DRAG_SESSION } from "../Browser/dragSession.ts"
+import { aggregateColumn, defaultText, findColumn, isEmptyFilter, nextSortState, resolveColumns } from "./columns.ts"
 import {
   buildRows,
   collectKeys,
@@ -742,7 +742,7 @@ import {
   type NestedTree,
   type SelectionState,
   type NodeLocation,
-} from "./rows"
+} from "./rows.ts"
 import type {
   ColumnFacets,
   DataTableColumn,
@@ -758,7 +758,7 @@ import type {
   RowNode,
   SortEntry,
   CellBadge,
-} from "./types"
+} from "./types.ts"
 
 const props = withDefaults(
   defineProps<{

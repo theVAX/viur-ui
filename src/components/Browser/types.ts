@@ -1,4 +1,4 @@
-import type { RowKey } from "../DataTable/types"
+import type { RowKey } from "../DataTable/types.ts"
 
 /** Node of the navigation tree (and folder in the list). */
 export interface BrowserNode {

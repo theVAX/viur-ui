@@ -1,6 +1,6 @@
 import type { DefineComponent } from "vue"
-import type { RowKey } from "../DataTable/types"
-import type { BrowserMovePayload, BrowserUploadPayload } from "./types"
+import type { RowKey } from "../DataTable/types.ts"
+import type { BrowserMovePayload, BrowserUploadPayload } from "./types.ts"
 
 /** Props of ViurBrowser.vue (see defineProps there). */
 export interface ViurBrowserProps {

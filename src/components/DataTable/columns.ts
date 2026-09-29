@@ -13,7 +13,7 @@ import type {
   Row,
   SortEntry,
   SortMode,
-} from "./types"
+} from "./types.ts"
 
 /** Read a value via a dot path ("user.name"). */
 export function getPath(row: Row, path: string): unknown {

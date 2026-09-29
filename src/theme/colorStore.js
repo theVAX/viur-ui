@@ -18,7 +18,7 @@ import { useConfigStore } from "../request/configStore.js"
 /** Lightness (HSL, %) per brand step: the old admin's table (50 → 83 %, …,
  *  950 → 3 %), step by step on WebAwesome's steps (95 … 05). */
 export const BRAND_LIGHTNESS = [
-  ["95", 83],
+  ["95", 95],
   ["90", 78],
   ["80", 68],
   ["70", 58],

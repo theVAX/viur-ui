@@ -12,6 +12,8 @@ import { createControllerFetch, resetState } from "../request/index.js"
 // success). This store owns what does NOT fit a generic form step:
 //   • the SESSION: the current user + access gating (`fetchSelf`, `logout`)
 //   • Google sign-in via the Identity SDK token (`loginWithGoogle`)
+//   • the requests of the CLASSIC chain (viur-core 3.9, v1 JSON) that are not a
+//     form submit (`loadLoginStep`, `selectAuthenticationProvider`)
 // On a completed login the consumer calls `fetchSelf()` to load the user.
 
 const DEFAULT_RENDERER = import.meta.env.VITE_DEFAULT_RENDERER || "json"
@@ -113,6 +115,29 @@ export const useUserStore = defineStore("viurUser", () => {
     state.status = "unknown"
   }
 
+  // ── classic login chain (viur-core 3.9) ─────────────────────────────────────
+  // viur-core 3.9 answers in the classic v1 shape: `/user/login` offers the
+  // providers, every further step is a form of its own whose url the server
+  // hands out (provider / second factor targets, `params.action_url`). The
+  // login screen reports failures itself, so these requests stay silent.
+
+  /** GET-render a step: an endpoint below `user` ("login") or a server url. */
+  async function loadLoginStep(target = "login") {
+    const url = /^(\/|https?:\/\/)/.test(target) ? target : userUrl(target)
+    return apiRequest(url, { method: "GET", messages: false })
+  }
+
+  /** Choose a primary provider without a widget of its own; the answer's
+   *  `next_url` is its first step. */
+  async function selectAuthenticationProvider(provider) {
+    return apiRequest(userUrl("select_authentication_provider"), {
+      method: "POST",
+      secure: true,
+      data: { provider },
+      messages: false,
+    })
+  }
+
   // ── Google sign-in ────────────────────────────────────────────────────────────
   // POST the GSI id-token. Returns the normalized envelope so the caller can
   // complete (status success → the session was loaded via fetchSelf) or hand a
@@ -149,6 +174,9 @@ export const useUserStore = defineStore("viurUser", () => {
     fetchSelf,
     logout,
     reset,
+    // classic login chain
+    loadLoginStep,
+    selectAuthenticationProvider,
     // google
     loginWithGoogle,
   }

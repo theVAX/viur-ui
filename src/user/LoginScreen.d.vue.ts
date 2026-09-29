@@ -6,9 +6,9 @@ export interface LoginScreenProps {
   title?: string
   /**
    * Endpunkt unterhalb des `user`-Moduls, der den Ablauf startet. Envelope v2
-   * fährt die ganze Kette ab "login"; ein klassisches v1-Backend liefert auf
-   * die Auswahl denselben Schritt ohne `follow`, dort wird der Provider direkt
-   * adressiert (z. B. "auth_userpassword/login").
+   * fährt die ganze Kette ab "login". viur-core 3.9 (klassisches v1) antwortet
+   * auf "login" mit der Provider-Auswahl; die Kette führt der LoginScreen dann
+   * selbst wie vi-vue-utils (Passwort, Passwort vergessen, zweiter Faktor).
    */
   action?: string
   /** Renderer für die Requests; Standard: VITE_DEFAULT_RENDERER oder "json". */
@@ -21,6 +21,14 @@ export interface LoginScreenProps {
    * `false` blendet den Knopf immer aus.
    */
   googleClientId?: string | false | null
+  /**
+   * Hintergrundbild der App, falls die Konfiguration keines setzt
+   * ("admin.login.background" leer). Wie dort: absolute URLs bleiben, "/…" ist
+   * ein Pfad auf dem Backend, alles andere ein Asset der App (unter BASE_URL).
+   */
+  backgroundImage?: string | null
+  /** Logo über dem Login, falls "admin.login.logo" leer ist (Auflösung wie oben). */
+  logo?: string | null
   /** Fortschrittsleiste des Multistep-Formulars zeigen. */
   showSteps?: boolean
   /** Beim Mounten eine bestehende Session prüfen und den Login überspringen. */

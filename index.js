@@ -34,6 +34,9 @@ export {
   notify,
 } from "./src/request/index.js"
 
+// Theme (brand color from the configuration)
+export { useColorStore, hexToHsl, BRAND_LIGHTNESS } from "./src/theme/colorStore.js"
+
 // Translations (Komponenten dieses Pakets; in die vue-i18n-Instanz der App mergen —
 // vue-i18n ist Voraussetzung, die Komponenten übersetzen mit t() ohne Fallbacks)
 export { default as deTranslations } from "./src/translations/de.js"

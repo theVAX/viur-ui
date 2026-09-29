@@ -167,6 +167,115 @@ describe("google sign-in", () => {
   })
 })
 
+// viur-core 3.9 answers the login chain in the classic v1 shape; the login
+// screen walks it step by step through these requests.
+const CHOOSER = {
+  action: "select_authentication_provider",
+  values: { provider: "/json/user/auth_userpassword/login" },
+  structure: {
+    provider: {
+      type: "select",
+      required: true,
+      values: {
+        "/json/user/auth_userpassword/login": "Username & Password",
+        "/json/user/auth_googleaccount/login": "Google Account",
+      },
+    },
+  },
+  errors: [],
+  next_url: null,
+  params: {},
+}
+
+describe("classic login chain (viur-core 3.9)", () => {
+  it("loadLoginStep GET-renders /user/login without an skey", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(CHOOSER))
+    vi.stubGlobal("fetch", fetchMock)
+    const store = useUserStore()
+    const body = await store.loadLoginStep()
+
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).toBe("http://api.test/json/user/login")
+    expect((options?.method ?? "GET").toUpperCase()).toBe("GET")
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes("/skey"))).toBe(false)
+    // the classic action survives the normalization — the screen detects the chain by it
+    expect(body.action).toBe("select_authentication_provider")
+    expect(Object.keys(body.structure.provider.values)).toHaveLength(2)
+  })
+
+  it("loadLoginStep takes a server url as it is (second factor start)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        action: "edit",
+        values: { otptoken: null },
+        structure: { otptoken: { type: "numeric", required: true } },
+        errors: [],
+        next_url: null,
+        params: { action_name: "otp", action_url: "/json/user/f2_timebasedotp/otp" },
+      })
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const store = useUserStore()
+    const body = await store.loadLoginStep("/json/user/f2_timebasedotp/start")
+
+    expect(fetchMock.mock.calls[0][0]).toBe("http://api.test/json/user/f2_timebasedotp/start")
+    expect(body.params.action_url).toBe("/json/user/f2_timebasedotp/otp")
+    expect(body.data).toEqual({ otptoken: null })
+  })
+
+  it("loadLoginStep rejects on a transport error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({}, 500)))
+    const store = useUserStore()
+
+    await expect(store.loadLoginStep()).rejects.toBeTruthy()
+  })
+
+  it("selectAuthenticationProvider posts the choice with an skey", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk1"])
+      return jsonResponse({
+        ...CHOOSER,
+        action: "select_authentication_provider_success",
+        values: { provider: "/json/user/auth_sso/login" },
+        next_url: "/json/user/auth_sso/login",
+      })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const store = useUserStore()
+    const body = await store.selectAuthenticationProvider("/json/user/auth_sso/login")
+
+    const [url, options] = fetchMock.mock.calls.find(([u]) => !String(u).includes("/skey"))
+    expect(url).toBe("http://api.test/json/user/select_authentication_provider")
+    expect(options.method).toBe("POST")
+    expect(options.body.get("provider")).toBe("/json/user/auth_sso/login")
+    expect(options.body.get("skey")).toBe("sk1")
+    expect(body.next_url).toBe("/json/user/auth_sso/login")
+  })
+
+  it("loginWithGoogle loads the session on a classic login_success", async () => {
+    let loggedIn = false
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url, opts) => {
+        const method = (opts?.method || "GET").toUpperCase()
+        if (url.includes("/skey")) return jsonResponse(["sk1"])
+        if (url.includes("/user/view/self"))
+          return loggedIn ? jsonResponse({ action: "view", values: USER, errors: [] }) : jsonResponse({}, 401)
+        if (url.includes("/auth_googleaccount/login") && method === "POST") {
+          loggedIn = true
+          return jsonResponse({ action: "login_success", values: USER, structure: {}, errors: [], next_url: null })
+        }
+        return jsonResponse({}, 404)
+      })
+    )
+    const store = useUserStore()
+    const body = await store.loginWithGoogle("id-token")
+
+    expect(body.action).toBe("login_success")
+    expect(store.isLoggedIn).toBe(true)
+  })
+})
+
 describe("logout", () => {
   it("clears the session", async () => {
     vi.stubGlobal(

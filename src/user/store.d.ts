@@ -44,6 +44,14 @@ export interface UserStore {
   fetchSelf: () => Promise<UserSkelValues | null>
   logout: () => Promise<void>
   reset: () => void
+  /**
+   * Klassische Kette (viur-core 3.9): einen Schritt per GET rendern — Endpunkt
+   * unterhalb von `user` (Standard "login") oder eine Server-URL. Liefert die
+   * normalisierte Antwort; wirft bei einem Transportfehler.
+   */
+  loadLoginStep: (target?: string) => Promise<Record<string, any>>
+  /** Primären Provider ohne eigenes Widget wählen; `next_url` ist sein erster Schritt. */
+  selectAuthenticationProvider: (provider: string) => Promise<Record<string, any>>
   /** Google-Identity-Token anmelden; liefert die normalisierte Antwort. */
   loginWithGoogle: (token: string) => Promise<Record<string, any> | null>
 }

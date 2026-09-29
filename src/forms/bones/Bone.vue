@@ -644,6 +644,12 @@ provide("formatString", formatString)
     grid-gap: var(--wa-space-s);
     margin-bottom: 20px;
 
+    /* Label über dem Inhalt oder gar keins: eine Spalte auf jeder Breite */
+    &.is-label-top,
+    &.is-label-hide {
+      grid-template-columns: 1fr;
+    }
+
     @media (max-width: 900px) {
       grid-template-columns: 1fr;
     }

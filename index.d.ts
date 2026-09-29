@@ -269,6 +269,27 @@ export declare function getMessageStore(): MessageStore | null
 export declare function notify(message: MessageInput): Message | null
 export declare function canAccessAdminConfig(user: Record<string, any> | null | undefined): boolean
 
+// ─── Color store (brand color from the configuration) ─────────────────────────
+
+export interface ColorStore {
+  /** Set to override the configuration; null → `admin.color.primary` / `.secondary`. */
+  state: { primaryColor: string | null; secondaryColor: string | null }
+  /** WebAwesome brand tokens (`--wa-color-brand-95…05`, `--wa-color-brand`, `-on`); empty without a valid color */
+  brandColors: Record<string, string>
+  /** `hsl(…)` with hue/saturation of the color; `lightness` (%) replaces its lightness, 0 keeps it */
+  getPrimaryColor(lightness?: number): string | null
+  getSecondaryColor(lightness?: number): string | null
+  getAlphaColor(color: "primaryColor" | "secondaryColor", lightness: number, alpha: number): string | null
+  /** Writes the brand palette into `doc` (a `<style>` in the head) and keeps it in sync; returns stop() */
+  applyBrandColor(doc?: Document): () => void
+}
+
+export declare function useColorStore(): ColorStore
+/** "#rrggbb" / "#rgb" → [h, s, l] (degrees, %, %); null for anything else */
+export declare function hexToHsl(color: unknown): [number, number, number] | null
+/** Lightness (HSL, %) per WebAwesome brand step, lightest first */
+export declare const BRAND_LIGHTNESS: [string, number][]
+
 // ─── File Upload ──────────────────────────────────────────────────────────────
 
 export interface UploadFileOptions {

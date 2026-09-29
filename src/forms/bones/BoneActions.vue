@@ -42,6 +42,18 @@ const props = defineProps({
   index: Number,
   lang: String,
   bone: Object,
+  /**
+   * Welche Actions diese Leiste zeigt:
+   * - "entry": alle bei `boneactions`, sonst nur die Pflicht-Actions (Standard)
+   * - "value": nur die Pflicht-Actions — am Wert EINER Sprache eines
+   *   mehrsprachigen Bones (Löschen/Download betreffen nur diese Sprache)
+   * - "bone": nur die übrigen — die Leiste neben den Sprach-Tabs (Übersetzen …)
+   */
+  scope: {
+    type: String,
+    default: "entry",
+    validator: (value) => ["entry", "value", "bone"].includes(value),
+  },
 })
 
 const boneState = inject("boneState")
@@ -86,7 +98,13 @@ onMounted(() => {
   const all = resolveActions(props.bone, configured, boneState, { relationSelector, multipleRow })
   // Ohne `boneactions` bleiben nur die PFLICHT-Actions (Gerüst, z.B. das
   // Zeilen-X) — die Leiste als Ganzes ist Opt-in, das Gerüst nicht.
-  state.actions = boneState?.boneactions ? all : all.filter((action) => action.required)
+  if (props.scope === "bone") {
+    state.actions = all.filter((action) => !action.required)
+  } else if (props.scope === "value" || !boneState?.boneactions) {
+    state.actions = all.filter((action) => action.required)
+  } else {
+    state.actions = all
+  }
 })
 
 function onClick(action) {

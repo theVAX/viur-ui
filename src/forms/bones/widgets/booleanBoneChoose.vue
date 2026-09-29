@@ -1,6 +1,9 @@
 <template>
+  <!-- readonly an der Gruppe: wa-radio-group markiert nur Radios, die selbst
+       nicht disabled sind — sonst wäre bei readonly keine Auswahl sichtbar -->
   <wa-radio-group
     :value="state.value"
+    :disabled="boneState.readonly"
     class="bone-widget bone-widget-boolean bone-widget-boolean-choose"
     :class="[`bone-widget-boolean-${name}`]"
     :required="
@@ -9,16 +12,10 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
-    <wa-radio
-      :value="'true'"
-      :disabled="boneState.readonly"
-    >
+    <wa-radio :value="'true'">
       {{ $t("bones.bool.true") }}
     </wa-radio>
-    <wa-radio
-      :value="'false'"
-      :disabled="boneState.readonly"
-    >
+    <wa-radio :value="'false'">
       {{ $t("bones.bool.false") }}
     </wa-radio>
   </wa-radio-group>

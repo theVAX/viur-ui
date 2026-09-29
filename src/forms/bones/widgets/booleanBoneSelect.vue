@@ -8,17 +8,15 @@
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   >
+    <!-- String-Werte: wa-select gleicht seinen Wert beim Setzen mit den
+         Options-Werten ab; boolesche werden erst später zu Strings, der
+         gespeicherte Wert erschiene dann nicht -->
     <wa-option
-      v-for="val in [true, false]"
+      v-for="val in ['true', 'false']"
       :key="val"
       :value="val"
     >
-      <template v-if="val">
-        {{ $t("bones.bool.true") }}
-      </template>
-      <template v-else>
-        {{ $t("bones.bool.false") }}
-      </template>
+      {{ $t(`bones.bool.${val}`) }}
     </wa-option>
   </wa-select>
 </template>

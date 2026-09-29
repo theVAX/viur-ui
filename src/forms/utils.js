@@ -3,6 +3,21 @@ import Logics from "logics-js"
 import { inject, toRaw, reactive, markRaw } from "vue"
 import Utils from "./bones/utils"
 
+/**
+ * Tiefe Kopie reiner Daten (Skel-Werte), die Vue-Proxies auf JEDER Ebene
+ * auflöst. structuredClone allein scheitert daran: ein Record-/using-Formular
+ * bekommt den reaktiven Wert des Eltern-Bones, und `{ ...proxy }` behält die
+ * verschachtelten Werte als Proxies. Andere Objekte (Date, File) bleiben geteilt.
+ */
+function rawCopy(value) {
+  const raw = toRaw(value)
+  if (Array.isArray(raw)) return raw.map(rawCopy)
+  if (raw && typeof raw === "object" && Object.getPrototypeOf(raw) === Object.prototype) {
+    return Object.fromEntries(Object.entries(raw).map(([key, entry]) => [key, rawCopy(entry)]))
+  }
+  return raw
+}
+
 export function useFormUtils(props, state) {
   function buildRequestSpec(urlOverride = null) {
     let path = urlOverride
@@ -58,7 +73,7 @@ export function useFormUtils(props, state) {
 
   // Apply a (normalized v2) envelope to the form state. Central place that maps
   // the envelope onto skel / structure / errors and the multi-step fields.
-  function applyResponseState(data, { updateStructure = false } = {}) {
+  function applyResponseState(data, { updateStructure = false, presetValues = false } = {}) {
     data = data ?? {}
 
     state.datatype = data["datatype"] ?? null
@@ -78,7 +93,13 @@ export function useFormUtils(props, state) {
       // normalizeEnvelope; accept `values` too for a raw body).
       const values = data["data"] !== undefined ? data["data"] : data["values"]
       if (updateStructure && data["structure"] != null) {
-        initForm(values, data["structure"], state.values)
+        // Der `values`-Prop belegt ein frisch GERENDERTES Formular vor. Die
+        // Antwort auf ein Absenden spiegelt, was gesendet wurde — darüber darf
+        // er nicht erneut schreiben.
+        initForm(values, data["structure"], presetValues ? state.values : null)
+        // Neue Struktur = Server-Flags: visibleIf/readonlyIf/requiredIf/evaluate
+        // gleich wieder anwenden, nicht erst bei der nächsten Eingabe.
+        logics()
       } else if (values !== undefined) {
         state.skel = values
       }
@@ -125,7 +146,7 @@ export function useFormUtils(props, state) {
     )
     try {
       await fetchResult.execute()
-      applyResponseState(fetchResult.data.value, { updateStructure: true })
+      applyResponseState(fetchResult.data.value, { updateStructure: true, presetValues: true })
       // Ein v1-Schritt bringt kein Ziel mit (kein `follow`, kein next_url, kein
       // params.action_url) — dort wird der Schritt an DIESELBE URL
       // zurückgeschickt, aus der er gerendert wurde. Ohne das stünde postUrl
@@ -544,9 +565,8 @@ export function useFormUtils(props, state) {
     // Stand festhalten, wie er hereinkam: `state.skel` ist die Arbeitskopie und
     // wird beim Tippen verändert. resetForm() stellt daraus wieder her, ohne
     // erneut zu laden ("Änderungen verwerfen").
-    // markRaw: reine Lesedaten. Ohne das läge hier ein reaktiver Proxy, den
-    // structuredClone nicht kopieren kann.
-    state.pristine = markRaw(structuredClone(toRaw(state.skel)))
+    // markRaw: reine Lesedaten, kein reaktiver Proxy.
+    state.pristine = markRaw(rawCopy(state.skel))
 
     state.categories = updateCategories()
   }
@@ -557,7 +577,7 @@ export function useFormUtils(props, state) {
    */
   function resetForm() {
     if (state.pristine === undefined || state.pristine === null) return
-    initForm(structuredClone(toRaw(state.pristine)), undefined, state.values)
+    initForm(rawCopy(state.pristine), undefined, state.values)
     state.errors = []
   }
 

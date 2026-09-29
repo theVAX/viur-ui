@@ -188,6 +188,7 @@ import { useRouter } from "vue-router"
 import { useUserStore } from "./store.js"
 import { useConfigStore } from "../request/configStore.js"
 import { normalizeStructure } from "../request/skel.js"
+import { resetState } from "../request/request.js"
 import { renderGoogleButton } from "./google.js"
 
 /** Image setting → url, as the old admin resolved them: absolute urls stay,
@@ -290,6 +291,8 @@ function loadAdminConfig() {
 
 async function onFormSuccess() {
   try {
+    // the login resets the server session: skeys fetched before it are void
+    await resetState().catch(() => null)
     await store.fetchSelf()
     await loadAdminConfig()
   } finally {
@@ -461,6 +464,7 @@ async function onGoogleToken(token) {
     return
   }
   if (body.status === "success" || body.action === "login_success") {
+    await resetState().catch(() => null)
     await configStore.fetchConfig({ user: store.state.user }).catch(() => null)
     emit("success", store.state.user)
     await goRedirect().catch(() => null)

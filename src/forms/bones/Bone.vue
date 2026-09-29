@@ -98,6 +98,7 @@
                 :readonly="state.readonly"
                 :actionbar="state.actionbar"
               />
+              <!-- Wert-Actions (Löschen, Download …) je Sprache am Eintrag -->
               <bone-single-entry
                 :is="is"
                 v-else
@@ -110,8 +111,9 @@
             </wa-tab-panel>
           </template>
         </wa-tab-group>
+        <!-- Bone-Actions über alle Sprachen (Übersetzen …) -->
         <div
-          v-if="state.boneactions && !state.multiple && state.hasActions"
+          v-if="state.boneactions && !state.multiple && state.hasOptionalActions"
           class="wa-cluster wa-gap-xs"
         >
           <bone-actions
@@ -119,6 +121,7 @@
             :name="name"
             :index="null"
             :bone="state.bonestructure"
+            scope="bone"
             @change="updateValue"
           ></bone-actions>
         </div>
@@ -430,15 +433,18 @@ const state = reactive({
   // wie BoneActions selbst — sonst fällt z.B. die Relations-Auswahl
   // (when: relationSelector) hier raus und der Wrapper versteckt eine real
   // vorhandene Action, oder eine per ViForm abgewählte bleibt "sichtbar".
-  hasActions: computed(
-    () =>
-      resolveActions(
-        state.bonestructure,
-        [...formConfiguredActions(boneActionsConfig, props.name), ...(state.bonestructure?.params?.actions ?? [])],
-        state,
-        { relationSelector }
-      ).length > 0
+  resolvedActions: computed(() =>
+    resolveActions(
+      state.bonestructure,
+      [...formConfiguredActions(boneActionsConfig, props.name), ...(state.bonestructure?.params?.actions ?? [])],
+      state,
+      { relationSelector }
+    )
   ),
+  hasActions: computed(() => state.resolvedActions.length > 0),
+  // Pflicht-Actions (Löschen, Download …) erscheinen auch ohne `boneactions`
+  hasRequiredActions: computed(() => state.resolvedActions.some((action) => action.required)),
+  hasOptionalActions: computed(() => state.resolvedActions.some((action) => !action.required)),
 })
 provide("boneState", state)
 

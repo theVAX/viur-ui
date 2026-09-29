@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { reactive } from "vue"
+import { reactive, isProxy } from "vue"
 import { useFormUtils } from "../../src/forms/utils.js"
 
 // Drives the multi-step / list form flow (ViForm gaps 1–3) through the REAL
@@ -328,5 +328,97 @@ describe("list envelope in the form", () => {
     expect(state.cursor).toBe("cur-1")
     expect(state.orders).toEqual([{ field: "name", dir: "asc" }])
     expect(state.structure).toEqual({}) // no form built from a null structure
+  })
+})
+
+describe("Legacy-Verhalten der Formularlogik", () => {
+  const recordStructure = {
+    title: { type: "str", languages: ["de", "en"], visible: true, params: {} },
+    tags: { type: "str", multiple: true, visible: true, params: {} },
+  }
+
+  it("Unterformular mit reaktivem Wert (Record/using) baut sich auf", () => {
+    // so reicht BoneNestedWrapper den Wert des Eltern-Bones durch
+    const parentValue = reactive({ title: { de: "Hallo", en: "Hello" }, tags: ["a", "b"] })
+    const state = makeState()
+    const { reload, resetForm } = useFormUtils(
+      makeProps({ multistep: false, skel: parentValue, structure: recordStructure }),
+      state
+    )
+
+    reload()
+
+    expect(Object.keys(state.categories).length).toBeGreaterThan(0)
+    expect(state.loading).toBe(false)
+    // der Ausgangsstand ist eine echte Kopie — keine Proxies, kein geteilter Wert
+    expect(isProxy(state.pristine.title)).toBe(false)
+    expect(state.pristine.tags).not.toBe(parentValue.tags)
+
+    state.skel.tags = ["geändert"]
+    resetForm()
+    expect(state.skel.tags).toEqual(["a", "b"])
+  })
+
+  it("die Antwort auf ein Absenden überschreibt der values-Prop nicht erneut", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          action: "edit",
+          values: { name: "vom-benutzer" },
+          structure: { name: { type: "str", visible: true, params: {} } },
+          errors: [{ severity: 3, fieldPath: ["name"], errorMessage: "zu kurz" }],
+        })
+      )
+    )
+    const state = makeState()
+    state.values = { name: "vorbelegt" } // der values-Prop
+    state.structure = { name: { type: "str", visible: true, params: {} } }
+    state.skel = { name: "vom-benutzer" }
+
+    const { sendData } = useFormUtils(makeProps({ module: "appconf", action: "edit" }), state)
+    await sendData()
+
+    expect(state.skel.name).toBe("vom-benutzer")
+  })
+
+  it("beim Rendern eines Schritts belegt values weiterhin vor", async () => {
+    const step = {
+      action: "add",
+      values: { name: "" },
+      structure: { name: { type: "str", visible: true } },
+      errors: [],
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(step)))
+    const state = makeState()
+    state.values = { name: "vorbelegt" }
+    const { loadStep } = useFormUtils(makeProps(), state)
+    await loadStep()
+
+    expect(state.skel.name).toBe("vorbelegt")
+  })
+
+  it("visibleIf gilt nach dem Absenden sofort wieder (neue Struktur)", async () => {
+    const structure = () => ({
+      mode: { type: "str", visible: true, params: {} },
+      detail: { type: "str", visible: true, params: { visibleIf: 'mode == "voll"' } },
+    })
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ action: "edit", values: { mode: "kurz", detail: "" }, structure: structure(), errors: [] })
+        )
+    )
+    const state = makeState()
+    state.structure = structure()
+    state.skel = { mode: "kurz", detail: "" }
+
+    const { sendData } = useFormUtils(makeProps({ module: "appconf", action: "edit" }), state)
+    await sendData()
+
+    // der Server schickt visible: true — die Logik blendet den Bone aus
+    expect(state.structure.detail.visible).toBe(false)
   })
 })

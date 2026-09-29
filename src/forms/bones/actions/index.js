@@ -40,6 +40,10 @@ const defaultActions = {
     icon: "download",
     library: "default",
     title: "bone.download",
+    // Gerüst wie das Zeilen-X: auch ohne `boneactions` da (früher ein Knopf im
+    // Datei-Widget) — und nur lesend, also auch bei readonly-Bones.
+    required: true,
+    allowReadonly: true,
   },
   debug: {
     type: "assistant",
@@ -66,6 +70,9 @@ const defaultActions = {
     title: "bone.del",
     position: "end",
     variant: "danger",
+    // Gerüst: ohne sie wird man eine gesetzte Relation/Datei nicht wieder los
+    // (früher ein Knopf im Widget) — daher auch ohne `boneactions` da.
+    required: true,
     // Nur bei relationalen Single-Bones sichtbar (nicht multiple).
     when: (ctx) => prefixMatches("relational", ctx?.bone?.type) && !ctx?.bone?.multiple,
   },
@@ -101,12 +108,21 @@ const handlerRegistry = {
   removeEntry: (ctx) => ctx.removeEntry?.(),
 }
 
+/** Kein Wert zum Bearbeiten: leer, oder ein Objekt/Array ohne Inhalt (nur
+ *  null/undefined/leere Listen — wie `isObjectEmpty` im Bone). */
+function isEmptyValue(value) {
+  if (!value) return true
+  if (typeof value !== "object") return false
+  return Object.values(value).every((entry) => entry == null || (Array.isArray(entry) && entry.length === 0))
+}
+
 /** Disabled-Check per `arg`. Erhält den Action-Kontext (name, value, index, lang, bone, boneState). */
 const disabledRegistry = {
   translate: (ctx) => !ctx.bone?.languages,
   describe_image: (ctx) => !ctx.value?.dest?.key,
   download: (ctx) => !ctx.value?.dest?.downloadUrl,
-  delete: (ctx) => !!ctx.boneState?.isEmpty,
+  // am EIGENEN Wert — bei Mehrsprachigkeit der einer Sprache, nicht des Bones
+  delete: (ctx) => isEmptyValue(ctx.value),
 }
 
 /**
@@ -115,6 +131,9 @@ const disabledRegistry = {
  *
  * Matching-Regel: Prefix matcht, wenn `boneType === prefix` (exakt) ODER
  * `boneType.startsWith(prefix + ".")` (Subtype). Der leere Prefix `""` matcht alles.
+ *
+ * Definitionen mit `required: true` (delete, download) erscheinen auch ohne
+ * `boneactions`; ein Host kann sie hier trotzdem abwählen (wie per `"-name"`).
  */
 const defaultActionsByType = {
   "": ["debug", "placeholder"],
@@ -183,8 +202,9 @@ export function getActionHandler(arg) {
 }
 
 export function isActionDisabled(action, ctx) {
-  // Im Readonly-Modus sind grundsätzlich alle Actions deaktiviert.
-  if (ctx?.boneState?.readonly) return true
+  // Im Readonly-Modus sind grundsätzlich alle Actions deaktiviert — bis auf
+  // rein lesende (`allowReadonly`, z.B. Download).
+  if (ctx?.boneState?.readonly && !action?.allowReadonly) return true
   const fn = disabledRegistry[action?.arg]
   return fn ? !!fn(ctx) : false
 }
@@ -244,9 +264,7 @@ export function resolveActions(bone, configured, boneState, extras = {}) {
   const required = collectFromMap(requiredActionsByType, bone?.type)
   const entries = Array.isArray(configured) ? [...configured] : []
   // Explizite Abwahl: "-name"-Einträge sammeln und aus der Liste nehmen.
-  const disabled = new Set(
-    entries.filter((e) => typeof e === "string" && e.startsWith("-")).map((e) => e.slice(1))
-  )
+  const disabled = new Set(entries.filter((e) => typeof e === "string" && e.startsWith("-")).map((e) => e.slice(1)))
   const names = entries.filter((e) => !(typeof e === "string" && e.startsWith("-")))
   for (const d of [...defaults, ...required]) {
     if (!names.some((e) => entryArg(e) === d)) names.push(d)

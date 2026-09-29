@@ -16,9 +16,12 @@
     </wa-checkbox>
   </div>
 
+  <!-- readonly an der Gruppe (siehe booleanBoneChoose): disabled Radios
+       zeigten keine Auswahl -->
   <wa-radio-group
     v-else
     :value="state.value"
+    :disabled="boneState.readonly"
     class="bone-widget bone-widget-select bone-widget-select-choose"
     :class="[`bone-widget-select-${name}`]"
     @change="changeEvent"
@@ -26,7 +29,6 @@
     <wa-radio
       v-for="value in convertObjToList()"
       :value="value[0]"
-      :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     >
       {{ value[1] }}

@@ -27,6 +27,8 @@
         state.isLastEntry ? [] : bone?.params?.['collapsedCategories'] ? bone?.params?.['collapsedCategories'] : []
       "
       :readonly="mainformState.readonly"
+      :boneactions="mainformState.boneactions"
+      :actions="parentActionsConfig"
       @change="changeEvent"
     ></vi-form>
   </div>
@@ -62,6 +64,9 @@ const props = defineProps({
 const skelRef = ref(null)
 const boneState = inject("boneState")
 const mainformState = inject("mainformState")
+// Action-Konfiguration des umgebenden Formulars (ViForm `actions`) — das
+// Unterformular stellt sonst seine eigene (leere) bereit.
+const parentActionsConfig = inject("boneActionsConfig", null)
 const parentBonePath = inject("bonePath", [])
 const bonePath = computed(() => {
   const path = [...(unref(parentBonePath) ?? []), props.name]

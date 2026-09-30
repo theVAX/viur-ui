@@ -36,7 +36,7 @@
     "vue-router": "^4.5.0"
   },
   "scripts": {
-    "icons": "npx wa-icons . ./src/public/assets/icons",
+    "icons": "npx wa-icons . ./stories/public/webawesome/assets/icons",
     "test": "vitest",
     "test:run": "vitest run",
     "story:dev": "histoire dev",

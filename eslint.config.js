@@ -100,6 +100,12 @@ export default [
     },
   },
 
+  // Tests: an uncaught await is correct there, a try/catch would swallow the failure
+  {
+    files: ["tests/**"],
+    rules: { "no-restricted-syntax": "off" },
+  },
+
   // Prettier config to disable conflicting rules (must come last)
   eslintConfigPrettier,
 ]

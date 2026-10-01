@@ -1160,3 +1160,58 @@ describe("useListFetch — next(pages) / nextAll", () => {
     expect(list.data.value.map((e) => e.key)).toEqual(["e1"])
   })
 })
+
+describe("useListFetch — superseded runs do not write", () => {
+  it("a response that arrives after execute() does not overwrite the newer list", async () => {
+    let releaseStructure
+    const structureGate = new Promise((resolve) => (releaseStructure = resolve))
+    let structureCalls = 0
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) {
+        structureCalls++
+        // the first run hangs between list response and structure response
+        if (structureCalls === 1) await structureGate
+        return jsonResponse({ viewSkel: {} })
+      }
+      const tenant = new URL(url).searchParams.get("tenant")
+      return jsonResponse({ skellist: [{ key: `${tenant}1` }], cursor: `${tenant}-cursor`, orders: [] })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const list = useListFetch("items", { immediate: false, params: { tenant: "a" } })
+    const first = list.execute()
+    await vi.waitFor(() => expect(structureCalls).toBe(1))
+
+    await list.filter({ tenant: "b" })
+    expect(list.data.value).toEqual([{ key: "b1" }])
+
+    releaseStructure()
+    await first
+    expect(list.data.value).toEqual([{ key: "b1" }])
+    expect(list.cursor.value).toBe("b-cursor")
+  })
+
+  it("aborting a running request is not reported as an error", async () => {
+    const fetchMock = vi.fn().mockImplementation((url, options) => {
+      if (url.includes("/structure")) return Promise.resolve(jsonResponse({ viewSkel: {} }))
+      if (new URL(url).searchParams.get("tenant") === "a") {
+        // like the real fetch: reject at once on an already aborted signal
+        return new Promise((_, reject) => {
+          const fail = () => reject(new DOMException("aborted", "AbortError"))
+          if (options.signal.aborted) fail()
+          else options.signal.addEventListener("abort", fail)
+        })
+      }
+      return Promise.resolve(jsonResponse({ skellist: [{ key: "b1" }], cursor: "", orders: [] }))
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const list = useListFetch("items", { immediate: false, params: { tenant: "a" } })
+    const first = list.execute()
+    await list.filter({ tenant: "b" })
+    await first
+
+    expect(list.data.value).toEqual([{ key: "b1" }])
+    expect(list.error.value).toBeNull()
+  })
+})

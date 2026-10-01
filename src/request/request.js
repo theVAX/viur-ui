@@ -127,6 +127,11 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     const orders = ref([])
     const params = ref({ ...initialParams })
     let _isNext = false
+    // Bumped by execute()/reset(). A request remembers the generation it started
+    // in; once a newer one exists it must not write anymore. Aborting alone is
+    // not enough: after the list response arrived, afterFetch still awaits the
+    // structure round trip and would then write into the already cleared state.
+    let _generation = 0
 
     function _buildUrl() {
       const base = url ?? create_url({ controller, endpoint: group ? `list/${group}` : "list", renderer, version })
@@ -147,7 +152,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
      * Additionally, the structure can be a PAIR LIST
      * (`json.bone.structure.keytuples`) — normalizeStructure flattens that.
      */
-    async function _fetchStructure() {
+    async function _fetchStructure(generation) {
       const skeltype =
         params.value.skelType === "node"
           ? "viewNodeSkel"
@@ -163,7 +168,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
         if (!resp.ok) return
         const body = normalizeEnvelope(await resp.json())
         const raw = body?.["structure"] ?? body?.[skeltype]
-        if (raw) structure.value = normalizeStructure(raw)
+        if (raw && generation === _generation) structure.value = normalizeStructure(raw)
       } catch {
         // the structure is optional, the list stays usable without it
       }
@@ -193,11 +198,12 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
               return { options, url }
             }
           }
-          if (!secure) return { options, url }
+          const generation = _generation
+          if (!secure) return { options, url, generation }
           try {
             const skey = await fetchSkeyToken(renderer)
             const separator = url.includes("?") ? "&" : "?"
-            return { url: `${url}${separator}skey=${skey}`, options }
+            return { url: `${url}${separator}skey=${skey}`, options, generation }
           } catch (error) {
             throw error
           }
@@ -205,13 +211,16 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
         async afterFetch(ctx) {
           // Normalize v1/v2 up to the canonical v2 envelope, then read the list
           // payload from `data` and pagination from `meta`.
+          const { generation } = ctx.context
+          if (generation !== _generation) return ctx
           const responseData = normalizeEnvelope(ctx.data)
           if (!_isNext) {
             try {
-              await _fetchStructure()
+              await _fetchStructure(generation)
             } catch (error) {
               throw error
             }
+            if (generation !== _generation) return ctx
           }
           const list = responseData.data ?? []
           // Some installations deliver the structure along with the list
@@ -233,6 +242,11 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           return ctx
         },
         onFetchError(ctx) {
+          // A superseded or aborted request is no failure: keep the current
+          // error as it is (null for the run that replaced this one).
+          if (ctx.context.generation !== _generation || ctx.error?.name === "AbortError") {
+            return { ...ctx, error: error.value }
+          }
           ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
           if (messages) {
             notify(
@@ -282,6 +296,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     })
 
     function execute() {
+      _generation++
       _isNext = false
       abort()
       data.value = []
@@ -346,6 +361,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     }
 
     function reset() {
+      _generation++
       abort()
       data.value = []
       structure.value = {}

@@ -310,12 +310,12 @@
             role="row"
             :style="state.gridStyle"
             :data-key="displayRow.key"
-            @dblclick="onRowDoubleClick(displayRow, $event)"
             :aria-selected="
               selectable !== false && displayRow.kind === 'data' ? state.selectedSet.has(displayRow.nodeKey) : undefined
             "
             :aria-level="state.isTree ? displayRow.depth + 1 : undefined"
             :aria-expanded="displayRow.expandable ? displayRow.expanded : undefined"
+            @dblclick="onRowDoubleClick(displayRow, $event)"
           >
             <div
               v-for="cell in state.cellColumns"
@@ -1782,9 +1782,11 @@ function toggleExpand(displayRow: DisplayRow<R>): void {
   if (props.loadChildren && displayRow.kind === "data" && displayRow.row) {
     const row = displayRow.row
     if (childState(row) === "unknown" && !displayRow.node?.children.length) {
-      void fetchChildren(row).then(() => {
-        if (childState(row) !== "empty") expand(displayRow.nodeKey, row)
-      })
+      void fetchChildren(row)
+        .then(() => {
+          if (childState(row) !== "empty") expand(displayRow.nodeKey, row)
+        })
+        .catch((error) => console.warn("[DataTable] Ebene konnte nicht aufgeklappt werden", error))
       return
     }
   }
@@ -2537,7 +2539,7 @@ defineExpose({
     const row = findRowByKey(key)
     if (!row) return
     delete state.loadedChildren[String(key)]
-    await fetchChildren(row, true)
+    return await fetchChildren(row, true)
   },
   /** A row's lazy-loaded children (undefined = not loaded yet). */
   getLoadedChildren: (key: RowKey): R[] | undefined => state.loadedChildren[String(key)] as R[] | undefined,
@@ -2718,16 +2720,17 @@ watch(
   z-index: 3;
 }
 /* The row only provides the tint as a variable and lays out the cells —
-   painting happens in the CELLS.
-   Reason: the row box is only as wide as the visible area, but its
-   column tracks can extend beyond it (horizontal scrolling).
-   A background or border on the row therefore breaks off in the middle of the grid
-   — visible as a missing divider under pinned columns as soon as you
-   scroll. The cells, in contrast, cover the full width. */
+   painting happens in the CELLS, which always cover the full width of the grid.
+   The row box itself grows to the full width of its column tracks
+   (`min-inline-size: max-content`). Without that it is only as wide as the
+   visible area while the tracks extend beyond it — and cells pinned to the
+   start, being `position: sticky` inside the row, scroll away with the row
+   once the table is scrolled further than one visible width. */
 .vi-dt-row {
   --dt-row-bg: var(--wa-color-surface-default);
   display: grid;
   align-items: stretch;
+  min-inline-size: max-content;
   min-block-size: var(--dt-row-height, 2.75rem);
   background-color: transparent;
 }
@@ -2793,6 +2796,11 @@ watch(
   background-color: var(--dt-row-bg);
   border-block-end: var(--dt-border-width) solid var(--dt-border-color);
   overflow: hidden;
+  /* Every row is its own grid, sized by `max-content` (see .vi-dt-row). If
+     cell content counted towards that size, a row with a long text would
+     size its flex columns differently from the others and the columns would
+     no longer line up. Content still overflows and ellipsizes as before. */
+  contain: inline-size;
 }
 .vi-dt-cell.is-lead {
   padding-inline: var(--wa-space-2xs);

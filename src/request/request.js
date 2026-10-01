@@ -62,31 +62,43 @@ let _skeyPending = null
 
 async function _refillSkeys(renderer) {
   const base = import.meta.env.VITE_API_URL ?? window.location.origin
-  let response = await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
-  if (!response.ok) {
-    response = await fetch(`${base}/${renderer}/skey`, { credentials: "include" })
-    if (!response.ok) throw new Error("Failed to fetch skey token")
+  try {
+    let response = await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
+    if (!response.ok) {
+      response = await fetch(`${base}/${renderer}/skey`, { credentials: "include" })
+      if (!response.ok) throw new Error("Failed to fetch skey token")
+    }
+    let data = await response.json()
+    if (!Array.isArray(data)) data = [data]
+    _skeyCache.push(...data)
+  } finally {
+    // also on failure: otherwise every later caller awaits the same rejected promise
+    _skeyPending = null
   }
-  let data = await response.json()
-  if (!Array.isArray(data)) data = [data]
-  _skeyCache.push(...data)
-  _skeyPending = null
 }
 
 async function fetchSkeyToken(renderer) {
-  if (_skeyCache.length === 0) {
-    if (!_skeyPending) _skeyPending = _refillSkeys(renderer)
-    await _skeyPending
+  try {
+    if (_skeyCache.length === 0) {
+      if (!_skeyPending) _skeyPending = _refillSkeys(renderer)
+      await _skeyPending
+    }
+    return _skeyCache.shift()
+  } catch (error) {
+    throw error
   }
-  return _skeyCache.shift()
 }
 
 async function executeAndThrow(fetchResult, executeImpl) {
-  await executeImpl()
-  if (fetchResult.error.value) {
-    throw fetchResult.error.value
+  try {
+    await executeImpl()
+    if (fetchResult.error.value) {
+      throw fetchResult.error.value
+    }
+    return fetchResult
+  } catch (error) {
+    throw error
   }
-  return fetchResult
 }
 
 function createControllerListFetch({ all = false, secure = false } = {}) {
@@ -146,11 +158,15 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       if (params.value.skelType) {
         url += `${url.includes("?") ? "&" : "?"}skelType=${encodeURIComponent(params.value.skelType)}`
       }
-      const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
-      if (!resp.ok) return
-      const body = normalizeEnvelope(await resp.json())
-      const raw = body?.["structure"] ?? body?.[skeltype]
-      if (raw) structure.value = normalizeStructure(raw)
+      try {
+        const resp = await fetch(url, { credentials: "include", headers: { Accept: "application/json" } })
+        if (!resp.ok) return
+        const body = normalizeEnvelope(await resp.json())
+        const raw = body?.["structure"] ?? body?.[skeltype]
+        if (raw) structure.value = normalizeStructure(raw)
+      } catch {
+        // the structure is optional, the list stays usable without it
+      }
     }
 
     const listUrl = ref(_buildUrl())
@@ -166,7 +182,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           const extraHeaders = typeof headers === "function" ? headers() : headers
           if (extraHeaders) options.headers = { ...options.headers, ...extraHeaders }
           if (cached && !_isNext) {
-            const hit = await getCached(url, ttl)
+            const hit = await getCached(url, ttl).catch((error) => {
+              throw error
+            })
             if (hit) {
               data.value = hit.data ?? hit.skellist ?? hit
               cursor.value = hit.meta?.cursor ?? hit.cursor ?? ""
@@ -176,16 +194,24 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
             }
           }
           if (!secure) return { options, url }
-          const skey = await fetchSkeyToken(renderer)
-          const separator = url.includes("?") ? "&" : "?"
-          return { url: `${url}${separator}skey=${skey}`, options }
+          try {
+            const skey = await fetchSkeyToken(renderer)
+            const separator = url.includes("?") ? "&" : "?"
+            return { url: `${url}${separator}skey=${skey}`, options }
+          } catch (error) {
+            throw error
+          }
         },
         async afterFetch(ctx) {
           // Normalize v1/v2 up to the canonical v2 envelope, then read the list
           // payload from `data` and pagination from `meta`.
           const responseData = normalizeEnvelope(ctx.data)
           if (!_isNext) {
-            await _fetchStructure()
+            try {
+              await _fetchStructure()
+            } catch (error) {
+              throw error
+            }
           }
           const list = responseData.data ?? []
           // Some installations deliver the structure along with the list
@@ -199,7 +225,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           data.value = _isNext ? data.value.concat(list) : list
           if (cached && !_isNext) {
             const entityKeys = list.map((s) => s.key).filter(Boolean)
-            await setCached(ctx.url ?? listUrl.value, responseData, entityKeys)
+            await setCached(ctx.url ?? listUrl.value, responseData, entityKeys).catch((error) => {
+              throw error
+            })
           }
           ctx.data = data.value
           return ctx
@@ -245,7 +273,11 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
         params.value = { ...params.value, cursor: cursor.value }
         _isNext = true
         listUrl.value = _buildUrl()
-        await executeAndThrow(fetchResult, _execute)
+        try {
+          await executeAndThrow(fetchResult, _execute)
+        } catch {
+          // already in `error`; rethrowing here would only be an unhandled rejection
+        }
       }
     })
 
@@ -265,34 +297,46 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
     /** Load one more page; detects the ViUR end (empty page with the same
      *  cursor marker) and then clears the cursor. Returns true on progress. */
     async function _advance() {
-      if (!cursor.value) return false
-      const before = data.value.length
-      const cursorBefore = cursor.value
-      params.value = { ...params.value, cursor: cursor.value }
-      _isNext = true
-      listUrl.value = _buildUrl()
-      await executeAndThrow(fetchResult, _execute)
-      if (data.value.length === before && cursor.value === cursorBefore) {
-        cursor.value = ""
-        return false
+      try {
+        if (!cursor.value) return false
+        const before = data.value.length
+        const cursorBefore = cursor.value
+        params.value = { ...params.value, cursor: cursor.value }
+        _isNext = true
+        listUrl.value = _buildUrl()
+        await executeAndThrow(fetchResult, _execute)
+        if (data.value.length === before && cursor.value === cursorBefore) {
+          cursor.value = ""
+          return false
+        }
+        return true
+      } catch (error) {
+        throw error
       }
-      return true
     }
 
     /** Load the next `pages` pages (default: one) — e.g. directly as the
      *  handler of the DataTable cursor bar: `@load-more="({ pages }) =>
      *  pages === 'all' ? list.nextAll() : list.next(pages)"`. */
     async function next(pages = 1) {
-      let remaining = pages
-      while (remaining-- > 0) {
-        if (!(await _advance())) return
+      try {
+        let remaining = pages
+        while (remaining-- > 0) {
+          if (!(await _advance())) return
+        }
+      } catch (error) {
+        throw error
       }
     }
 
     /** Load all remaining pages ("load everything"). */
     async function nextAll() {
-      while (await _advance()) {
-        /* until the end */
+      try {
+        while (await _advance()) {
+          /* until the end */
+        }
+      } catch (error) {
+        throw error
       }
     }
 
@@ -367,23 +411,35 @@ export function useTreeFetch(
   // detects the ViUR end (empty page with the same cursor marker) itself and
   // then clears its cursor — only progress counts here.
   async function _nextOf(list) {
-    const before = list.data.value.length
-    await list.next()
-    return list.data.value.length > before
+    try {
+      const before = list.data.value.length
+      await list.next()
+      return list.data.value.length > before
+    } catch (error) {
+      throw error
+    }
   }
 
   async function next() {
-    if (nodes.cursor.value && (await _nextOf(nodes))) return
-    if (leaves.cursor.value) await _nextOf(leaves)
+    try {
+      if (nodes.cursor.value && (await _nextOf(nodes))) return
+      if (leaves.cursor.value) await _nextOf(leaves)
+    } catch (error) {
+      throw error
+    }
   }
 
   /** Load all remaining pages of both lists ("load everything"). */
   async function nextAll() {
-    while (nodes.cursor.value) {
-      if (!(await _nextOf(nodes))) break
-    }
-    while (leaves.cursor.value) {
-      if (!(await _nextOf(leaves))) break
+    try {
+      while (nodes.cursor.value) {
+        if (!(await _nextOf(nodes))) break
+      }
+      while (leaves.cursor.value) {
+        if (!(await _nextOf(leaves))) break
+      }
+    } catch (error) {
+      throw error
     }
   }
 
@@ -459,7 +515,12 @@ export function createControllerFetch({
       },
       options: {
         async beforeFetch({ options, url, cancel }) {
-          const skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
+          let skeyToken = null
+          try {
+            skeyToken = secure ? ctxSkey || (await fetchSkeyToken(renderer)) : null
+          } catch (error) {
+            throw error
+          }
           const base = create_url({ controller, endpoint, renderer, version, lang })
           const extraQs = query ? (typeof query === "string" ? query : new URLSearchParams(query).toString()) : ""
 
@@ -473,7 +534,9 @@ export function createControllerFetch({
             _cacheKey = qs ? `${base}?${qs}` : base
 
             if (cached) {
-              const hit = await getCached(_cacheKey, ttl)
+              const hit = await getCached(_cacheKey, ttl).catch((error) => {
+                throw error
+              })
               if (hit) {
                 _cachedHit = hit
                 cancel()
@@ -525,18 +588,25 @@ export function createControllerFetch({
           }
           if (cached && method.toUpperCase() === "GET" && _cacheKey) {
             const entityKey = ctx.data?.data?.key
-            await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : [])
+            await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : []).catch((error) => {
+              throw error
+            })
           }
           if (invalidates) {
             const keys = []
             if (data.key) keys.push(data.key)
             if (ctx.data?.data?.key) keys.push(ctx.data.data.key)
-            if (keys.length) await invalidateByKey(keys)
+            if (keys.length)
+              await invalidateByKey(keys).catch((error) => {
+                throw error
+              })
           }
           if (invalidatesAll) {
             const base = import.meta.env.VITE_API_URL ?? window.location.origin
             const controllerPath = Array.isArray(controller) ? controller.join("/") : controller
-            await clearCache(`${base}/${renderer}/${controllerPath}/`)
+            await clearCache(`${base}/${renderer}/${controllerPath}/`).catch((error) => {
+              throw error
+            })
           }
           return ctx
         },
@@ -586,47 +656,51 @@ export async function uploadFile(
   file,
   { target = undefined, publicUpload = false, renderer = null, version = null } = {}
 ) {
-  const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
-  const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
+  try {
+    const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
+    const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
 
-  // Step 1: get upload URL
-  const filedata = {
-    fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
-    size: file.size.toString(),
-  }
-  if (target) filedata.node = target
-  if (publicUpload) filedata.public = true
-  const fd1 = _toFormData(filedata)
-  fd1.append("skey", await fetchSkeyToken(_renderer))
-
-  const getUrlResp = await fetch(
-    create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer, version }),
-    {
-      ...fetchOpts,
-      body: fd1,
+    // Step 1: get upload URL
+    const filedata = {
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: file.size.toString(),
     }
-  )
-  if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
-  // Envelope-agnostic: v2 carries the payload in `data`, v1 in `values`.
-  const getUrlData = normalizeEnvelope(await getUrlResp.json())
-  const { uploadUrl, uploadKey } = getUrlData.data ?? getUrlData.values ?? {}
+    if (target) filedata.node = target
+    if (publicUpload) filedata.public = true
+    const fd1 = _toFormData(filedata)
+    fd1.append("skey", await fetchSkeyToken(_renderer))
 
-  // Step 2: upload raw bytes to external storage (no-cors, no credentials)
-  await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
+    const getUrlResp = await fetch(
+      create_url({ controller: "file", endpoint: "getUploadURL", renderer: _renderer, version }),
+      {
+        ...fetchOpts,
+        body: fd1,
+      }
+    )
+    if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
+    // Envelope-agnostic: v2 carries the payload in `data`, v1 in `values`.
+    const getUrlData = normalizeEnvelope(await getUrlResp.json())
+    const { uploadUrl, uploadKey } = getUrlData.data ?? getUrlData.values ?? {}
 
-  // Step 3: register file in ViUR
-  const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
-  fd3.append("skey", await fetchSkeyToken(_renderer))
+    // Step 2: upload raw bytes to external storage (no-cors, no credentials)
+    await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
 
-  const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer, version }), {
-    ...fetchOpts,
-    body: fd3,
-  })
-  if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
-  const addData = normalizeEnvelope(await addResp.json())
-  if (addData.status !== "success") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
-  return addData.data ?? addData.values
+    // Step 3: register file in ViUR
+    const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })
+    fd3.append("skey", await fetchSkeyToken(_renderer))
+
+    const addResp = await fetch(create_url({ controller: "file", endpoint: "add", renderer: _renderer, version }), {
+      ...fetchOpts,
+      body: fd3,
+    })
+    if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
+    const addData = normalizeEnvelope(await addResp.json())
+    if (addData.status !== "success") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
+    return addData.data ?? addData.values
+  } catch (error) {
+    throw error
+  }
 }
 
 function _absolute(url) {

@@ -109,6 +109,24 @@ describe("skey token fetching", () => {
     const fallbackCall = fetchMock.mock.calls.find(([url]) => url.includes("/skey") && !url.includes("amount="))
     expect(fallbackCall).toBeDefined()
   })
+
+  it("fetches skeys again after a failed refill", async () => {
+    let skeyAvailable = false
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return skeyAvailable ? jsonResponse(["sk1"]) : jsonResponse(null, 500)
+        return jsonResponse({ action: "editSuccess", values: {} })
+      })
+    )
+
+    await expect(useEditFetch("mod", "/", {}, { immediate: false }).execute()).rejects.toThrow()
+
+    skeyAvailable = true
+    const second = useEditFetch("mod", "/", {}, { immediate: false })
+    await second.execute()
+    expect(second.error.value).toBeNull()
+  })
 })
 
 // ─── useListFetch ─────────────────────────────────────────────────────────────

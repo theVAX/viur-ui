@@ -2,6 +2,7 @@ import pluginVue from "eslint-plugin-vue"
 import eslintConfigPrettier from "eslint-config-prettier"
 import eslintPluginPrettier from "eslint-plugin-prettier"
 import globals from "globals"
+import tseslint from "typescript-eslint"
 
 export default [
   {
@@ -23,6 +24,8 @@ export default [
     // Language options with global variables
     languageOptions: {
       ecmaVersion: "latest",
+      // parses <script lang="ts"> blocks in .vue files
+      parserOptions: { parser: tseslint.parser },
       globals: {
         ...globals.browser,
         ...globals.es2021,

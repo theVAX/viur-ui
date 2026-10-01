@@ -35,6 +35,48 @@ export interface GridNavigationOptions {
 
 const RESIZE_STEP = 24
 
+const TOGGLE_INPUT_TYPES = new Set(["checkbox", "radio", "button", "submit", "reset", "image"])
+
+/**
+ * Classifies the control inside a cell that a keydown came from (shadow DOM
+ * included). "text" controls own every navigation key, "activate" controls
+ * (buttons, checkboxes, switches) only Enter and Space. The walk stops at the
+ * cell, so the cell itself never counts.
+ */
+function cellControl(event: KeyboardEvent): { kind: "text" | "activate"; cell: HTMLElement | undefined } | undefined {
+  const path = event.composedPath()
+  let kind: "text" | "activate" | undefined
+  for (const node of path) {
+    if (!(node instanceof HTMLElement)) continue
+    if (node.hasAttribute("data-row")) return kind ? { kind, cell: node } : undefined
+    if (kind === "text") continue
+    const tag = node.tagName
+    const role = node.getAttribute("role")
+    if (
+      tag === "TEXTAREA" ||
+      tag === "SELECT" ||
+      node.isContentEditable ||
+      (tag === "INPUT" && !TOGGLE_INPUT_TYPES.has((node as HTMLInputElement).type)) ||
+      role === "textbox" ||
+      role === "combobox" ||
+      role === "listbox"
+    ) {
+      kind = "text"
+    } else if (
+      tag === "BUTTON" ||
+      tag === "INPUT" ||
+      (tag === "A" && node.hasAttribute("href")) ||
+      role === "button" ||
+      role === "checkbox" ||
+      role === "switch"
+    ) {
+      kind ??= "activate"
+    }
+  }
+  // Not inside a cell (e.g. a toolbar control) - leave it alone too.
+  return kind ? { kind, cell: undefined } : undefined
+}
+
 export function useGridNavigation(scroller: Ref<HTMLElement | undefined>, options: GridNavigationOptions) {
   const state = reactive({
     /** -1 = header row. */
@@ -73,6 +115,23 @@ export function useGridNavigation(scroller: Ref<HTMLElement | undefined>, option
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    // ARIA grid: keys inside a cell's control belong to the control,
+    // Escape returns focus to the cell.
+    const control = cellControl(event)
+    if (control) {
+      // An open popup (wa-select) closes itself on Escape at document level.
+      // composedPath()[0], not event.target: the target is retargeted to the host.
+      const origin = event.composedPath()[0]
+      const popupOpen = origin instanceof HTMLElement && origin.getAttribute("aria-expanded") === "true"
+      if (event.key === "Escape" && !event.defaultPrevented && !popupOpen && control.cell) {
+        event.preventDefault()
+        control.cell.focus()
+        return
+      }
+      if (control.kind === "text") return
+      if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") return
+    }
+
     const rows = options.rowCount()
     const cols = options.colCount()
     const inHeader = state.row === -1

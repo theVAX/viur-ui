@@ -33,7 +33,7 @@
 
 <script setup>
 import { reactive, onMounted, inject, computed, watch } from "vue"
-import { useListFetch } from "../../../request/index.js"
+import { useRelationalSource } from "../relationalSource.js"
 import Wrapper_nested from "../BoneNestedWrapper.vue"
 /**
  * Relational selection widget for bones of type `relational` and `relational.select`.
@@ -102,33 +102,16 @@ const state = reactive({
   }),
 })
 
+const relationalSource = useRelationalSource(boneState, formatString)
+
 async function getList(search) {
-  let params = { limit: 99 }
-  if (boneState.bonestructure["type"] === "relational.tree.leaf.file") {
-    params.skelType = "leaf"
-  } else if (boneState.bonestructure["type"] === "relational.tree.node.file") {
-    params.skelType = "node"
+  try {
+    const items = await relationalSource(search)
+    state.skellistdata = Object.fromEntries(items.map((item) => [item.value, item.data]))
+    return items
+  } catch (error) {
+    throw error // no partial list; wa-combobox then shows no suggestions
   }
-
-  const listFetch = useListFetch(boneState.bonestructure["module"], {
-    immediate: false,
-    params,
-    renderer: import.meta.env.VITE_DEFAULT_RENDERER || "vi",
-  })
-
-  await listFetch.execute()
-
-  //?viurTags$lk=${search.toLowerCase()
-  const data = { skellist: listFetch.data.value }
-
-  state.skellistdata = {}
-  for (let e of data["skellist"]) {
-    state.skellistdata[e["key"]] = e
-  }
-
-  return data["skellist"]?.map((d) => {
-    return { text: formatString(boneState.bonestructure["format"], { dest: d }), value: d.key, data: d }
-  })
 }
 
 function changeEvent(event) {

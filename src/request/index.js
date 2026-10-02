@@ -8,6 +8,7 @@ export {
   useEditFetch,
   useListFetch,
   useListFetchAll,
+  fetchAll,
   useTreeFetch,
   useViewFetch,
   useStructureFetch,

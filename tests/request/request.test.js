@@ -3,6 +3,7 @@ import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
 import {
   useListFetch,
   useListFetchAll,
+  fetchAll,
   useTreeFetch,
   useViewFetch,
   useEditFetch,
@@ -425,6 +426,35 @@ describe("useListFetchAll", () => {
     )
 
     expect(result.data.value.map((e) => e.key)).toEqual(["p1", "p2", "p3"])
+  })
+})
+
+describe("fetchAll", () => {
+  function pagedServer(pages, { failOn = null } = {}) {
+    let calls = 0
+    return vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+      calls++
+      if (calls === failOn) return jsonResponse({}, 500)
+      // end: empty page with the same cursor marker (ViUR behavior)
+      if (calls > pages) return jsonResponse({ skellist: [], cursor: `c${pages}`, orders: [] })
+      return jsonResponse({ skellist: [{ key: `e${calls}` }], cursor: `c${calls}`, orders: [] })
+    })
+  }
+
+  it("loads every page and resolves with all entries", async () => {
+    const fetchMock = pagedServer(3)
+    vi.stubGlobal("fetch", fetchMock)
+    const entries = await fetchAll("items", { params: { amount: 1 } })
+    expect(entries.map((e) => e.key)).toEqual(["e1", "e2", "e3"])
+    const listUrls = fetchMock.mock.calls.map(([url]) => url).filter((url) => url.includes("/list"))
+    expect(listUrls[0]).toBe(`${BASE}/json/items/list?amount=1`)
+    expect(listUrls[1]).toBe(`${BASE}/json/items/list?amount=1&cursor=c1`)
+  })
+
+  it("rejects with the HTTPError of a failing page instead of returning a partial list", async () => {
+    vi.stubGlobal("fetch", pagedServer(5, { failOn: 2 }))
+    await expect(fetchAll("items")).rejects.toBeInstanceOf(HTTPError)
   })
 })
 

@@ -2,6 +2,7 @@
 export {
   useListFetch,
   useListFetchAll,
+  fetchAll,
   useViewFetch,
   useAddFetch,
   useEditFetch,

@@ -1,4 +1,4 @@
-import { ref, computed, watch } from "vue"
+import { ref, computed, watch, effectScope } from "vue"
 import { createFetch } from "@vueuse/core"
 import { getCached, setCached, invalidateByKey, clearCache } from "./cache.js"
 import { normalizeStructure } from "./skel.js"
@@ -786,6 +786,33 @@ export function resetState() {
 export const useStructureFetch = createControllerFetch({ endpoint: "structure" })
 export const useListFetch = createControllerListFetch()
 export const useListFetchAll = createControllerListFetch({ all: true })
+
+/**
+ * Fetch a whole list once: the first page, then every further page via the
+ * cursor. For imperative one-off fetches (event handlers, stores) that need the
+ * full list but no reactive list state. Unlike `useListFetchAll` (a reactive
+ * instance for `setup`), this resolves with a plain array and runs anywhere.
+ *
+ * The list instance lives in its own detached effect scope that is stopped
+ * afterwards — otherwise its watchers would leak when called outside `setup`,
+ * or live on until the calling component unmounts.
+ *
+ * @param {string|string[]} controller
+ * @param {object} [options] same as `useListFetch` (`immediate` is ignored)
+ * @returns {Promise<object[]>} every entry; rejects with the error of the first failing page
+ */
+export async function fetchAll(controller, options = {}) {
+  const scope = effectScope(true)
+  const list = scope.run(() => useListFetch(controller, { ...options, immediate: false }))
+  try {
+    await list.execute()
+    await list.nextAll()
+    return list.data.value
+  } finally {
+    scope.stop()
+  }
+}
+
 export const useViewFetch = createControllerFetch({ endpoint: "view" })
 export const useEditFetch = createControllerFetch({ endpoint: "edit", method: "POST", secure: true, invalidates: true })
 export const useDeleteFetch = createControllerFetch({

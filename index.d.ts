@@ -42,6 +42,13 @@ export interface ListFetchOptions {
 
 export declare const useListFetch: (controller: string | string[], options?: ListFetchOptions) => ListFetchInstance
 export declare const useListFetchAll: (controller: string | string[], options?: ListFetchOptions) => ListFetchInstance
+/** Fetch every page of a list once, in its own effect scope (no leaking
+ *  watchers). Not a composable: resolves with a plain array, callable anywhere.
+ *  Rejects with the error of the first failing page. */
+export declare function fetchAll<T = Record<string, any>>(
+  controller: string | string[],
+  options?: Omit<ListFetchOptions, "immediate">
+): Promise<T[]>
 
 // ─── Tree (nodes + leaves) ────────────────────────────────────────────────────
 

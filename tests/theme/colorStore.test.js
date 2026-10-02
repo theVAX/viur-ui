@@ -77,9 +77,9 @@ describe("brandColors", () => {
     expect(colors["--wa-color-brand-on"]).toBe("white")
   })
 
-  it("dieselben Helligkeiten wie der alte Admin, in derselben Reihenfolge", () => {
-    // --sl-color-primary-50…950 in the old App.vue
-    expect(BRAND_LIGHTNESS.map(([, lightness]) => lightness)).toEqual([83, 78, 68, 58, 48, 43, 38, 28, 18, 8, 3])
+  it("Helligkeiten wie der alte Admin, nur die hellste Stufe heller", () => {
+    // --sl-color-primary-50…950 in the old App.vue, the lightest step 95 instead of 83
+    expect(BRAND_LIGHTNESS.map(([, lightness]) => lightness)).toEqual([95, 78, 68, 58, 48, 43, 38, 28, 18, 8, 3])
   })
 
   it("dunkle Schrift auf hellen Farbtönen (Lime)", () => {

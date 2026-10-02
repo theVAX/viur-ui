@@ -415,16 +415,61 @@ describe("useListFetchAll", () => {
     )
 
     const result = useListFetchAll("items", { immediate: false })
-    result.execute()
-
-    await vi.waitFor(
-      () => {
-        if (result.cursor.value !== "" || result.data.value.length < 3) throw new Error("not done")
-      },
-      { timeout: 5000 }
-    )
+    await result.execute()
 
     expect(result.data.value.map((e) => e.key)).toEqual(["p1", "p2", "p3"])
+    expect(result.complete.value).toBe(true)
+  })
+
+  it("loads every page with immediate=true", async () => {
+    let page = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+        page++
+        if (page === 1) return jsonResponse({ skellist: [{ key: "p1" }], cursor: "next", orders: [] })
+        return jsonResponse({ skellist: [{ key: "p2" }], cursor: "", orders: [] })
+      })
+    )
+
+    const result = useListFetchAll("items")
+
+    await vi.waitFor(() => {
+      if (!result.complete.value) throw new Error("not done")
+    })
+    expect(result.data.value.map((e) => e.key)).toEqual(["p1", "p2"])
+  })
+
+  it("stops at an empty page that repeats the cursor", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+      if (!url.includes("cursor=")) return jsonResponse({ skellist: [{ key: "p1" }], cursor: "end", orders: [] })
+      return jsonResponse({ skellist: [], cursor: "end", orders: [] })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = useListFetchAll("items", { immediate: false })
+    await result.execute()
+
+    expect(result.data.value.map((e) => e.key)).toEqual(["p1"])
+    expect(result.complete.value).toBe(true)
+    expect(fetchMock.mock.calls.filter(([u]) => u.includes("/list")).length).toBe(2)
+  })
+
+  it("execute() rejects when a later page fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+        if (!url.includes("cursor=")) return jsonResponse({ skellist: [{ key: "p1" }], cursor: "next", orders: [] })
+        return jsonResponse({}, 500)
+      })
+    )
+
+    const result = useListFetchAll("items", { immediate: false })
+    await expect(result.execute()).rejects.toBeInstanceOf(HTTPError)
+    expect(result.data.value.map((e) => e.key)).toEqual(["p1"])
   })
 })
 

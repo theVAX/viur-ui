@@ -4,8 +4,9 @@
     <wa-tooltip
       v-else
       :for="tooltipTargetId"
-      :content="name"
-    ></wa-tooltip>
+    >
+      {{ name }}
+    </wa-tooltip>
     <span
       v-if="debug"
       :id="tooltipTargetId"
@@ -30,8 +31,7 @@
   >
     <pre>
         {{ boneState }}
-      </pre
-    >
+      </pre>
   </wa-dialog>
 </template>
 

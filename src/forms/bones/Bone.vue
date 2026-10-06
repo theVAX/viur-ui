@@ -674,6 +674,11 @@ provide("formatString", formatString)
       flex-direction: column;
       flex-wrap: nowrap;
 
+      /* in a column the 235px basis of the label would become its height */
+      & > :deep(.bone-label) {
+        flex: 0 0 auto;
+      }
+
       & > .bone-inner {
         flex: 1 1 auto;
       }

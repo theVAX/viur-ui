@@ -1,4 +1,4 @@
-import type { DefineComponent } from "vue"
+import type { Component, DefineComponent } from "vue"
 
 /** Props of ViForm.vue (see defineProps there — the common ones here). */
 export interface ViFormProps {
@@ -38,6 +38,13 @@ export interface ViFormProps {
   collapsedCategories?: string[]
   categoryDefaultname?: string
   readonly?: boolean
+  /**
+   * Layout component that places the bones (default: LayoutCategory). It renders
+   * its default slot once per bone with `{ boneName, widget, visible?, label? }`.
+   */
+  layout?: Component
+  /** Label position of the bones (default: "normal"). */
+  label?: "normal" | "top" | "hide" | "placeholder"
   /** Show bone action bars (required actions always appear). */
   boneactions?: boolean
   /**

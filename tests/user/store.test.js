@@ -4,6 +4,19 @@ import { setActivePinia, createPinia } from "pinia"
 import { useUserStore } from "../../src/user/store.js"
 import { resetState } from "../../src/request/request.js"
 
+// The store imports resetState via the request index - wrap it in a spy that still runs the real one.
+const { resetStateSpy } = vi.hoisted(() => ({ resetStateSpy: vi.fn() }))
+vi.mock("../../src/request/index.js", async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    resetState: (...args) => {
+      resetStateSpy(...args)
+      return actual.resetState(...args)
+    },
+  }
+})
+
 // The user store owns the SESSION + Google sign-in. The multi-step login FLOW
 // itself is driven by <ViForm multistep> (its engine is covered by
 // tests/forms/formFlow.test.js). These tests hit the REAL request layer
@@ -38,6 +51,7 @@ beforeEach(async () => {
   setActivePinia(createPinia())
   await resetState()
   vi.restoreAllMocks()
+  resetStateSpy.mockClear()
 })
 
 describe("session", () => {
@@ -296,5 +310,26 @@ describe("logout", () => {
     expect(store.state.user).toBeNull()
     expect(store.state.status).toBe("anonymous")
     expect(store.isLoggedIn).toBe(false)
+    expect(resetStateSpy).toHaveBeenCalledOnce()
+  })
+
+  it("drops skeys and request cache even when the logout request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return jsonResponse(["sk1"])
+        if (url.includes("/user/logout")) return jsonResponse({}, 500)
+        return jsonResponse({}, 404)
+      })
+    )
+    const store = useUserStore()
+    store.state.user = { ...USER }
+    store.state.status = "authenticated"
+
+    await store.logout()
+
+    expect(store.state.user).toBeNull()
+    expect(store.state.status).toBe("anonymous")
+    expect(resetStateSpy).toHaveBeenCalledOnce()
   })
 })

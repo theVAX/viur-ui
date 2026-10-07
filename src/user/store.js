@@ -102,14 +102,13 @@ export const useUserStore = defineStore("viurUser", () => {
     try {
       const body = await apiRequest(userUrl("logout"), { method: "POST", secure: true })
       follow = body?.follow ?? null
-      state.user = null
-      state.status = "anonymous"
-      await resetState() // drop cached skeys + request cache
     } catch (error) {
       // clear the session locally regardless of a failed request
-      state.user = null
-      state.status = "anonymous"
     }
+    state.user = null
+    state.status = "anonymous"
+    // drop cached skeys + request cache - also after a failed request, they belong to the old session
+    await resetState().catch(() => null)
     if (typeof follow === "string" && /^https?:\/\//.test(follow)) {
       window.location.href = follow
     }

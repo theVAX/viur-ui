@@ -33,11 +33,24 @@
       </div>
 
       <template v-else-if="!store.isLoggedIn">
+        <!-- GET /user/login failed (server down, 5xx, no access): say so instead
+             of falling back to an empty multistep form -->
+        <template v-if="state.loadError">
+          <wa-callout variant="danger">{{ t("login.unavailable") }}</wa-callout>
+          <wa-button
+            class="viur-login__retry"
+            variant="brand"
+            @click="retryStart"
+          >
+            {{ t("login.retry") }}
+          </wa-button>
+        </template>
+
         <!-- viur-core 3.9 answers classic (v1): /user/login offers the
              providers and every further step is a form of its own whose url
              the server hands out. Walked here like vi-vue-utils: provider
              choice, password (+ "lost password"), second factor choice / OTP. -->
-        <template v-if="state.classic">
+        <template v-else-if="state.classic">
           <wa-button
             v-if="state.view !== 'start'"
             appearance="plain"
@@ -249,6 +262,7 @@ const router = useRouter()
 
 const state = reactive({
   classic: false, // viur-core 3.9: /user/login answered with the provider choice
+  loadError: false, // /user/login could not be loaded at all
   view: "start", // "start" | "provider" | "otp" | "recover" | "secondfactor" | "done"
   providers: [], // [{ name, target, label }] offered by /user/login
   secondFactors: [], // [{ name, target, label }] offered after the password
@@ -372,13 +386,29 @@ async function startClassic() {
   let body = null
   try {
     body = await store.loadLoginStep(props.action)
-  } catch {
+  } catch (error) {
+    // no answer at all is not "the server speaks v2" - the multistep form
+    // would fail the same way and show nothing but its action bar
+    state.loadError = true
+    emit("error", error)
     return
   }
+  state.loadError = false
   if (!String(body?.["action"] ?? "").startsWith("select_authentication_provider")) return
   state.classic = true
   state.providers = selectOptions(body)
   return showStart()
+}
+
+/** Load the start of the login again after it failed. */
+async function retryStart() {
+  checking.value = true
+  try {
+    await startClassic()
+  } finally {
+    checking.value = false
+  }
+  if (!state.loadError) await mountGoogleButton().catch(() => null)
 }
 
 /** A provider without a widget of its own: the server confirms the choice and

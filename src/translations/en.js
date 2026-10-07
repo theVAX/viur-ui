@@ -189,6 +189,8 @@ export default {
     choose_second_factor: "Choose a second factor",
     second_factor: "Two-factor verification",
     lost_password: "Forgot your password?",
+    unavailable: "Sign-in is not available right now.",
+    retry: "Try again",
     with_google: "Sign in with Google",
     waiting: "loading...",
     or: "or",

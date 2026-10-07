@@ -41,7 +41,12 @@ async function apiRequest(url, { method = "GET", data = {}, secure = false, mess
     immediate: false,
     messages,
   })
-  await result.execute()
+  try {
+    await result.execute()
+  } catch (error) {
+    // the caller decides what a failure means (a 401 on view/self is "anonymous")
+    throw error
+  }
   return result.data.value
 }
 

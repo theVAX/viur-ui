@@ -258,7 +258,9 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       },
     })
 
-    const { isFetching, isFinished, error, execute: _execute, abort } = useViurFetch(listUrl, { immediate }).json()
+    // all=true starts through our own execute() below, which loads every page
+    const fetchOptions = { immediate: immediate && !all }
+    const { isFetching, isFinished, error, execute: _execute, abort } = useViurFetch(listUrl, fetchOptions).json()
 
     /** Everything loaded: last response is in and no cursor left open. From here
      *  on, sorting/filtering may run locally on the dataset. */
@@ -281,22 +283,16 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       reset,
     }
 
-    // when all=true: automatically fetch next pages until cursor is empty
-    watch(isFinished, async (finished) => {
-      if (finished && all && cursor.value) {
-        params.value = { ...params.value, cursor: cursor.value }
-        _isNext = true
-        listUrl.value = _buildUrl()
-        try {
-          await executeAndThrow(fetchResult, _execute)
-        } catch {
-          // already in `error`; rethrowing here would only be an unhandled rejection
-        }
-      }
-    })
+    if (all && immediate) {
+      execute().catch(() => {
+        // already in `error`; rethrowing here would only be an unhandled rejection
+      })
+    }
 
-    function execute() {
+    /** First page; with all=true it only resolves once every page is in. */
+    async function execute() {
       _generation++
+      const generation = _generation
       _isNext = false
       abort()
       data.value = []
@@ -306,7 +302,14 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
       const { cursor: _, ...rest } = params.value
       params.value = rest
       listUrl.value = _buildUrl()
-      return executeAndThrow(fetchResult, _execute)
+      try {
+        const result = await executeAndThrow(fetchResult, _execute)
+        // a newer execute()/reset() took over meanwhile — that one loads the rest
+        if (all && generation === _generation) await nextAll()
+        return result
+      } catch (error) {
+        throw error
+      }
     }
 
     /** Load one more page; detects the ViUR end (empty page with the same
@@ -346,8 +349,10 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 
     /** Load all remaining pages ("load everything"). */
     async function nextAll() {
+      const generation = _generation
       try {
-        while (await _advance()) {
+        // stops when execute()/filter()/reset() restarts the list meanwhile
+        while (generation === _generation && (await _advance())) {
           /* until the end */
         }
       } catch (error) {

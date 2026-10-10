@@ -190,6 +190,8 @@ export default {
     choose_second_factor: "Zweiten Faktor wählen",
     second_factor: "Zwei-Faktor-Bestätigung",
     lost_password: "Passwort vergessen?",
+    unavailable: "Die Anmeldung ist gerade nicht erreichbar.",
+    retry: "Erneut versuchen",
     with_google: "Mit Google anmelden",
     waiting: "lade...",
     or: "oder",

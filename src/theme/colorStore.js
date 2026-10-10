@@ -16,7 +16,8 @@ import { useConfigStore } from "../request/configStore.js"
 // and dark) as it does for any built-in brand color.
 
 /** Lightness (HSL, %) per brand step: the old admin's table (50 → 83 %, …,
- *  950 → 3 %), step by step on WebAwesome's steps (95 … 05). */
+ *  950 → 3 %), step by step on WebAwesome's steps (95 … 05) — except the
+ *  lightest step, which is brighter (95 % instead of 83 %). */
 export const BRAND_LIGHTNESS = [
   ["95", 95],
   ["90", 78],

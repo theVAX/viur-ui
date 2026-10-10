@@ -23,9 +23,10 @@
       <wa-tooltip
         v-if="state.hasTooltip && !showLabelInfo"
         :for="state.labelTooltipTargetId"
-        :content="state.bonestructure.params['tooltip']"
-        placement="top-center"
-      ></wa-tooltip>
+        placement="top"
+      >
+        {{ state.bonestructure.params["tooltip"] }}
+      </wa-tooltip>
       <div
         v-if="state.hasTooltip && !showLabelInfo"
         :id="state.labelTooltipTargetId"
@@ -51,9 +52,10 @@
       class="bone-tooltip"
       :for="state.boneTooltipTargetId"
       :disabled="!state.showtooltip"
-      :content="state.bonestructure?.['descr']"
-      style="--show-delay: 1000"
-    ></wa-tooltip>
+      :show-delay="1000"
+    >
+      {{ state.bonestructure?.["descr"] }}
+    </wa-tooltip>
     <div
       :id="state.boneTooltipTargetId"
       class="bone-inner"

@@ -1,0 +1,121 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
+import { resetState, HTTPError } from "../../../src/request/request.js"
+import { useRelationalSource } from "../../../src/forms/bones/relationalSource.js"
+
+function jsonResponse(data, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: status === 200 ? "OK" : "Error",
+    headers: { get: (k) => (k === "content-type" ? "application/json" : null) },
+    json: () => Promise.resolve(data),
+    text: () => Promise.resolve(JSON.stringify(data)),
+    clone() {
+      return this
+    },
+  }
+}
+
+// Answers /list with `respond(searchParams)`; returns the parsed /list URLs.
+function stubFetch(respond = () => ({ skellist: [], cursor: "", orders: [] })) {
+  const urls = []
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/structure")) return jsonResponse({ viewSkel: {} })
+      const parsed = new URL(url)
+      urls.push(parsed.searchParams)
+      const result = await respond(parsed.searchParams)
+      return result === "error" ? jsonResponse({}, 500) : jsonResponse(result)
+    })
+  )
+  return urls
+}
+
+const page = (...names) => ({ skellist: names.map((name) => ({ key: name, name })), cursor: "next", orders: [] })
+const boneState = (format = "$(dest.name)", type = "relational") => ({
+  bonestructure: { type, module: "items", format },
+})
+const formatString = (format, { dest }) => dest.name
+
+// Let the 300 ms search debounce elapse, then wait for the result.
+async function settle(promise) {
+  await vi.advanceTimersByTimeAsync(300)
+  return promise
+}
+
+beforeEach(async () => {
+  globalThis.indexedDB = new IDBFactory()
+  globalThis.IDBKeyRange = IDBKeyRange
+  await resetState()
+  vi.restoreAllMocks()
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+describe("useRelationalSource", () => {
+  it("fetches one page of 99 without filter for an empty search", async () => {
+    const urls = stubFetch(() => page("a", "b"))
+    const items = await settle(useRelationalSource(boneState(), formatString)(""))
+    expect(items).toEqual([
+      { text: "a", value: "a", data: { key: "a", name: "a" } },
+      { text: "b", value: "b", data: { key: "b", name: "b" } },
+    ])
+    expect(urls).toHaveLength(1)
+    expect(urls[0].get("limit")).toBe("99")
+    expect([...urls[0].keys()].some((key) => key.endsWith("$lk"))).toBe(false)
+  })
+
+  it("sends the search as a prefix filter on the first bone of the format", async () => {
+    const urls = stubFetch(() => page("Entry"))
+    const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
+    expect((await settle(getList(" Ent "))).map((item) => item.value)).toEqual(["Entry"])
+    expect(urls[0].get("firstname$lk")).toBe("Ent")
+    expect(urls[0].get("limit")).toBe("99")
+  })
+
+  it("does not filter when the format names no bone", async () => {
+    const urls = stubFetch()
+    await settle(useRelationalSource(boneState("static"), formatString)("Ent"))
+    expect([...urls[0].keys()].some((key) => key.endsWith("$lk"))).toBe(false)
+  })
+
+  it("sets skelType for tree bones", async () => {
+    const urls = stubFetch()
+    await settle(useRelationalSource(boneState("$(dest.name)", "relational.tree.leaf.file"), formatString)(""))
+    expect(urls[0].get("skelType")).toBe("leaf")
+  })
+
+  it("rejects when the request fails", async () => {
+    stubFetch(() => "error")
+    const rejected = expect(useRelationalSource(boneState(), formatString)("x")).rejects.toBeInstanceOf(HTTPError)
+    await vi.advanceTimersByTimeAsync(300)
+    await rejected
+  })
+
+  it("an outdated slower response resolves with the newest result", async () => {
+    let releaseOld
+    const oldResponse = new Promise((resolve) => (releaseOld = resolve))
+    stubFetch((params) => (params.get("name$lk") === "a" ? oldResponse : page("ab")))
+    const getList = useRelationalSource(boneState(), formatString)
+    const old = getList("a")
+    await vi.advanceTimersByTimeAsync(300) // request for "a" is out, its response hangs
+    const current = getList("ab")
+    expect((await settle(current)).map((item) => item.value)).toEqual(["ab"])
+    releaseOld(page("a", "ab", "ac"))
+    expect((await old).map((item) => item.value)).toEqual(["ab"])
+  })
+
+  it("debounces keystrokes into one request; every call gets its result", async () => {
+    const urls = stubFetch((params) => page(params.get("name$lk")))
+    const getList = useRelationalSource(boneState(), formatString)
+    const calls = [getList("a"), getList("ab"), getList("abc")]
+    await vi.advanceTimersByTimeAsync(300)
+    for (const items of await Promise.all(calls)) expect(items.map((item) => item.value)).toEqual(["abc"])
+    expect(urls).toHaveLength(1)
+  })
+})

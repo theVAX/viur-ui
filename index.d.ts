@@ -28,9 +28,13 @@ export interface ListFetchOptions {
   group?: string | null
   url?: string | null
   renderer?: string
+  /** pin the wire format, e.g. `2`/`"v2"` (default: unversioned endpoint) */
+  version?: string | number | null
   immediate?: boolean
   cached?: boolean
   ttl?: number
+  /** push failures to the message store (when one exists), default `true` */
+  messages?: boolean
   /** Extra headers for the LIST requests (not the structure) — object or
    *  function, evaluated per request (e.g. X-VIUR-BONELIST). */
   headers?: Record<string, string> | (() => Record<string, string> | null) | null
@@ -295,7 +299,8 @@ export declare const BRAND_LIGHTNESS: [string, number][]
 export interface UploadFileOptions {
   target?: string
   publicUpload?: boolean
-  renderer?: string
+  renderer?: string | null
+  version?: string | number | null
 }
 
 export declare function uploadFile(file: File, options?: UploadFileOptions): Promise<Record<string, any>>

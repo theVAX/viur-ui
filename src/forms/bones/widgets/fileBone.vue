@@ -97,6 +97,7 @@
 <script setup>
 import { reactive, onMounted, inject, ref } from "vue"
 import { downloadUrlFor, uploadFile } from "../../../request/index.js"
+import { notify, requestMessage } from "../../../request/messageStore.js"
 import BoneActions from "../BoneActions.vue"
 /**
  * File upload widget for bones of type `relational.tree.leaf.file.file`.
@@ -183,9 +184,22 @@ async function handleUpload(event) {
       uploadinput.value.value = ""
       emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
     }
+  } catch (error) {
+    reportUploadError(error)
   } finally {
     state.loading = false
   }
+}
+
+/**
+ * Surfaces a failed upload (e.g. missing upload permission) in the message store.
+ * `uploadFile` talks to the server with plain `fetch`, past the request layer that
+ * would report it otherwise - without this the failure is silent.
+ * @param {Error} error
+ */
+function reportUploadError(error) {
+  if (uploadinput.value) uploadinput.value.value = ""
+  notify(requestMessage({ method: "POST", endpoint: "add", module: "file", error }))
 }
 
 async function handleDrop(event) {
@@ -198,6 +212,8 @@ async function handleDrop(event) {
       emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
       break
     }
+  } catch (error) {
+    reportUploadError(error)
   } finally {
     state.loading = false
   }

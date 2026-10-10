@@ -39,7 +39,7 @@
 import { ref, computed, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Browser from "./Browser.vue"
-import { useTreeFetch, useListFetch, useListRootNodesFetch, useMoveFetch, uploadFile } from "../../request/index.js"
+import { useTreeFetch, useListFetchAll, useListRootNodesFetch, useMoveFetch, uploadFile } from "../../request/index.js"
 import { columnsFromStructure } from "../DataTable/viurColumns.ts"
 
 // Thin ViUR wrapper around the generic browser: pass in `module`, done.
@@ -246,13 +246,19 @@ async function onUpload({ files, target }) {
 
 // ── Tree levels (nodes only) ──────────────────────────────────────────────────
 async function loadNodeChildren(node) {
-  const list = useListFetch(props.module, {
-    // Tree levels are navigation: as complete as possible (ViUR maximum 99).
+  const list = useListFetchAll(props.module, {
+    // Tree levels are navigation: complete, all pages (page size = ViUR maximum 99).
     params: { skelType: "node", parententry: node.key, orderby: props.orderField, limit: 99 },
     ...(props.renderer ? { renderer: props.renderer } : {}),
     immediate: false,
   })
-  await list.execute().catch(() => null)
+  try {
+    await list.execute()
+  } catch (error) {
+    // Propagate: TreeNav then keeps the level collapsed and unloaded (retry on
+    // next expand) instead of caching it as "no children".
+    throw error
+  }
   return list.data.value.map((skel) => ({
     key: skel.key,
     name: typeof skel.name === "string" ? skel.name : (skel.name?.name ?? skel.key),

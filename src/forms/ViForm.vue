@@ -198,7 +198,7 @@ const props = defineProps({
   // show only these bones
   bones: {
     type: Array,
-    default: [],
+    default: () => [],
   },
   //override server defaultvalues
   values: {
@@ -208,7 +208,7 @@ const props = defineProps({
   //used for fetch data
   params: {
     type: Object,
-    default: {},
+    default: () => ({}),
   },
   // define the renderer default is json
   renderer: {
@@ -228,7 +228,7 @@ const props = defineProps({
   },
   collapsedCategories: {
     type: Array,
-    default: [],
+    default: () => [],
   },
   categoryDefaultname: {
     type: String,
@@ -408,7 +408,10 @@ function listLabel(item, i) {
 provide("formState", state)
 // Form-wide action configuration (see actions prop) — computed so that
 // a reactive prop change reaches the bones.
-provide("boneActionsConfig", computed(() => props.actions))
+provide(
+  "boneActionsConfig",
+  computed(() => props.actions)
+)
 if (!props.internal) {
   provide("mainformState", state)
 }

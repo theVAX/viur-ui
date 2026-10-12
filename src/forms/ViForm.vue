@@ -148,7 +148,7 @@
 import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils.js"
 import { v1SelectionFollow } from "../request/index.js"
-import { reactive, watch, onBeforeMount, computed, provide, ref } from "vue"
+import { reactive, watch, onBeforeMount, onMounted, onBeforeUnmount, computed, provide, inject, ref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 import Bone from "./bones/Bone.vue"
@@ -416,14 +416,55 @@ if (!props.internal) {
   provide("mainformState", state)
 }
 
-const { fetchData, sendData, loadStep, resetForm, back, updateSkel, initForm, logics, reload } = useFormUtils(
-  props,
-  state
-)
+const {
+  fetchData,
+  sendData: sendDataNow,
+  loadStep,
+  resetForm,
+  back,
+  updateSkel,
+  initForm,
+  logics,
+  reload,
+} = useFormUtils(props, state)
 
-const formUpdateEvent = useDebounceFn((data) => {
+// The change event is debounced: it breaks the feedback loop between nested
+// forms and the outer form (outer skel -> props.skel -> initForm). A pending
+// change of a nested form is therefore not yet in the outer state.skel, so
+// the outermost form flushes them before it sends.
+let pendingChange = null
+const formUpdateEvent = useDebounceFn(flushChange, 500)
+
+function flushChange() {
+  if (pendingChange === null) return false
+  const data = pendingChange
+  pendingChange = null
   emit("change", data)
-}, 500)
+  return true
+}
+
+const nestedFlushes = props.internal ? inject("nestedFlushes", null) : new Set()
+if (!props.internal) {
+  provide("nestedFlushes", nestedFlushes)
+} else if (nestedFlushes) {
+  onMounted(() => nestedFlushes.add(flushChange))
+  onBeforeUnmount(() => nestedFlushes.delete(flushChange))
+}
+
+function flushNestedForms() {
+  // A flush can leave a pending change one level up (form in form), so repeat
+  // until nothing is pending. ponytail: capped instead of proving termination.
+  for (let pass = 0; pass < 10; pass++) {
+    let flushed = false
+    for (const flush of nestedFlushes) flushed = flush() || flushed
+    if (!flushed) return
+  }
+}
+
+function sendData(...args) {
+  flushNestedForms()
+  return sendDataNow(...args)
+}
 
 onBeforeMount(() => {
   reload()
@@ -458,7 +499,8 @@ watch(
 
 function formUpdate(data) {
   updateSkel(data)
-  formUpdateEvent(data)
+  pendingChange = data
+  formUpdateEvent()
 }
 
 function handlePressEnter(ev, name) {

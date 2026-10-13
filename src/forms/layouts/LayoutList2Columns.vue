@@ -1,44 +1,41 @@
 <template>
   <div
-    v-id="Object.keys(formState.structure).length > 0"
+    v-if="Object.keys(formState.structure).length > 0"
     class="wrapper"
   >
-    <div class="column left">
+    <div
+      v-for="column in columns"
+      :key="column.side"
+      class="column"
+      :class="column.side"
+    >
       <template
-        v-for="(boneValue, boneName, idx) in formState.skel"
+        v-for="boneName in column.bones"
         :key="boneName"
       >
-        <template v-if="formState.bones.includes(boneName)">
-          <slot
-            v-if="idx % 2 === 0"
-            :bone-name="boneName"
-            :widget="getBoneWidget(formState.structure[boneName]['type'])"
-          ></slot>
-        </template>
-      </template>
-    </div>
-    <div class="column right">
-      <template
-        v-for="(boneValue, boneName, idx) in formState.skel"
-        :key="boneName"
-      >
-        <template v-if="formState.bones.includes(boneName)">
-          <slot
-            v-if="idx % 2 !== 0"
-            :bone-name="boneName"
-            :widget="getBoneWidget(formState.structure[boneName]['type'])"
-          ></slot>
-        </template>
+        <slot
+          :bone-name="boneName"
+          :widget="getBoneWidget(formState.structure[boneName]['type'])"
+        ></slot>
       </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { inject } from "vue"
+import { computed, inject } from "vue"
 import { getBoneWidget } from "../bones/index.js"
+import { shownBones } from "./shownBones.js"
 const formState = inject("formState")
-const formUpdate = inject("formUpdate")
+
+// Alternating over the shown bones, so a `bones` filter still gives even columns
+const columns = computed(() => {
+  const bones = shownBones(formState)
+  return [
+    { side: "left", bones: bones.filter((_, i) => i % 2 === 0) },
+    { side: "right", bones: bones.filter((_, i) => i % 2 === 1) },
+  ]
+})
 </script>
 
 <style scoped>

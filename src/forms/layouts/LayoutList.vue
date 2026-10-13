@@ -4,15 +4,13 @@
     class="wrapper"
   >
     <template
-      v-for="(boneValue, boneName) in formState.skel"
+      v-for="boneName in shownBones(formState)"
       :key="boneName"
     >
-      <template v-if="formState.structure?.[boneName]">
-        <slot
-          :bone-name="boneName"
-          :widget="getBoneWidget(formState.structure[boneName]['type'])"
-        ></slot>
-      </template>
+      <slot
+        :bone-name="boneName"
+        :widget="getBoneWidget(formState.structure[boneName]['type'])"
+      ></slot>
     </template>
   </div>
 </template>
@@ -20,8 +18,8 @@
 <script setup>
 import { inject } from "vue"
 import { getBoneWidget } from "../bones/index.js"
+import { shownBones } from "./shownBones.js"
 const formState = inject("formState")
-const formUpdate = inject("formUpdate")
 </script>
 
 <style scoped>

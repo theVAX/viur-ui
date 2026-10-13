@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { reactive, computed } from "vue"
-import { createControllerFetch, resetState } from "../request/index.js"
+import { createControllerFetch, resetState, useConfigStore } from "../request/index.js"
 
 // --------------------------------------------------------------------------- //
 // User / session store (ViUR core 3.9, envelope v2)                           //
@@ -109,6 +109,11 @@ export const useUserStore = defineStore("viurUser", () => {
     state.status = "anonymous"
     // drop cached skeys + request cache - also after a failed request, they belong to the old session
     await resetState().catch(() => null)
+    // modules and rights belong to the old session: the next login must load its own, and
+    // whatever stays on screen needs the public config again (login screen, theme)
+    const config = useConfigStore()
+    config.reset()
+    await config.fetchConfig().catch(() => null)
     if (typeof follow === "string" && /^https?:\/\//.test(follow)) {
       window.location.href = follow
     }

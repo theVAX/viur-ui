@@ -3,6 +3,7 @@ import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
 import { setActivePinia, createPinia } from "pinia"
 import { useUserStore } from "../../src/user/store.js"
 import { resetState } from "../../src/request/request.js"
+import { useConfigStore } from "../../src/request/configStore.js"
 
 // The store imports resetState via the request index - wrap it in a spy that still runs the real one.
 const { resetStateSpy } = vi.hoisted(() => ({ resetStateSpy: vi.fn() }))
@@ -311,6 +312,32 @@ describe("logout", () => {
     expect(store.state.status).toBe("anonymous")
     expect(store.isLoggedIn).toBe(false)
     expect(resetStateSpy).toHaveBeenCalledOnce()
+  })
+
+  it("drops the admin config of the old session and reloads the public one", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return jsonResponse(["sk1"])
+        if (url.includes("/user/logout"))
+          return jsonResponse({ version: 2, action: "logout", status: "success", errors: [] })
+        if (url.endsWith("/config")) return jsonResponse({ configuration: { public: true } })
+        return jsonResponse({}, 404)
+      })
+    )
+    const config = useConfigStore()
+    config.state.modules = { order: {} }
+    config.state.status = "admin"
+    config.state.access = ["root"]
+    const store = useUserStore()
+    store.state.user = { ...USER }
+
+    await store.logout()
+
+    expect(config.state.modules).toBeNull()
+    expect(config.state.access).toEqual([])
+    expect(config.state.status).toBe("public")
+    expect(config.state.configuration).toEqual({ public: true })
   })
 
   it("drops skeys and request cache even when the logout request fails", async () => {

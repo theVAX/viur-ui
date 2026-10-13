@@ -25,62 +25,86 @@ async function _openDb() {
 }
 
 async function _dbGet(cacheKey) {
-  const db = await _openDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly")
-    const req = tx.objectStore(STORE_NAME).get(cacheKey)
-    req.onsuccess = () => resolve(req.result ?? null)
-    req.onerror = () => reject(req.error)
-  })
+  try {
+    const db = await _openDb()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readonly")
+      const req = tx.objectStore(STORE_NAME).get(cacheKey)
+      req.onsuccess = () => resolve(req.result ?? null)
+      req.onerror = () => reject(req.error)
+    })
+  } catch (error) {
+    throw error
+  }
 }
 
 async function _dbPut(entry) {
-  const db = await _openDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite")
-    tx.objectStore(STORE_NAME).put(entry)
-    tx.oncomplete = resolve
-    tx.onerror = () => reject(tx.error)
-  })
+  try {
+    const db = await _openDb()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite")
+      tx.objectStore(STORE_NAME).put(entry)
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (error) {
+    throw error
+  }
 }
 
 async function _dbDelete(cacheKey) {
-  const db = await _openDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite")
-    tx.objectStore(STORE_NAME).delete(cacheKey)
-    tx.oncomplete = resolve
-    tx.onerror = () => reject(tx.error)
-  })
+  try {
+    const db = await _openDb()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite")
+      tx.objectStore(STORE_NAME).delete(cacheKey)
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (error) {
+    throw error
+  }
 }
 
 async function _dbGetAll() {
-  const db = await _openDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly")
-    const req = tx.objectStore(STORE_NAME).getAll()
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
+  try {
+    const db = await _openDb()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readonly")
+      const req = tx.objectStore(STORE_NAME).getAll()
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  } catch (error) {
+    throw error
+  }
 }
 
 async function _dbClear() {
-  const db = await _openDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite")
-    tx.objectStore(STORE_NAME).clear()
-    tx.oncomplete = resolve
-    tx.onerror = () => reject(tx.error)
-  })
+  try {
+    const db = await _openDb()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite")
+      tx.objectStore(STORE_NAME).clear()
+      tx.oncomplete = resolve
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (error) {
+    throw error
+  }
 }
 
 async function _trimCache() {
-  const all = await _dbGetAll()
-  if (all.length <= MAX_CACHE_ENTRIES) return
-  all.sort((a, b) => a.date - b.date)
-  const toDelete = all.slice(0, all.length - MAX_CACHE_ENTRIES)
-  for (const entry of toDelete) {
-    await _dbDelete(entry.cacheKey)
+  try {
+    const all = await _dbGetAll()
+    if (all.length <= MAX_CACHE_ENTRIES) return
+    all.sort((a, b) => a.date - b.date)
+    const toDelete = all.slice(0, all.length - MAX_CACHE_ENTRIES)
+    for (const entry of toDelete) {
+      await _dbDelete(entry.cacheKey)
+    }
+  } catch (error) {
+    throw error
   }
 }
 
@@ -95,14 +119,18 @@ function _registerKeyMapping(entityKey, cacheKey) {
 }
 
 async function _ensureKeyMappings() {
-  if (_keyMappingsLoaded) return
-  const all = await _dbGetAll()
-  for (const entry of all) {
-    for (const key of entry.entityKeys ?? []) {
-      _registerKeyMapping(key, entry.cacheKey)
+  try {
+    if (_keyMappingsLoaded) return
+    const all = await _dbGetAll()
+    for (const entry of all) {
+      for (const key of entry.entityKeys ?? []) {
+        _registerKeyMapping(key, entry.cacheKey)
+      }
     }
+    _keyMappingsLoaded = true
+  } catch (error) {
+    throw error
   }
-  _keyMappingsLoaded = true
 }
 
 /**
@@ -116,13 +144,17 @@ if (typeof window !== "undefined" && window.location.hostname === "localhost") {
 }
 
 export async function getCached(url, ttl = DEFAULT_TTL) {
-  const entry = await _dbGet(url)
-  if (!entry) return null
-  if (ttl > 0 && Date.now() - entry.date > ttl * 1000) {
-    await _dbDelete(url)
-    return null
+  try {
+    const entry = await _dbGet(url)
+    if (!entry) return null
+    if (ttl > 0 && Date.now() - entry.date > ttl * 1000) {
+      await _dbDelete(url)
+      return null
+    }
+    return entry.data
+  } catch (error) {
+    throw error
   }
-  return entry.data
 }
 
 /**
@@ -132,11 +164,15 @@ export async function getCached(url, ttl = DEFAULT_TTL) {
  * @param {string[]} [entityKeys] - viur entity keys contained in the response (for invalidation)
  */
 export async function setCached(url, data, entityKeys = []) {
-  await _dbPut({ cacheKey: url, data, date: Date.now(), entityKeys })
-  for (const key of entityKeys) {
-    _registerKeyMapping(key, url)
+  try {
+    await _dbPut({ cacheKey: url, data, date: Date.now(), entityKeys })
+    for (const key of entityKeys) {
+      _registerKeyMapping(key, url)
+    }
+    await _trimCache()
+  } catch (error) {
+    throw error
   }
-  await _trimCache()
 }
 
 /**
@@ -145,15 +181,19 @@ export async function setCached(url, data, entityKeys = []) {
  * @param {string|string[]} entityKeys
  */
 export async function invalidateByKey(entityKeys) {
-  await _ensureKeyMappings()
-  const keys = Array.isArray(entityKeys) ? entityKeys : [entityKeys]
-  for (const entityKey of keys) {
-    const cacheKeys = _keyToCache.get(entityKey)
-    if (!cacheKeys) continue
-    for (const cacheKey of cacheKeys) {
-      await _dbDelete(cacheKey)
+  try {
+    await _ensureKeyMappings()
+    const keys = Array.isArray(entityKeys) ? entityKeys : [entityKeys]
+    for (const entityKey of keys) {
+      const cacheKeys = _keyToCache.get(entityKey)
+      if (!cacheKeys) continue
+      for (const cacheKey of cacheKeys) {
+        await _dbDelete(cacheKey)
+      }
+      _keyToCache.delete(entityKey)
     }
-    _keyToCache.delete(entityKey)
+  } catch (error) {
+    throw error
   }
 }
 
@@ -163,21 +203,25 @@ export async function invalidateByKey(entityKeys) {
  *                            If omitted, all entries are cleared.
  */
 export async function clearCache(prefix) {
-  if (prefix === undefined) {
-    _keyToCache.clear()
+  try {
+    if (prefix === undefined) {
+      _keyToCache.clear()
+      _keyMappingsLoaded = false
+      await _dbClear()
+      return
+    }
     _keyMappingsLoaded = false
-    await _dbClear()
-    return
-  }
-  _keyMappingsLoaded = false
-  const all = await _dbGetAll()
-  for (const entry of all) {
-    if (entry.cacheKey.startsWith(prefix)) {
-      await _dbDelete(entry.cacheKey)
-      for (const [entityKey, cacheKeys] of _keyToCache) {
-        cacheKeys.delete(entry.cacheKey)
-        if (cacheKeys.size === 0) _keyToCache.delete(entityKey)
+    const all = await _dbGetAll()
+    for (const entry of all) {
+      if (entry.cacheKey.startsWith(prefix)) {
+        await _dbDelete(entry.cacheKey)
+        for (const [entityKey, cacheKeys] of _keyToCache) {
+          cacheKeys.delete(entry.cacheKey)
+          if (cacheKeys.size === 0) _keyToCache.delete(entityKey)
+        }
       }
     }
+  } catch (error) {
+    throw error
   }
 }

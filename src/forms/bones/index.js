@@ -34,6 +34,18 @@ const phoneBone = defineAsyncComponent(() => import("./widgets/phoneBone.vue"))
 const codeBone = defineAsyncComponent(() => import("./widgets/codeBone.vue"))
 const textBone = defineAsyncComponent(() => import("./widgets/textBone.vue"))
 
+/**
+ * Entry of `registry` for `boneType`: exact key, else the longest dotted key that `boneType`
+ * starts with ("relational." matches "relational.user"). `undefined` if none matches.
+ */
+function lookup(registry, boneType) {
+  if (Object.hasOwn(registry, boneType)) return registry[boneType]
+  const prefix = Object.keys(registry)
+    .filter((key) => key.includes(".") && boneType.startsWith(key))
+    .sort((a, b) => b.length - a.length)[0]
+  return prefix === undefined ? undefined : registry[prefix]
+}
+
 export const useBoneStore = defineStore("boneStore", () => {
   const state = reactive({
     additionalBones: shallowRef({}),
@@ -68,36 +80,14 @@ export const useBoneStore = defineStore("boneStore", () => {
     multibones: shallowRef(["select", "select."]),
   })
 
+  // Replace instead of mutating: the registries are shallowRefs, only a new object triggers.
   function addBoneWidget(boneType, widget) {
-    state.additionalBones[boneType] = widget
-  }
-
-  function importWidgets() {
-    let bones = state.defaultBones
-    for (const [k, v] of Object.entries(state.additionalBones)) {
-      bones.add(v)
-    }
-    return bones
+    state.additionalBones = { ...state.additionalBones, [boneType]: widget }
   }
 
   function getBoneWidget(boneType) {
-    if (Object.keys(state.additionalBones).includes(boneType)) {
-      //exact match
-      return state.additionalBones[boneType]
-    } else {
-      let typeParts = boneType.split(".") //prefix match
-      let matchingPrefixes = Object.entries(state.additionalBones).filter((prefix) =>
-        prefix[0].startsWith(typeParts[0] + ".")
-      )
-      if (matchingPrefixes.length > 0) {
-        matchingPrefixes.sort((a, b) => b.length - a.length)
-        for (let prefix of matchingPrefixes) {
-          if (boneType.startsWith(prefix[0])) {
-            return state.additionalBones[prefix[0]]
-          }
-        }
-      }
-    }
+    const custom = lookup(state.additionalBones, boneType)
+    if (custom) return custom
 
     if (boneType === "date" || boneType.startsWith("date.")) {
       return dateBone
@@ -147,36 +137,17 @@ export const useBoneStore = defineStore("boneStore", () => {
   }
 
   function addBoneActionbar(boneType, widget) {
-    state.actionbars[boneType] = widget
+    state.actionbars = { ...state.actionbars, [boneType]: widget }
   }
 
   function getBoneActionbar(boneType) {
-    if (Object.keys(state.actionbars).includes(boneType)) {
-      //exact match
-      return state.actionbars[boneType]
-    } else {
-      let typeParts = boneType.split(".") //prefix match
-      let matchingPrefixes = Object.entries(state.actionbars).filter((prefix) =>
-        prefix[0].startsWith(typeParts[0] + ".")
-      )
-      if (matchingPrefixes.length > 0) {
-        matchingPrefixes.sort((a, b) => b.length - a.length)
-        for (let prefix of matchingPrefixes) {
-          if (boneType.startsWith(prefix[0])) {
-            return state.actionbars[prefix[0]]
-          }
-        }
-      }
-    }
-
-    return defaultBar
+    return lookup(state.actionbars, boneType) ?? defaultBar
   }
 
   return {
     state,
     addBoneWidget,
     getBoneWidget,
-    importWidgets,
 
     addBoneActionbar,
     getBoneActionbar,
@@ -205,21 +176,7 @@ export function addBoneWidget(boneType, widget) {
 
 export function BoneHasMultipleHandling(boneType) {
   const boneStore = useBoneStore()
-  if (boneStore.state.multibones.includes(boneType)) {
-    return true
-  } else {
-    let typeParts = boneType.split(".") //prefix match
-    let matchingPrefixes = Object.entries(boneStore.state.multibones).filter((prefix) =>
-      prefix[1].startsWith(typeParts[0] + ".")
-    )
-    if (matchingPrefixes.length > 0) {
-      matchingPrefixes.sort((a, b) => b.length - a.length)
-      for (let prefix of matchingPrefixes) {
-        if (boneType.startsWith(prefix[1])) {
-          return true
-        }
-      }
-    }
-  }
-  return false
+  return boneStore.state.multibones.some(
+    (type) => type === boneType || (type.includes(".") && boneType.startsWith(type))
+  )
 }

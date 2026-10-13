@@ -8,10 +8,10 @@
     <wa-button
       v-if="boneState.multiple && !readonly"
       variant="danger"
-      :title="$t('bone.del')"
+      :title="$t('bone.delAll')"
       appearance="outlined"
       class="delete-btn"
-      @click="openSelector()"
+      @click="removeMultipleEntries(lang)"
     >
       <wa-icon
         slot="start"
@@ -68,6 +68,7 @@
 import { useI18n } from "vue-i18n"
 import { reactive, onMounted, inject, ref, computed } from "vue"
 import { uploadFile } from "../../../request/index.js"
+import { notify, requestMessage } from "../../../request/messageStore.js"
 
 const { t } = useI18n()
 
@@ -84,7 +85,7 @@ const emit = defineEmits(["change"])
 
 const boneState = inject("boneState")
 const addMultipleEntry = inject("addMultipleEntry")
-const removeMultipleEntries = null
+const removeMultipleEntries = inject("removeMultipleEntries")
 const uploadinput = ref()
 const state = reactive({
   skels: {},
@@ -94,33 +95,33 @@ const state = reactive({
   hasUsing: computed(() => boneState?.bonestructure["using"]),
 })
 
-async function handleUpload(event) {
+/**
+ * Uploads the files one by one and appends each as an entry. A failed upload stops the rest and
+ * is reported in the message store, like in the file widget.
+ * @param {FileList} files
+ */
+async function uploadAll(files) {
   state.loading = true
-  for (let file of event.target.files) {
-    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
-    uploadinput.value.value = null
-    let relDefault = null
-    if (state.hasUsing) {
-      relDefault = undefined
+  try {
+    for (const file of files) {
+      const fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
+      addMultipleEntry(props.lang, { dest: fileresult, rel: state.hasUsing ? undefined : null })
     }
-    addMultipleEntry(props.lang, { dest: fileresult, rel: relDefault })
+  } catch (error) {
+    notify(requestMessage({ method: "POST", endpoint: "add", module: "file", error }))
+  } finally {
+    if (uploadinput.value) uploadinput.value.value = ""
+    state.loading = false
   }
-  state.loading = false
 }
 
-async function handleDrop(event) {
-  state.loading = true
+function handleUpload(event) {
+  return uploadAll(event.target.files)
+}
+
+function handleDrop(event) {
   state.droparea = false
-  for (let file of event.dataTransfer.files) {
-    let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
-    uploadinput.value.value = null
-    let relDefault = null
-    if (state.hasUsing) {
-      relDefault = undefined
-    }
-    addMultipleEntry(props.lang, { dest: fileresult, rel: relDefault })
-  }
-  state.loading = false
+  return uploadAll(event.dataTransfer.files)
 }
 
 onMounted(() => {

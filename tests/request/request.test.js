@@ -1064,6 +1064,24 @@ describe("uploadFile", () => {
     expect(storageCall[1].mode).toBe("no-cors")
   })
 
+  it("passes the abort signal to all three requests", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey")) return jsonResponse(["sk1", "sk2", "sk3", "sk4"])
+      if (url.includes("/getUploadURL"))
+        return jsonResponse({ values: { uploadUrl: "https://storage.example.com/upload", uploadKey: "k" } })
+      if (url.includes("/file/add")) return jsonResponse({ action: "addSuccess", values: {} })
+      return { ok: true, status: 200, json: () => Promise.resolve(null) }
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const { signal } = new AbortController()
+
+    await uploadFile(new File(["data"], "file.bin"), { signal })
+
+    const uploadCalls = fetchMock.mock.calls.filter(([u]) => !u.includes("/skey"))
+    expect(uploadCalls).toHaveLength(3)
+    expect(uploadCalls.every(([, opts]) => opts.signal === signal)).toBe(true)
+  })
+
   it("passes target and publicUpload to getUploadURL", async () => {
     const fetchMock = vi.fn().mockImplementation(async (url) => {
       if (url.includes("/skey")) return jsonResponse(["sk1", "sk2", "sk3", "sk4"])

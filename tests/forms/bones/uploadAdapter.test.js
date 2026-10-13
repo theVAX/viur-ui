@@ -17,3 +17,18 @@ it("Bild-Upload im Text-Bone speichert /file/download/…, nicht /vi/…", async
 
   expect(result.default).toBe("http://api.test/file/download/abc?sig=x")
 })
+
+it("abort() cancels the running upload", async () => {
+  const { uploadFile } = await import("../../../src/request/index.js")
+  const fileRepository = {}
+  const editor = { plugins: { get: () => fileRepository }, config: { get: () => undefined } }
+  ViURUploadAdapterPlugin(editor)
+  const adapter = fileRepository.createUploadAdapter({ file: Promise.resolve(new File(["x"], "bild.png")) })
+
+  const upload = adapter.upload()
+  await vi.waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(2))
+  adapter.abort()
+
+  expect(uploadFile.mock.calls.at(-1)[1].signal.aborted).toBe(true)
+  await upload
+})

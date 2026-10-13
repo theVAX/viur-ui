@@ -301,6 +301,8 @@ export interface UploadFileOptions {
   publicUpload?: boolean
   renderer?: string | null
   version?: string | number | null
+  /** Aborts the upload (all three requests). */
+  signal?: AbortSignal
 }
 
 export declare function uploadFile(file: File, options?: UploadFileOptions): Promise<Record<string, any>>

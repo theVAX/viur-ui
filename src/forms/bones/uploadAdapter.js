@@ -9,33 +9,26 @@ class ViURUploadAdapter {
   async upload() {
     this.loader.uploadTotal = 100
     this.loader.uploaded = 0
-    return this.loader.file.then(
-      async (file) =>
-        new Promise((resolve, reject) => {
-          this.loader.uploaded = 10
-          uploadFile(file, { renderer: "vi" })
-            .then((uploadedData) => {
-              this.loader.uploaded = 75
-              this.loader.uploaded = 100
-              resolve({
-                // The URL ends up in the text bone's HTML: as /file/download/…
-                // (only made absolute) — viur-core recognizes those again
-                // (blob reference, srcset) and it doesn't sit behind /vi.
-                default: downloadUrlFor(uploadedData["downloadUrl"]),
-              })
-            })
-            .catch((error) => {
-              reject(error)
-            })
-        })
-    )
+    this.controller = new AbortController()
+    try {
+      const file = await this.loader.file
+      this.loader.uploaded = 10
+      const uploadedData = await uploadFile(file, { renderer: "vi", signal: this.controller.signal })
+      this.loader.uploaded = 100
+      return {
+        // The URL ends up in the text bone's HTML: as /file/download/…
+        // (only made absolute) — viur-core recognizes those again
+        // (blob reference, srcset) and it doesn't sit behind /vi.
+        default: downloadUrlFor(uploadedData["downloadUrl"]),
+      }
+    } catch (error) {
+      throw error // CKEditor shows the failed upload
+    }
   }
 
-  // Aborts the upload process.
+  // Aborts the upload process (called by CKEditor, e.g. when the image is removed while uploading).
   abort() {
-    if (this.xhr) {
-      this.xhr.abort()
-    }
+    this.controller?.abort()
   }
 }
 

@@ -675,11 +675,11 @@ function _toFormData(obj) {
 
 export async function uploadFile(
   file,
-  { target = undefined, publicUpload = false, renderer = null, version = null } = {}
+  { target = undefined, publicUpload = false, renderer = null, version = null, signal = undefined } = {}
 ) {
   try {
     const _renderer = renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
-    const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST" }
+    const fetchOpts = { credentials: "include", headers: { Accept: "application/json" }, method: "POST", signal }
 
     // Step 1: get upload URL
     const filedata = {
@@ -705,7 +705,7 @@ export async function uploadFile(
     const { uploadUrl, uploadKey } = getUrlData.data ?? getUrlData.values ?? {}
 
     // Step 2: upload raw bytes to external storage (no-cors, no credentials)
-    await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors" })
+    await fetch(uploadUrl, { method: "POST", body: file, mode: "no-cors", signal })
 
     // Step 3: register file in ViUR
     const fd3 = _toFormData({ key: uploadKey, skelType: "leaf" })

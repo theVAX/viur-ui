@@ -3,10 +3,10 @@
     <wa-button
       v-if="boneState.multiple && !readonly"
       variant="danger"
-      :title="$t('bone.del')"
+      :title="$t('bone.delAll')"
       appearance="outlined"
       class="delete-btn"
-      @click="openSelector()"
+      @click="removeMultipleEntries(lang)"
     >
       <wa-icon
         slot="start"
@@ -59,7 +59,7 @@ const emit = defineEmits(["change"])
 const boneState = inject("boneState")
 const addMultipleEntry = inject("addMultipleEntry")
 const formatString = inject("formatString")
-const removeMultipleEntries = null
+const removeMultipleEntries = inject("removeMultipleEntries")
 const state = reactive({
   skels: {},
   hasUsing: computed(() => boneState?.bonestructure["using"]),

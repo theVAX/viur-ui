@@ -767,6 +767,33 @@ describe("useAddFetch", () => {
   })
 })
 
+describe("useAddFetch cache", () => {
+  it("clears the module's lists in every language and version, nothing else", async () => {
+    const { getCached } = await import("../../src/request/cache.js")
+    const keys = {
+      plain: `${BASE}/json/items/list`,
+      lang: `${BASE}/de/json/items/list?limit=99`,
+      version: `${BASE}/json/v2/items/list`,
+      otherModule: `${BASE}/json/other/list`,
+      nestedModule: `${BASE}/json/shop/items/list`,
+    }
+    for (const key of Object.values(keys)) await setCached(key, { skellist: [] }, [])
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return jsonResponse(["sk-add"])
+        return jsonResponse({ action: "addSuccess", values: { key: "new-key" } })
+      })
+    )
+
+    await waitUntilFinished(useAddFetch("items", "/", { name: "New" }))
+
+    const left = {}
+    for (const [name, key] of Object.entries(keys)) left[name] = (await getCached(key, 0)) !== null
+    expect(left).toEqual({ plain: false, lang: false, version: false, otherModule: true, nestedModule: true })
+  })
+})
+
 // ─── useDeleteFetch ───────────────────────────────────────────────────────────
 
 describe("useDeleteFetch", () => {

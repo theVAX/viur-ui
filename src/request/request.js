@@ -607,27 +607,26 @@ export function createControllerFetch({
             const message = requestMessage({ method, endpoint, module: controllerPath(controller), body: ctx.data })
             if (message) notify(message)
           }
+          // The server already answered: a failing cache must not turn that into an error
+          const cacheFailed = (error) => console.warn("[request] cache update failed", error)
           if (cached && method.toUpperCase() === "GET" && _cacheKey) {
             const entityKey = ctx.data?.data?.key
-            await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : []).catch((error) => {
-              throw error
-            })
+            await setCached(_cacheKey, ctx.data, entityKey ? [entityKey] : []).catch(cacheFailed)
           }
           if (invalidates) {
             const keys = []
             if (data.key) keys.push(data.key)
             if (ctx.data?.data?.key) keys.push(ctx.data.data.key)
-            if (keys.length)
-              await invalidateByKey(keys).catch((error) => {
-                throw error
-              })
+            if (keys.length) await invalidateByKey(keys).catch(cacheFailed)
           }
           if (invalidatesAll) {
-            const base = import.meta.env.VITE_API_URL ?? window.location.origin
-            const controllerPath = Array.isArray(controller) ? controller.join("/") : controller
-            await clearCache(`${base}/${renderer}/${controllerPath}/`).catch((error) => {
-              throw error
-            })
+            // every cached request of the module, in any language and version (see create_url)
+            const base = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : window.location.origin
+            const modulePath = Array.isArray(controller) ? controller.join("/") : controller
+            const inModule = new RegExp(`^(/[^/]+)?/${renderer}(/v\\d+)?/${modulePath}/`)
+            await clearCache(
+              (cacheKey) => cacheKey.startsWith(base) && inModule.test(cacheKey.slice(base.length))
+            ).catch(cacheFailed)
           }
           return ctx
         },

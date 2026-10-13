@@ -6,6 +6,9 @@ const STORE_NAME = "requests"
 
 let _db = null
 
+// No IndexedDB (Node, SSR, some private modes): the cache does nothing instead of failing requests
+const _available = () => typeof indexedDB !== "undefined"
+
 async function _openDb() {
   if (_db) return _db
   return new Promise((resolve, reject) => {
@@ -144,6 +147,7 @@ if (typeof window !== "undefined" && window.location.hostname === "localhost") {
 }
 
 export async function getCached(url, ttl = DEFAULT_TTL) {
+  if (!_available()) return null
   try {
     const entry = await _dbGet(url)
     if (!entry) return null
@@ -164,6 +168,7 @@ export async function getCached(url, ttl = DEFAULT_TTL) {
  * @param {string[]} [entityKeys] - viur entity keys contained in the response (for invalidation)
  */
 export async function setCached(url, data, entityKeys = []) {
+  if (!_available()) return
   try {
     await _dbPut({ cacheKey: url, data, date: Date.now(), entityKeys })
     for (const key of entityKeys) {
@@ -181,6 +186,7 @@ export async function setCached(url, data, entityKeys = []) {
  * @param {string|string[]} entityKeys
  */
 export async function invalidateByKey(entityKeys) {
+  if (!_available()) return
   try {
     await _ensureKeyMappings()
     const keys = Array.isArray(entityKeys) ? entityKeys : [entityKeys]
@@ -199,10 +205,11 @@ export async function invalidateByKey(entityKeys) {
 
 /**
  * Clear cached entries.
- * @param {string} [prefix] - If given, only entries whose cache key starts with this prefix are removed.
- *                            If omitted, all entries are cleared.
+ * @param {string|((cacheKey: string) => boolean)} [prefix] - If given, only entries whose cache key
+ *   starts with this prefix (or matches this predicate) are removed. If omitted, all entries are cleared.
  */
 export async function clearCache(prefix) {
+  if (!_available()) return
   try {
     if (prefix === undefined) {
       _keyToCache.clear()
@@ -213,7 +220,7 @@ export async function clearCache(prefix) {
     _keyMappingsLoaded = false
     const all = await _dbGetAll()
     for (const entry of all) {
-      if (entry.cacheKey.startsWith(prefix)) {
+      if (typeof prefix === "function" ? prefix(entry.cacheKey) : entry.cacheKey.startsWith(prefix)) {
         await _dbDelete(entry.cacheKey)
         for (const [entityKey, cacheKeys] of _keyToCache) {
           cacheKeys.delete(entry.cacheKey)

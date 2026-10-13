@@ -11,7 +11,8 @@
  *   emits `pick` (LatLng) when the user clicks the map. Handles its own consent.
  * @property {(address: Object) => Promise<LatLng|null>} [geocode] - Address fields -> coordinates.
  * @property {(coordinates: LatLng) => Promise<Object|null>} [reverseGeocode] - Coordinates -> address
- *   fields (`street_name`, `street_number`, `zip_code`, `city`, `country`).
+ *   fields (`street_name`, `street_number`, `zip_code`, `city`, `region`, `country`). `region` only
+ *   matters if the bone has one (optional field, see viur-core `AddressRelSkel`).
  */
 
 let provider = null
@@ -26,7 +27,7 @@ export function getAddressProvider() {
   return provider
 }
 
-const QUERY_FIELDS = ["street_name", "street_number", "zip_code", "city", "country"]
+const QUERY_FIELDS = ["street_name", "street_number", "zip_code", "city", "region", "country"]
 
 /**
  * Identity of the geocodable part of an address, `null` while street or city is missing.

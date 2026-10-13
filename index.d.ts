@@ -370,7 +370,7 @@ export interface AddressProvider {
   map?: import("vue").Component
   /** Address fields -> `[lat, lng]`, `null` if not found. */
   geocode?: (address: Record<string, unknown>) => Promise<[number, number] | null>
-  /** `[lat, lng]` -> address fields (`street_name`, `street_number`, `zip_code`, `city`, `country`). */
+  /** `[lat, lng]` -> address fields (`street_name`, `street_number`, `zip_code`, `city`, `region`, `country`). */
   reverseGeocode?: (coordinates: [number, number]) => Promise<Record<string, unknown> | null>
 }
 /** Registers the map/geocoder for all address widgets. Call once at app start, `null` removes it. */

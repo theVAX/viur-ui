@@ -24,6 +24,7 @@ describe("addressKey", () => {
     const a = { street_name: "Musterstraße", city: "Musterstadt" }
     expect(addressKey(a)).not.toBe(addressKey({ ...a, zip_code: "12345" }))
     expect(addressKey(a)).not.toBe(addressKey({ ...a, country: "de" }))
+    expect(addressKey(a)).not.toBe(addressKey({ ...a, region: "Bayern" }))
   })
 })
 

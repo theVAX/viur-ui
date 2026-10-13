@@ -2,7 +2,8 @@ import { defineConfig } from "vitest/config"
 import vue from "@vitejs/plugin-vue"
 
 export default defineConfig({
-  plugins: [vue()],
+  // Same as the apps: Web Awesome tags are custom elements, not Vue components.
+  plugins: [vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith("wa-") } } })],
   test: {
     environment: "happy-dom",
     setupFiles: ["./tests/setup.js"],

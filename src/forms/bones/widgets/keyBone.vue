@@ -4,7 +4,7 @@
     :class="[`bone-widget-key-${name}`]"
     disabled
     :value="value"
-    :data-data-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+    :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
   ></wa-input>
 </template>

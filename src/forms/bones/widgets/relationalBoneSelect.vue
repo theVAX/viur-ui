@@ -6,7 +6,7 @@
     <div class="bone-widget-single-entry">
       <wa-select
         :disabled="boneState.readonly"
-        :value="state.selection?.['dest']['key']"
+        :value="state.selection?.['dest']?.['key']"
         max-options-visible="0"
         with-clear
         :required="
@@ -27,9 +27,10 @@
     </div>
     <Wrapper_nested
       v-if="bone['using']"
-      :value="value"
+      :value="value?.['rel']"
       :name="name"
       :index="index"
+      :lang="lang"
       :bone="bone"
       :disabled="bone['readonly']"
       @change="changeEventNested"
@@ -86,13 +87,15 @@ async function getList(search) {
 }
 
 function changeEvent(event) {
-  state.selection = { dest: state.skellistdata[event.target.value] }
+  // a new target keeps the extra fields already entered
+  state.selection = { ...state.selection, dest: state.skellistdata[event.target.value] }
   emit("change", props.name, state.selection, props.lang, props.index)
 }
 
 function changeEventNested(data) {
   state.selection = { ...state.selection, rel: data["value"] }
-  emit("change", data["name"], state.selection, data["lang"], data["index"])
+  // only send a change if we have a valid target
+  if (state.selection.dest) emit("change", data["name"], state.selection, data["lang"], data["index"])
 }
 
 onMounted(() => {

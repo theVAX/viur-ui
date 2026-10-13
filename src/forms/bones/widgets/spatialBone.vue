@@ -60,7 +60,7 @@ defineOptions({
 const props = defineProps({
   /** Bone name – passed as the first argument in every `change` event. */
   name: String,
-  /** Current bone value as an array `[lat, lng]` or an object `{ lat, lng }`. */
+  /** Current bone value as an array `[lat, lng]`. */
   value: [Object, String, Number, Boolean, Array],
   /** Index in the multiple array; `undefined` for a single value. */
   index: Number,

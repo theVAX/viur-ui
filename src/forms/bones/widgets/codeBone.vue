@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, inject, computed, ref } from "vue"
+import { reactive, onMounted, inject, computed, ref, watch } from "vue"
 import { basicSetup } from "codemirror"
 import { EditorView, keymap, drawSelection } from "@codemirror/view"
 import { syntaxHighlighting, defaultHighlightStyle, LanguageDescription } from "@codemirror/language"
@@ -117,12 +117,7 @@ function editorFromTextArea(textarea, extensions) {
   indentString(_view.state, 4)
 
   let listener = () => {
-    let lines = ""
-    for (let i = 0; i < _view.state.doc.lines; ++i) {
-      let line = _view.state.doc.line(i + 1).text
-      lines += line + "\n"
-    }
-    state.value = lines
+    state.value = _view.state.doc.toString()
     emit("change", props.name, state.value, props.lang, props.index)
   }
 
@@ -150,8 +145,9 @@ async function build() {
   )
 
   if (langDesc) {
-    const support = await langDesc.load()
-    exts.push(support)
+    // without the language module the editor still works, only without highlighting
+    const support = await langDesc.load().catch(() => null)
+    if (support) exts.push(support)
   }
 
   if (boneState?.readonly) {
@@ -165,7 +161,11 @@ onMounted(async () => {
   if (props.value !== null) {
     state.value = props.value
   }
-  const exts = await build()
+  const exts = await build().catch((error) => {
+    console.error("[codeBone] editor setup failed", error)
+    return null
+  })
+  if (!exts) return
   view.value = editorFromTextArea(element.value, exts)
 
   //init editor
@@ -175,6 +175,17 @@ onMounted(async () => {
 
   emit("change", props.name, props.value, props.lang, props.index) //init
 })
+
+// Value changed from outside (reset, other form): show it, unless it is what the editor holds
+watch(
+  () => props.value,
+  (value) => {
+    const text = value ?? ""
+    if (!view.value || text === view.value.state.doc.toString()) return
+    state.value = text
+    view.value.dispatch({ changes: { from: 0, to: view.value.state.doc.length, insert: text } })
+  }
+)
 </script>
 <style scoped>
 .bone-widget-raw-hidden {

@@ -138,19 +138,13 @@ const state = reactive({
 const passwordBone = ref(null)
 
 function changeEvent(event) {
+  // before the tests: they report a mismatch, and the keystroke that makes both equal counts
+  state.equal = !state.needsConfirm || state.value1 === state.value2
   testPassword(state.value1)
 
-  if (!state.needsConfirm || state.value1 === state.value2) {
-    state.equal = true
-  } else {
-    state.equal = false
-    // dont try to update if not equal
-  }
-
-  // boneState.bonestructure["test_threshold"] = 2  *needs to be removed by the look cuz overridees server settings
   if (
     state.requiredPasswordInfo.length === 0 &&
-    state.passwordInfo.length - state.requiredPasswordInfo.length <= boneState.bonestructure["test_threshold"]
+    state.passwordInfo.length <= (boneState.bonestructure["test_threshold"] ?? 0)
   ) {
     emit("change", props.name, state.value1, props.lang, props.index, true)
   } else {
@@ -165,7 +159,7 @@ onMounted(() => {
 function testPassword(password) {
   state.passwordInfo = []
   state.requiredPasswordInfo = []
-  for (const test of boneState.bonestructure["tests"]) {
+  for (const test of boneState.bonestructure["tests"] ?? []) {
     if (!new RegExp(test[0]).test(password)) {
       if (test[2]) {
         state.requiredPasswordInfo.push(test[1])

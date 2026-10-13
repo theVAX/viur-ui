@@ -171,7 +171,6 @@ function openPicker() {
 }
 
 function createBackgroundImage() {
-  console.log(props.value)
   return downloadUrlFor(props.value, false)
 }
 
@@ -180,7 +179,6 @@ async function handleUpload(event) {
   try {
     for (let file of event.target.files) {
       let fileresult = await uploadFile(file, { publicUpload: !!boneState?.bonestructure["public"] })
-      console.log(fileresult)
       uploadinput.value.value = ""
       emit("change", props.name, { dest: fileresult, rel: null }, props.lang, props.index)
     }

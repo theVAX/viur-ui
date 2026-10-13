@@ -13,7 +13,7 @@
       boneState.bonestructure.required && !boneState.bonestructure.multiple && !boneState.bonestructure.languages
     "
     :placeholder="state.placeholder"
-    :data-data-invalid="boneState.errorMessages.length === 0 ? undefined : true"
+    :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
     @keyup="changeEvent"
   ></wa-input>
@@ -120,6 +120,6 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  emit("change", props.name, "" + props.value, props.lang, props.index) //init
+  emit("change", props.name, props.value == null ? "" : "" + props.value, props.lang, props.index) //init
 })
 </script>

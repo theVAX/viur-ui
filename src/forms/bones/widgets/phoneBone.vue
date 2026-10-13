@@ -6,6 +6,7 @@
   >
     <wa-select
       :value="state.dialCode"
+      :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="handleSelect"
     >
@@ -83,13 +84,14 @@ const emit = defineEmits([
 
 const boneState = inject("boneState")
 const state = reactive({
+  // parsePhoneNumber returns undefined for input it can't read: show that as typed
   value: computed(() =>
     props.value
-      ? parsePhoneNumber(state.reference, getCountry(state.dialCode)).formatInternational()
+      ? (parsePhoneNumber(state.reference, getCountry(state.dialCode))?.formatInternational() ?? state.reference)
       : state.dialCode + ""
   ),
   loading: false,
-  reference: computed(() => parsePhoneNumber(props.value, getCountry(state.dialCode)).formatNational()),
+  reference: computed(() => parsePhoneNumber(props.value, getCountry(state.dialCode))?.formatNational() ?? props.value),
   country: computed(() => getCountry(state.dialCode)),
   dialCode: "",
   countryInfo: [],
@@ -99,19 +101,15 @@ const countryInformation = ref(jsonData)
 const phoneBone = ref(null)
 
 function changeEvent(event) {
-  if (!event.target.value) {
+  const input = event.target.value?.trim()
+  // only the dial code (e.g. after choosing a country) is no number yet
+  if (!input || input === state.dialCode) {
     emit("change", props.name, "", props.lang, props.index)
     return
   }
-  if (event.target.value.length > 4) {
-    const number = parsePhoneNumber(event.target.value, state.country)
-    const valueFormatter = new AsYouType()
-
-    let value = valueFormatter.input(number ? number.number : event.target.value)
-    state.dialCode = "+" + number?.countryCallingCode
-    emit("change", props.name, value, props.lang, props.index)
-    return
-  } else return
+  const number = parsePhoneNumber(input, state.country)
+  if (number) state.dialCode = "+" + number.countryCallingCode
+  emit("change", props.name, number ? new AsYouType().input(number.number) : input, props.lang, props.index)
 }
 
 watchEffect(() => {
@@ -146,8 +144,9 @@ function getDefaultCode() {
 }
 
 function getCode(value) {
-  if (!value) return boneState.bonestructure.default_country_code ? boneState.bonestructure.default_country_code : "+49"
-  return "+" + parsePhoneNumber(value).countryCallingCode
+  const number = value ? parsePhoneNumber(value) : undefined
+  if (number) return "+" + number.countryCallingCode
+  return boneState.bonestructure.default_country_code ? boneState.bonestructure.default_country_code : "+49"
 }
 
 onMounted(() => {

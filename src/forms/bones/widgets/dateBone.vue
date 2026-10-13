@@ -68,19 +68,16 @@ const emit = defineEmits([
 const boneState = inject("boneState")
 const state = reactive({
   value: computed(() => {
-    // remove timezone data if timed
-
-    let boneValue = props.value
-    if (props.value && boneState.bonestructure["time"] && boneState.bonestructure["date"]) {
-      boneValue = props.value?.split("+")[0]
-    } else if (props.value && boneState.bonestructure["time"] && props.value.includes("T")) {
-      boneValue = props.value?.split("+")[0]?.split("T")[1]
-    } else if (props.value && props.value.includes("T")) {
-      //convert to readable value
-      boneValue = new Date(props.value).toISOString().substr(0, 10)
-    }
-
-    return boneValue
+    // The inputs take local values without zone: drop the offset (`Z`, `+01:00`, `-05:00`)
+    // as sent by the server, without converting into the browser's zone.
+    const value = props.value
+    if (!value || typeof value !== "string") return value
+    const local = value.replace(/(Z|[+-]\d{2}:?\d{2})$/, "")
+    const { date, time } = boneState.bonestructure
+    if (time && date) return local
+    if (time) return local.includes("T") ? local.split("T")[1] : local
+    // date only: the server's calendar day, a UTC conversion would move it across midnight
+    return local.split("T")[0]
   }),
   typeString: computed(() => {
     // Calculate the correct datetype String

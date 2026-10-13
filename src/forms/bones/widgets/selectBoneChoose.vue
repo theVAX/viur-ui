@@ -6,8 +6,9 @@
   >
     <wa-checkbox
       v-for="value in convertObjToList()"
+      :key="value[0]"
       :data-value="value[0]"
-      :checked="state.value.includes(value[0])"
+      :checked="state.value.includes(String(value[0]))"
       :disabled="boneState.readonly"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="changeEventMultiple"
@@ -28,6 +29,7 @@
   >
     <wa-radio
       v-for="value in convertObjToList()"
+      :key="value[0]"
       :value="value[0]"
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     >
@@ -55,20 +57,12 @@ const emit = defineEmits(["change"])
 const boneState = inject("boneState")
 const state = reactive({
   value: computed(() => {
-    let val = props.value
+    // The options carry string keys: compare as strings, numeric keys (1 vs "1") included
     if (Array.isArray(props.value)) {
-      if (boneState["bonestructure"]["values"] instanceof Array) {
-        val = val.filter((i) => boneState["bonestructure"]["values"].map((i) => i[0].toString()).includes(i))
-      } else
-        val = val.filter((i) =>
-          Object.keys(boneState["bonestructure"]["values"])
-            .map((i) => i.toString())
-            .includes(i)
-        )
-
-      return val.map((i) => i.toString())
+      const keys = convertObjToList().map((entry) => String(entry[0]))
+      return props.value.map(String).filter((key) => keys.includes(key))
     }
-    return props.value ? props.value.toString() : ""
+    return props.value == null ? "" : String(props.value)
   }),
 })
 

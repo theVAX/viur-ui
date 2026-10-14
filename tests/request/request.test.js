@@ -968,6 +968,48 @@ describe("createControllerFetch options", () => {
     expect(url).toContain("foo=bar")
   })
 
+  it("GET: sends an array in data as repeated params, as the server expects for a list", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const useFetch = createControllerFetch({ endpoint: "costs" })
+    const result = useFetch("items", "/", { key: ["a", "b"], other: "x" })
+    await waitUntilFinished(result)
+
+    const [url] = fetchMock.mock.calls[0]
+    const params = new URL(url).searchParams
+    expect(params.getAll("key")).toEqual(["a", "b"])
+    expect(params.get("other")).toBe("x")
+  })
+
+  it("query: sends an array in a query object as repeated params", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const useFetch = createControllerFetch({ endpoint: "view" })
+    const result = useFetch("items", "/", {}, { query: { key: ["a", "b"] } })
+    await waitUntilFinished(result)
+
+    const [url] = fetchMock.mock.calls[0]
+    expect(new URL(url).searchParams.getAll("key")).toEqual(["a", "b"])
+  })
+
+  it("GET: takes data given as URLSearchParams unchanged", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const useFetch = createControllerFetch({ endpoint: "costs" })
+    const data = new URLSearchParams([
+      ["key", "a"],
+      ["key", "b"],
+    ])
+    const result = useFetch("items", "/", data)
+    await waitUntilFinished(result)
+
+    const [url] = fetchMock.mock.calls[0]
+    expect(new URL(url).searchParams.getAll("key")).toEqual(["a", "b"])
+  })
+
   it("query: appends to a POST url without leaking into the body", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ action: "editSuccess", values: {} }))
     vi.stubGlobal("fetch", fetchMock)

@@ -7,6 +7,25 @@ import { notify, requestMessage } from "./messageStore.js"
 
 const controllerPath = (controller) => (Array.isArray(controller) ? controller.join(".") : controller)
 
+/**
+ * Query params as ViUR reads them: an array becomes a repeated param (`key=a&key=b`),
+ * which the server turns back into a list. `new URLSearchParams(obj)` would join it to `a,b`.
+ * Anything but a plain object (string, `URLSearchParams`, `FormData`, pairs) passes through
+ * `URLSearchParams` unchanged.
+ */
+function toSearchParams(params) {
+  if (!params) return new URLSearchParams()
+  const proto = Object.getPrototypeOf(params)
+  if (typeof params !== "object" || (proto !== Object.prototype && proto !== null)) {
+    return new URLSearchParams(params)
+  }
+  const qs = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    Array.isArray(v) ? v.forEach((item) => qs.append(k, item)) : qs.append(k, v)
+  }
+  return qs
+}
+
 export class HTTPError extends Error {
   constructor(statusCode, statusText, message, response = null) {
     super(message || statusText)
@@ -135,10 +154,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
 
     function _buildUrl() {
       const base = url ?? create_url({ controller, endpoint: group ? `list/${group}` : "list", renderer, version })
-      const qs = new URLSearchParams()
-      for (const [k, v] of Object.entries(params.value)) {
-        Array.isArray(v) ? v.forEach((item) => qs.append(k, item)) : qs.append(k, v)
-      }
+      const qs = toSearchParams(params.value)
       return qs.toString() ? `${base}?${qs}` : base
     }
 
@@ -543,14 +559,14 @@ export function createControllerFetch({
             throw error
           }
           const base = create_url({ controller, endpoint, renderer, version, lang })
-          const extraQs = query ? (typeof query === "string" ? query : new URLSearchParams(query).toString()) : ""
+          const extraQs = query ? toSearchParams(query).toString() : ""
 
           options.method = method
           options.headers = { ...options.headers, ...headers }
           if (mode) options.mode = mode
 
           if (method.toUpperCase() === "GET") {
-            const dataQs = new URLSearchParams(data).toString()
+            const dataQs = toSearchParams(data).toString()
             const qs = [dataQs, extraQs].filter(Boolean).join("&")
             _cacheKey = qs ? `${base}?${qs}` : base
 

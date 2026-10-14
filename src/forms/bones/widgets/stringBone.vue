@@ -28,8 +28,9 @@ import Utils from "../utils.js"
  *
  * Renders a `<wa-input>` and delegates validation to the native
  * Constraint Validation API. Supports optional regex validation
- * via `boneState.params.pattern` as well as a custom error message via
- * `boneState.params.pattern_error`. With `boneState.label === "placeholder"`,
+ * via `boneState.params.pattern` (a string, or a dict per country code resolved by the
+ * `country` of the same form) as well as a custom error message via
+ * `boneState.params["pattern-error"]`. With `boneState.label === "placeholder"`,
  * the bone name is shown as a placeholder instead of as a label above.
  *
  * @displayName StringBone
@@ -73,24 +74,11 @@ const boneState = inject("boneState")
 const state = reactive({
   value: computed(() => props.value),
   valid: null,
-  pattern: computed(() => {
-    let pat = boneState.params?.pattern
-    if (!pat) return undefined
-
-    if (typeof pat === "string") {
-      return pat
-    }
-    return pat?.[boneState.defaultLanguage]
-  }),
-  pattern_error: computed(() => {
-    let pat = boneState.params?.pattern_error
-    if (!pat) return ""
-
-    if (typeof pat === "string") {
-      return pat
-    }
-    return pat?.[boneState.defaultLanguage] ? pat?.[boneState.defaultLanguage] : ""
-  }),
+  pattern: computed(() => byCountry(boneState.params?.pattern)),
+  // viur-core sends `pattern-error`
+  pattern_error: computed(
+    () => byCountry(boneState.params?.["pattern-error"] ?? boneState.params?.pattern_error) ?? ""
+  ),
   placeholder: computed(() => {
     if (boneState.label !== "placeholder") return undefined
     let name = boneState?.bonestructure?.descr
@@ -102,6 +90,21 @@ const state = reactive({
 })
 
 const stringBone = ref(null)
+
+// Form the bone sits in: for an address, the nested form holding `country` next to `zip_code`
+const formState = inject("formState", null)
+
+/**
+ * A param that is either a string or a dict per country (viur-core `AddressRelSkel.zip_code`:
+ * `ZIP_CODE_PATTERNS`, keyed by ISO2 code) resolved for the country of the same form.
+ * Without a country, or with an empty pattern, nothing is checked.
+ * @param {string|Object<string, string>|undefined} param
+ * @returns {string|undefined}
+ */
+function byCountry(param) {
+  const value = typeof param === "object" && param !== null ? param[formState?.skel?.country] : param
+  return value || undefined
+}
 
 /**
  * Handles `change` and `keyup` events of the `<wa-input>`.

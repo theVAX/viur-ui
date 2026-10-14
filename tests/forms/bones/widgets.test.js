@@ -228,3 +228,39 @@ describe("relationalBoneSelect", () => {
     expect(changes).toHaveLength(1) // only the init
   })
 })
+
+const { default: StringBone } = await import("../../../src/forms/bones/widgets/stringBone.vue")
+
+describe("stringBone pattern", () => {
+  // as viur-core sends AddressRelSkel.zip_code: ZIP_CODE_PATTERNS, keyed by country
+  const params = { pattern: { de: "^\\d{5}$", at: "^\\d{4}$", ae: "" }, "pattern-error": "Invalid ZIP code" }
+
+  function mountZip(country) {
+    const app = createApp(StringBone, { name: "zip_code", value: "" })
+    app.provide("boneState", { readonly: false, errorMessages: [], bonestructure: {}, params, defaultLanguage: "de" })
+    app.provide("formState", { skel: { country } })
+    const el = document.createElement("div")
+    app.mount(el)
+    return el.querySelector("wa-input")
+  }
+
+  it("uses the pattern of the address' country", () => {
+    expect(mountZip("at").getAttribute("pattern")).toBe("^\\d{4}$")
+  })
+
+  it("checks nothing without a country or with an empty pattern", () => {
+    expect(mountZip(null).getAttribute("pattern")).toBeNull()
+    expect(mountZip("ae").getAttribute("pattern")).toBeNull()
+  })
+
+  it("reports the error message viur-core sends as pattern-error", () => {
+    const input = mountZip("de")
+    let message = null
+    input.reportValidity = () => false
+    input.validity = { patternMismatch: true }
+    input.setCustomValidity = (text) => (message = text)
+    input.value = "123"
+    input.dispatchEvent(new Event("change"))
+    expect(message).toBe("Invalid ZIP code")
+  })
+})

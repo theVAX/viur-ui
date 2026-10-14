@@ -1,0 +1,89 @@
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { createApp, defineComponent, h, nextTick, ref } from "vue"
+
+vi.mock("vue-i18n", () => ({ useI18n: () => ({ t: (key) => key }) }))
+
+// The table itself is stubbed: of interest is what the wrapper hands over and asks the server for.
+const table = vi.hoisted(() => ({ props: null, emit: null }))
+vi.mock("../../src/components/DataTable/DataTable.vue", () => ({
+  default: defineComponent({
+    props: ["columns", "maxMultiSort", "server"],
+    emits: ["data-request"],
+    setup(props, { emit }) {
+      table.props = props
+      table.emit = emit
+      return () => h("div")
+    },
+  }),
+}))
+
+const list = vi.hoisted(() => ({ filter: null }))
+vi.mock("../../src/request/index.js", () => ({
+  useListFetch: () => {
+    list.filter = vi.fn(async () => {})
+    return {
+      data: ref([{ key: "k1", name: "A" }]),
+      structure: ref({ name: { type: "str", descr: "Name", indexed: true } }),
+      complete: ref(false),
+      cursor: ref("c1"),
+      isFetching: ref(false),
+      filter: list.filter,
+      next: vi.fn(),
+      nextAll: vi.fn(),
+    }
+  },
+}))
+
+const { default: ViurDataTable } = await import("../../src/components/DataTable/ViurDataTable.vue")
+
+function mount(props = {}) {
+  const exposed = ref(null)
+  const app = createApp({ render: () => h(ViurDataTable, { ref: exposed, module: "items", ...props }) })
+  app.mount(document.createElement("div"))
+  return exposed
+}
+
+const request = (overrides) => ({ sort: [], filters: [], search: "", page: 0, pageSize: 50, ...overrides })
+
+beforeEach(() => localStorage.clear())
+
+describe("ViurDataTable", () => {
+  it("searches on the server with the table's own search box", () => {
+    mount()
+    table.emit("data-request", request({ search: " ada " }))
+    expect(list.filter.mock.calls.at(-1)[0].search).toBe("ada")
+  })
+
+  it("keeps a search() term on a later sort request", async () => {
+    const exposed = mount()
+    exposed.value.search("ada")
+    await nextTick()
+    table.emit("data-request", request({ search: "ada", sort: [{ id: "name", desc: false }] }))
+    expect(list.filter.mock.calls.at(-1)[0]).toMatchObject({ search: "ada", orderby: "name" })
+  })
+
+  it("allows one sorting in server mode, as ViUR orders by one bone", () => {
+    mount()
+    expect(table.props.maxMultiSort).toBe(1)
+  })
+
+  it("hides custom columns the user switched off", async () => {
+    const exposed = mount({
+      columns: [
+        { field: "name", label: "Name" },
+        { field: "nr", label: "Nr" },
+      ],
+    })
+    exposed.value.columns.apply(["name"])
+    await nextTick()
+    expect(table.props.columns.map((column) => [column.field, column.hidden])).toEqual([
+      ["name", false],
+      ["nr", true],
+    ])
+  })
+
+  it("keeps the own hidden flag of custom columns until the user chooses", () => {
+    mount({ columns: [{ field: "secret", label: "Secret", hidden: true }] })
+    expect(table.props.columns[0].hidden).toBe(true)
+  })
+})

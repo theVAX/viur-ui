@@ -19,6 +19,7 @@
       v-model:filters="clientFilters"
       class="vi-vdt-table"
       :server="!allLoaded"
+      :max-multi-sort="allLoaded ? 0 : 1"
       :columns="effectiveColumns"
       :data="rows"
       :label="label ?? module"
@@ -78,7 +79,7 @@ const props = defineProps({
   /** Accessible label; default: module name. */
   label: { type: String, default: null },
   selectable: { type: [String, Boolean], default: "multiple" },
-  /** Entries per load (ViUR `limit`). */
+  /** Entries per load (ViUR `limit`), at most 99: the server caps it anyway (`conf.db.query_external_limit`). */
   pageSize: { type: Number, default: 50 },
   /**
    * Upper limit for local mode: above it, sorting/filtering/searching stay
@@ -124,7 +125,7 @@ const serverSearch = ref("")
 /** Client search/filters — apply ONLY in the fully loaded state. */
 const clientSearch = ref("")
 const clientFilters = ref([])
-/** Hidden columns (field names). */
+/** Hidden columns (field names); null until the user chose, then the columns' own `hidden` counts. */
 const hiddenFields = ref(loadHiddenFields())
 
 const list = useListFetch(props.module, {
@@ -139,15 +140,10 @@ const rows = computed(() => list.data.value)
 
 /** Everything loaded and small enough → local mode (the table's client pipeline). */
 const allLoaded = computed(
-  () =>
-    rows.value.length > 0 &&
-    rows.value.length <= props.localModeLimit &&
-    list.complete.value &&
-    !serverSearch.value
+  () => rows.value.length > 0 && rows.value.length <= props.localModeLimit && list.complete.value && !serverSearch.value
 )
 
 const effectiveColumns = computed(() => {
-  if (props.columns) return props.columns
   const derived = columnsFromStructure(list.structure.value, {
     ...(props.bones ? { bones: props.bones } : {}),
     ...(props.language ? { language: props.language } : {}),
@@ -157,19 +153,18 @@ const effectiveColumns = computed(() => {
     local: allLoaded.value,
     boolTexts: [t("bones.bool.true"), t("bones.bool.false")],
   })
-  if (derived.length) {
-    return derived.map((column) => ({
-      ...column,
-      hidden: hiddenFields.value.includes(String(column.field ?? column.id)),
-    }))
-  }
-  return fallbackColumns(rows.value[0])
+  const columns = props.columns ?? (derived.length ? derived : null)
+  if (!columns) return fallbackColumns(rows.value[0])
+  return columns.map((column) => ({
+    ...column,
+    hidden: hiddenFields.value
+      ? hiddenFields.value.includes(String(column.field ?? column.id))
+      : column.hidden === true,
+  }))
 })
 
 const notice = computed(() =>
-  rows.value.length && !columnsFromStructure(list.structure.value).length
-    ? t("dataTable.structureNotice")
-    : ""
+  rows.value.length && !columnsFromStructure(list.structure.value).length ? t("dataTable.structureNotice") : ""
 )
 
 /** Fallback columns: the fields of the first record, unformatted. */
@@ -194,6 +189,8 @@ function requestParams(sortEntries = sort.value) {
 
 function onRequest(request) {
   if (request.pageSize) limit.value = Math.min(99, request.pageSize)
+  // the table's own search box: in server mode ViUR searches
+  serverSearch.value = String(request.search ?? "").trim()
   void list.filter(requestParams(request.sort)).catch(() => null)
 }
 
@@ -218,28 +215,29 @@ watch(allLoaded, (local) => {
   if (local) return
   clientSearch.value = ""
   clientFilters.value = []
-  sort.value = sort.value.filter((entry) => {
-    const bone = list.structure.value?.[entry.id]
-    return bone?.indexed === true && !bone?.multiple && !bone?.languages?.length
-  })
+  // ViUR orders by one bone: keep the newest sorting
+  sort.value = sort.value
+    .filter((entry) => {
+      const bone = list.structure.value?.[entry.id]
+      return bone?.indexed === true && !bone?.multiple && !bone?.languages?.length
+    })
+    .slice(-1)
 })
 
 // ── Field visibility (+ optional persistence, + optional bonelist) ──────────
 function loadHiddenFields() {
-  if (!props.storageKey) return []
+  if (!props.storageKey) return null
   try {
-    const parsed = JSON.parse(localStorage.getItem(props.storageKey) ?? "[]")
-    return Array.isArray(parsed) ? parsed.map(String) : []
+    const parsed = JSON.parse(localStorage.getItem(props.storageKey) ?? "null")
+    return Array.isArray(parsed) ? parsed.map(String) : null
   } catch {
-    return []
+    return null
   }
 }
 
 function bonelistHeader() {
-  if (!props.bonelist || !hiddenFields.value.length) return null
-  const fields = Object.keys(list.structure.value ?? {}).filter(
-    (name) => !hiddenFields.value.includes(name)
-  )
+  if (!props.bonelist || !hiddenFields.value?.length) return null
+  const fields = Object.keys(list.structure.value ?? {}).filter((name) => !hiddenFields.value.includes(name))
   if (!fields.length) return null
   return { "X-VIUR-BONELIST": ["key", ...fields].join(",") }
 }
@@ -278,6 +276,8 @@ function search(term) {
     clientSearch.value = trimmed
   } else {
     serverSearch.value = trimmed
+    // shown in the table's search box, and sent along with every later sort/page request
+    clientSearch.value = trimmed
     void list.filter(requestParams()).catch(() => null)
   }
 }

@@ -16,16 +16,20 @@ the bone's `params`: `hours_per_day`, `days_per_week`, `largest_unit`
 
 - Emits the minutes as a string (`""` for no value), like `numericBone`.
   Unusable text emits `valid=false` with the previous value.
-- The label of the `wa-input` is the bone's `descr`; it is hidden by
-  `webawesomeCompat.css` and only names the field for assistive technology,
-  `BoneLabel` stays the visible label.
+- The label of the `wa-input` is the bone's `descr`, visually hidden with
+  `wa-visually-hidden-label` (not `display: none` as `webawesomeCompat.css`
+  does), so it names the field for assistive technology; `BoneLabel` stays the
+  visible label.
 
 ## Traps
 
-- Reads `min` / `max` from the structure (what viur-core sends), not the
-  `minAmount` / `maxAmount` that `numericBone` reads (those only exist with the
-  compatibility flag `json.bone.structure.camelcasenames`). The int64 limits
-  viur-core sends for "no limit" are ignored, a negative `min` counts as `0`.
+- Limits: `min` / `max` (what viur-core always sends) win over `minAmount` /
+  `maxAmount` (its copy with the compatibility flag
+  `json.bone.structure.camelcasenames`, the only keys `numericBone` reads). The
+  int64 limits viur-core sends for "no limit" are ignored, a negative `min`
+  counts as `0`, a fractional limit stays a limit (`max: 60.5` refuses 61).
+- A required bone that is cleared emits `valid=false`, like the native
+  `required` check of `numericBone`.
 
 ## See also
 

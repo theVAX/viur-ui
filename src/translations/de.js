@@ -139,6 +139,7 @@ export default {
     },
     preview: "= {value}",
     invalid: "Keine Dauer – z. B. 1t 2h 30m, 2,5h, 1:30 oder 90 (Minuten)",
+    required: "Bitte eine Dauer eingeben",
     min: "Mindestens {value}",
     max: "Höchstens {value}",
     presets: "Schnellwahl",

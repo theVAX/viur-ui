@@ -133,6 +133,7 @@ export default {
     // no `aliases`: English unit names (w, d, h, m, min, hours, ...) are always accepted
     preview: "= {value}",
     invalid: "Not a duration – e.g. 1d 2h 30m, 2.5h, 1:30 or 90 (minutes)",
+    required: "Please enter a duration",
     min: "At least {value}",
     max: "At most {value}",
     presets: "Quick picks",

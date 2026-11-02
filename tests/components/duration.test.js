@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { formatDuration, parseDuration } from "../../src/components/DurationInput/duration.ts"
+import {
+  formatDuration,
+  isDurationValue,
+  parseDuration,
+  splitDuration,
+  unitMinutes,
+} from "../../src/components/DurationInput/duration.ts"
 
 const workday = { hoursPerDay: 8, daysPerWeek: 5 }
 const german = { aliases: { week: ["wo"], day: ["t", "tag"], hour: ["std"], minute: ["min"] } }
@@ -82,5 +88,51 @@ describe("formatDuration", () => {
 
   it.each([0, 1, 59, 61, 479, 480, 630, 2399, 2400, 9999])("%j round-trips through the parser", (minutes) => {
     expect(parseDuration(formatDuration(minutes, workday), workday)).toBe(minutes)
+  })
+})
+
+describe("values that are not durations", () => {
+  it.each([-1, 1.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1, "60"])(
+    "%o is refused instead of formatted",
+    (minutes) => {
+      expect(isDurationValue(minutes)).toBe(false)
+      expect(() => splitDuration(minutes)).toThrow(RangeError)
+      expect(() => formatDuration(minutes)).toThrow(RangeError)
+    }
+  )
+
+  it("formats the largest safe number and reads it back", () => {
+    expect(isDurationValue(Number.MAX_SAFE_INTEGER)).toBe(true)
+    expect(parseDuration(formatDuration(Number.MAX_SAFE_INTEGER))).toBe(Number.MAX_SAFE_INTEGER)
+  })
+})
+
+describe("unit configuration", () => {
+  it.each([
+    [{ hoursPerDay: 0 }],
+    [{ hoursPerDay: -8 }],
+    [{ hoursPerDay: 0.5 }],
+    [{ hoursPerDay: 0.02 }],
+    [{ hoursPerDay: 8.001 }],
+    [{ hoursPerDay: NaN }],
+    [{ hoursPerDay: Infinity }],
+    [{ daysPerWeek: 0 }],
+    [{ daysPerWeek: 0.5 }],
+    [{ daysPerWeek: Infinity }],
+  ])("refuses %o", (options) => {
+    expect(() => unitMinutes(options)).toThrow(RangeError)
+    expect(() => parseDuration("1d", options)).toThrow(RangeError)
+    expect(() => formatDuration(60, options)).toThrow(RangeError)
+  })
+
+  it.each([
+    [{ hoursPerDay: 7.5 }, 450, 7 * 450],
+    [{ hoursPerDay: 8, daysPerWeek: 4.5 }, 480, 2160],
+    [{ hoursPerDay: 1, daysPerWeek: 1 }, 60, 60],
+  ])("accepts %j", (options, day, week) => {
+    expect(unitMinutes(options)).toMatchObject({ day, week })
+    for (const minutes of [0, 59, day - 1, day, day + 1, week + day + 61]) {
+      expect(parseDuration(formatDuration(minutes, options), options)).toBe(minutes)
+    }
   })
 })

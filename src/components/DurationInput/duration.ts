@@ -5,9 +5,9 @@ export type DurationUnit = "week" | "day" | "hour" | "minute"
 export const DURATION_UNITS: DurationUnit[] = ["week", "day", "hour", "minute"]
 
 export interface DurationOptions {
-  /** Hours in one day (default 24; a working day is usually 8). */
+  /** Hours in one day (default 24; a working day is usually 8). At least 1, a whole number of minutes. */
   hoursPerDay?: number
-  /** Days in one week (default 7; a working week is usually 5). */
+  /** Days in one week (default 7; a working week is usually 5). At least 1, a whole number of minutes. */
   daysPerWeek?: number
   /** Largest unit that is accepted and shown (default "week"). */
   largestUnit?: DurationUnit
@@ -24,10 +24,28 @@ export const ENGLISH_ALIASES: Record<DurationUnit, string[]> = {
 
 const SHORT: Record<DurationUnit, string> = { week: "w", day: "d", hour: "h", minute: "min" }
 
-/** Minutes per unit for the given options. */
+/**
+ * Minutes per unit for the given options.
+ * @throws RangeError unless a day is at least an hour and a week at least a day, both in whole minutes
+ *   (otherwise splitting into units would lose minutes or a unit would be worth nothing)
+ */
 export function unitMinutes(options: DurationOptions = {}): Record<DurationUnit, number> {
-  const day = (options.hoursPerDay ?? 24) * 60
-  return { week: day * (options.daysPerWeek ?? 7), day, hour: 60, minute: 1 }
+  const hoursPerDay = options.hoursPerDay ?? 24
+  const daysPerWeek = options.daysPerWeek ?? 7
+  const day = hoursPerDay * 60
+  const week = day * daysPerWeek
+  if (!(hoursPerDay >= 1 && Number.isSafeInteger(day))) {
+    throw new RangeError(`hoursPerDay must be >= 1 and a whole number of minutes, got ${hoursPerDay}`)
+  }
+  if (!(daysPerWeek >= 1 && Number.isSafeInteger(week))) {
+    throw new RangeError(`daysPerWeek must be >= 1 and a whole number of minutes, got ${daysPerWeek}`)
+  }
+  return { week, day, hour: 60, minute: 1 }
+}
+
+/** Whether `minutes` can be shown as a duration: a whole, non-negative, safe number. */
+export function isDurationValue(minutes: unknown): minutes is number {
+  return Number.isSafeInteger(minutes) && (minutes as number) >= 0
 }
 
 function allowedUnits(options: DurationOptions): DurationUnit[] {
@@ -77,11 +95,13 @@ function whole(minutes: number): number {
 /**
  * Splits minutes into the largest allowed units, e.g. 90 -> [["hour", 1], ["minute", 30]].
  * `0` gives [["minute", 0]].
+ * @throws RangeError for anything but a whole, non-negative, safe number (see `isDurationValue`)
  */
 export function splitDuration(minutes: number, options: DurationOptions = {}): [DurationUnit, number][] {
+  if (!isDurationValue(minutes)) throw new RangeError(`not a duration in minutes: ${minutes}`)
   const size = unitMinutes(options)
   const parts: [DurationUnit, number][] = []
-  let rest = Math.round(minutes)
+  let rest = minutes
   for (const unit of allowedUnits(options)) {
     const count = Math.floor(rest / size[unit])
     if (count > 0) parts.push([unit, count])
@@ -93,6 +113,7 @@ export function splitDuration(minutes: number, options: DurationOptions = {}): [
 /**
  * Formats minutes as "1 d 2 h 30 min" (`label` gives the unit text for a count).
  * `null` gives an empty string.
+ * @throws RangeError like `splitDuration`
  */
 export function formatDuration(
   minutes: number | null | undefined,

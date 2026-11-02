@@ -54,6 +54,8 @@ describe("numericBoneDuration", () => {
     const { input } = mountWidget(480, { params: { hours_per_day: 8, presets: [15, 60] } })
     expect(input.getAttribute("value")).toBe("1 T")
     expect(input.getAttribute("label")).toBe("Estimate")
+    // visually hidden instead of display: none, so the field keeps its accessible name
+    expect(input.classList.contains("wa-visually-hidden-label")).toBe(true)
     expect(input.parentElement.querySelectorAll("wa-button")).toHaveLength(2)
   })
 
@@ -73,5 +75,36 @@ describe("numericBoneDuration", () => {
     const open = mountWidget(null)
     await type(open.input, "100w")
     expect(open.changes.at(-1)).toEqual(["estimate", String(100 * 7 * 24 * 60), undefined, undefined, true])
+  })
+
+  it("reports a cleared required bone as invalid", async () => {
+    const { input, changes } = mountWidget(30, { required: true })
+    await type(input, "")
+    expect(changes.at(-1)).toEqual(["estimate", "30", undefined, undefined, false])
+  })
+
+  it.each([
+    ["min/max", { min: 30, max: 60 }],
+    ["minAmount/maxAmount (compatibility mode)", { min: undefined, max: undefined, minAmount: 30, maxAmount: 60 }],
+    ["min/max before minAmount/maxAmount", { min: 30, max: 60, minAmount: 0, maxAmount: 600 }],
+  ])("takes the limits from %s", async (_, limits) => {
+    const { input, changes } = mountWidget(null, limits)
+    for (const [text, valid] of [
+      ["29", false],
+      ["30", true],
+      ["60", true],
+      ["61", false],
+    ]) {
+      await type(input, text)
+      expect(changes.at(-1).at(-1), text).toBe(valid)
+    }
+  })
+
+  it("keeps a fractional max as a limit", async () => {
+    const { input, changes } = mountWidget(null, { max: 60.5 })
+    await type(input, "61")
+    expect(changes.at(-1).at(-1)).toBe(false)
+    await type(input, "60")
+    expect(changes.at(-1).at(-1)).toBe(true)
   })
 })

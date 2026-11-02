@@ -1,6 +1,6 @@
 <template>
   <DurationInput
-    class="bone-widget bone-widget-numeric bone-widget-numeric-duration"
+    class="bone-widget bone-widget-numeric bone-widget-numeric-duration wa-visually-hidden-label"
     :class="[`bone-widget-numeric-${name}`]"
     :name="name"
     :label="boneState.bonestructure.descr"
@@ -33,7 +33,7 @@ import DurationInput from "../../../components/DurationInput/DurationInput.vue"
  * of the normalised value and optional quick picks. Configured through the bone's `params`:
  * `hours_per_day` (default 24), `days_per_week` (default 7), `largest_unit`
  * (`"week"`, `"day"`, `"hour"`, `"minute"`) and `presets` (list of minutes). `min` / `max` of the
- * bone are the allowed range in minutes.
+ * bone (or `minAmount` / `maxAmount` in viur-core's compatibility mode) are the allowed range in minutes.
  *
  * @displayName NumericBoneDuration
  *
@@ -75,9 +75,9 @@ const emit = defineEmits([
 const boneState = inject("boneState")
 const state = reactive({
   minutes: computed(() => (props.value == null || props.value === "" ? null : Number(props.value))),
-  // viur-core sends its int64 limits for "no limit"
-  min: computed(() => Math.max(0, boneState.bonestructure.min ?? 0)),
-  max: computed(() => (Number.isSafeInteger(boneState.bonestructure.max) ? boneState.bonestructure.max : undefined)),
+  // `min`/`max` is what viur-core sends; `minAmount`/`maxAmount` is its compatibility copy
+  min: computed(() => limit(boneState.bonestructure.min ?? boneState.bonestructure.minAmount)),
+  max: computed(() => limit(boneState.bonestructure.max ?? boneState.bonestructure.maxAmount)),
   placeholder: computed(() => {
     if (boneState.label !== "placeholder") return undefined
     let name = boneState?.bonestructure?.descr
@@ -87,6 +87,11 @@ const state = reactive({
     return name
   }),
 })
+
+/** A finite limit, or `undefined` for none (viur-core sends its int64 limits for "no limit"). */
+function limit(value) {
+  return typeof value === "number" && Math.abs(value) < Number.MAX_SAFE_INTEGER ? value : undefined
+}
 
 function report(minutes, valid) {
   emit("change", props.name, minutes == null ? "" : String(minutes), props.lang, props.index, valid)

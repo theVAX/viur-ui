@@ -45,9 +45,10 @@
  * change of it is reported, also the state at mount: `update:modelValue` when it is usable and
  * differs from the model or was unusable before, `invalid(message)` when it turns unusable.
  *
- * While the user edits (typed, not yet left), a new `modelValue` from outside does not replace the
- * text, and the draft's value is reported back, so the edit wins. A change of the options or the
- * locale shows the model value anew and drops such a draft (it would now mean something else).
+ * While the user edits (typed, not yet left), a new `modelValue` does not replace the text and is not
+ * answered: it may be the host's own answer to the input (rounded, refused). Leaving the field (change
+ * or blur) shows the model value the host accepted. A change of the options or the locale shows the
+ * model value anew and drops a draft (it would now mean something else).
  *
  * A `modelValue` that is no duration (negative, fractional, NaN) shows as it is, with an error, and is
  * never rounded; only typed text is. Unusable unit options or limits (e.g. `hoursPerDay: 0`,
@@ -231,9 +232,10 @@ watch(
 )
 watch([options, locale], showModel)
 
-// the one place that reports validity: any change of message, value or model, and the state at mount
+// the one place that reports validity: any change of message or value, and the state at mount; a change
+// of the model alone is the host's answer and is not sent back
 watch(
-  [error, value, () => props.modelValue],
+  [error, value],
   ([message, minutes], before) => {
     if (message) {
       if (message !== before?.[0]) emit("invalid", message)
@@ -256,7 +258,8 @@ function commit() {
   if (!dirty.value) return
   dirty.value = false
   committed.value = true
-  if (!error.value) text.value = display(value.value)
+  // show what the host accepted (it may have rounded or refused the value); an unusable text stays
+  if (!error.value) showModel()
 }
 
 function pick(minutes: number) {

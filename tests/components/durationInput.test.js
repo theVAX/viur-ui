@@ -7,9 +7,10 @@ import DurationInput from "../../src/components/DurationInput/DurationInput.vue"
 
 /**
  * Mounts DurationInput with the package translations, v-model on `model`. `props` stays reactive
- * (change it to re-render), `i18n.global.locale.value` switches the language.
+ * (change it to re-render), `i18n.global.locale.value` switches the language. `accept` is the host:
+ * it gets each `update:modelValue` and returns the model it keeps (rounds, refuses, ...).
  */
-function mount(initial = {}, locale = "de") {
+function mount(initial = {}, locale = "de", accept = (minutes) => minutes) {
   const props = reactive({ ...initial })
   const model = ref(initial.modelValue ?? null)
   const events = []
@@ -21,7 +22,7 @@ function mount(initial = {}, locale = "de") {
         modelValue: model.value,
         "onUpdate:modelValue": (minutes) => {
           events.push(["update", minutes])
-          model.value = minutes
+          model.value = accept(minutes, model.value)
         },
         onInvalid: (message) => events.push(["invalid", message]),
       }),
@@ -271,50 +272,6 @@ describe("DurationInput", () => {
     expect(events.at(-1)).toEqual(["update", 30])
   })
 
-  it("commits on blur when the text was edited back and no change came", async () => {
-    const { input, model } = mount({ modelValue: 30 })
-    await type(input, "45")
-    await type(input, "30 min")
-    model.value = 120 // outside update during the edit: not shown
-    await nextTick()
-    await leave(input, { change: false })
-    expect(model.value).toBe(30)
-    expect(shown(input)).toBe("30 min")
-  })
-
-  it("commits once when change and blur both come", async () => {
-    const { input, model, events } = mount({ modelValue: 30 })
-    await type(input, "1h")
-    model.value = 120
-    await nextTick()
-    await leave(input)
-    expect(events).toEqual([
-      ["update", 60],
-      ["update", 60],
-    ])
-  })
-
-  it("keeps a draft against an outside update while editing; the left value wins", async () => {
-    const { input, model, events } = mount({ modelValue: 30 })
-    await type(input, "1:3")
-    model.value = 120
-    await nextTick()
-    expect(shown(input)).toBe("1:3")
-
-    await type(input, "1:30")
-    model.value = 300
-    await nextTick()
-    expect(shown(input)).toBe("1:30")
-    await leave(input)
-    expect(shown(input)).toBe("1 h 30 min")
-    expect(model.value).toBe(90)
-    expect(events.at(-1)).toEqual(["update", 90])
-
-    model.value = 240
-    await nextTick()
-    expect(shown(input)).toBe("4 h")
-  })
-
   it("reports a setup error at mount", () => {
     const logged = vi.spyOn(console, "error").mockImplementation(() => {})
     const { events } = mount({ modelValue: 30, hoursPerDay: 0 })
@@ -356,5 +313,89 @@ describe("DurationInput", () => {
       ["update", null],
       ["invalid", de.duration.required],
     ])
+  })
+
+  it("keeps a draft against an outside update while editing; leaving shows the model the host kept", async () => {
+    const { input, model, events } = mount({ modelValue: 30 })
+    await type(input, "1:3")
+    expect(events).toEqual([["invalid", de.duration.invalid]])
+    model.value = 120
+    await nextTick()
+    expect(shown(input)).toBe("1:3")
+    expect(events).toHaveLength(1)
+
+    await type(input, "1:30")
+    expect(events.slice(1)).toEqual([["update", 90]])
+    model.value = 300 // outside update during the edit: neither shown nor answered
+    await nextTick()
+    expect(shown(input)).toBe("1:30")
+    expect(events).toHaveLength(2)
+
+    await leave(input)
+    expect(shown(input)).toBe("5 h")
+    expect(model.value).toBe(300)
+    expect(events).toHaveLength(2)
+
+    model.value = 240
+    await nextTick()
+    expect(shown(input)).toBe("4 h")
+    expect(events).toHaveLength(2)
+  })
+
+  it("sends a typed value once to a host that rounds it, and shows the rounded value after leaving", async () => {
+    const quarter = (minutes) => Math.round(minutes / 15) * 15
+    const { input, model, events } = mount({ modelValue: 0 }, "de", quarter)
+    await type(input, "31")
+    expect(events).toEqual([["update", 31]])
+    expect(model.value).toBe(30)
+    expect(shown(input)).toBe("31")
+
+    await leave(input)
+    expect(events).toEqual([["update", 31]])
+    expect(shown(input)).toBe("30 min")
+  })
+
+  it("shows the old value after leaving when the host refuses the update", async () => {
+    const { input, model, events } = mount({ modelValue: 30 }, "de", (_, kept) => kept)
+    await type(input, "2h")
+    expect(events).toEqual([["update", 120]])
+    expect(model.value).toBe(30)
+
+    await leave(input, { change: false })
+    expect(events).toEqual([["update", 120]])
+    expect(shown(input)).toBe("30 min")
+  })
+
+  it("commits on blur when the text was edited back and no change came", async () => {
+    const { input, model, events } = mount({ modelValue: 30 })
+    await type(input, "45")
+    await type(input, "30")
+    expect(events).toEqual([
+      ["update", 45],
+      ["update", 30],
+    ])
+    expect(shown(input)).toBe("30")
+
+    await leave(input, { change: false })
+    expect(events).toHaveLength(2)
+    expect(model.value).toBe(30)
+    expect(shown(input)).toBe("30 min")
+  })
+
+  it("commits once when change and blur both come", async () => {
+    const { input, events } = mount({ modelValue: 30 })
+    await type(input, "1h")
+    expect(events).toEqual([["update", 60]])
+
+    input.dispatchEvent(new Event("change"))
+    await nextTick()
+    expect(shown(input)).toBe("1 h")
+    expect(events).toHaveLength(1)
+
+    await type(input, "1h") // same text again: a new edit, but nothing new to report
+    input.dispatchEvent(new Event("blur"))
+    await nextTick()
+    expect(shown(input)).toBe("1 h")
+    expect(events).toHaveLength(1)
   })
 })

@@ -53,22 +53,26 @@ the English ones in `ENGLISH_ALIASES`).
   rounded. Quick picks that are no duration are left out.
 - Validity is one computed state: the message (setup error, model value that
   is no duration, required, unparseable text, limits) and the value of the
-  text, together with the model. One watcher reports every change of it,
-  including the state at mount: `invalid(message)` when the message is new,
+  text. One watcher reports every change of it, including the state at
+  mount: `invalid(message)` when the message is new,
   `update:modelValue` when the state is usable and the value differs from the
   model or was unusable before. A usable state at mount is not reported (the
-  model already holds it). So a change of `min`/`max`/`required`, of the model
-  from outside, of the options or of the locale reports by itself; there is
-  no per-event reporting that could go stale.
+  model already holds it). So a change of `min`/`max`/`required`, of the
+  model while the field is not being edited, of the options or of the locale
+  reports by itself; there is no per-event reporting that could go stale. A
+  change of the model alone is never sent back: it may be the host's answer.
 - Unusable text leaves the value as it was; the message shows in the hint once
   the field is left (`change` or `blur`) and is set as custom validity on the
   `wa-input`. A fractional `min`/`max` allows the whole minutes inside it
   (`max: 60.5` allows 60, not 61); a non-finite one is no limit.
-- Draft against outside update: while the user edits (typed, field not yet
-  left), a new `modelValue` does not replace the text, and the draft's value
-  is reported back at once, so the edit wins. A change of the options or of the
-  locale shows the model value anew and drops a draft (the same text would now
-  mean something else).
+- Draft against model update: while the user edits (typed, field not yet
+  left), a new `modelValue` neither replaces the text nor is answered; it may
+  be the host's answer to the input (rounded, refused, changed elsewhere).
+  Each usable value is sent once. Leaving the field shows the model value the
+  host kept (`31` to a host that rounds to quarter hours shows `30 min`; a
+  host that refuses shows the old value). An unusable text stays with its
+  error. A change of the options or of the locale shows the model value anew
+  and drops a draft (the same text would now mean something else).
 - Attributes that are not props (`label`, `placeholder`, `name`, `size`,
   listeners such as `@keydown`) go to the inner `wa-input`.
 

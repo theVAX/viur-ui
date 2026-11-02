@@ -2576,17 +2576,26 @@ function measureDetailRows(): void {
   }
 }
 
+/** Border-box size — contentRect lacks padding/border, but grid tracks and
+ *  sticky offsets need the full box. */
+function borderBox(entry: ResizeObserverEntry): { inlineSize: number; blockSize: number } {
+  const box = entry.borderBoxSize?.[0]
+  if (box) return box
+  const rect = entry.target.getBoundingClientRect()
+  return { inlineSize: rect.width, blockSize: rect.height }
+}
+
 onMounted(() => {
   headerObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
       const id = (entry.target as HTMLElement).dataset.column
-      if (id && !id.startsWith("__")) layout.setMeasured(id, entry.contentRect.width)
+      if (id && !id.startsWith("__")) layout.setMeasured(id, borderBox(entry).inlineSize)
     }
   })
   detailObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
       const key = (entry.target as HTMLElement).dataset.detail
-      if (key) virtual.measureRow(key, entry.contentRect.height)
+      if (key) virtual.measureRow(key, borderBox(entry).blockSize)
     }
   })
   virtual.syncViewport()

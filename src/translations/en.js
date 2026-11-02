@@ -122,6 +122,21 @@ export default {
     uploadHint: "Drop files here",
     name: "Name",
   },
+  duration: {
+    units: { week: "w", day: "d", hour: "h", minute: "min" },
+    long: {
+      week: "{n} week | {n} weeks",
+      day: "{n} day | {n} days",
+      hour: "{n} hour | {n} hours",
+      minute: "{n} minute | {n} minutes",
+    },
+    // no `aliases`: English unit names (w, d, h, m, min, hours, ...) are always accepted
+    preview: "= {value}",
+    invalid: "Not a duration – e.g. 1d 2h 30m, 2.5h, 1:30 or 90 (minutes)",
+    min: "At least {value}",
+    max: "At most {value}",
+    presets: "Quick picks",
+  },
   form: {
     next: "Next",
     submit: "Submit",

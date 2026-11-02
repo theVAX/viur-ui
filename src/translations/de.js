@@ -122,6 +122,27 @@ export default {
     uploadHint: "Dateien hier ablegen",
     name: "Name",
   },
+  duration: {
+    units: { week: "W", day: "T", hour: "h", minute: "min" },
+    long: {
+      week: "{n} Woche | {n} Wochen",
+      day: "{n} Tag | {n} Tage",
+      hour: "{n} Stunde | {n} Stunden",
+      minute: "{n} Minute | {n} Minuten",
+    },
+    // accepted in addition to the English names (w, d, h, m, ...)
+    aliases: {
+      week: "w, wo, woche, wochen",
+      day: "t, tag, tage",
+      hour: "std, stunde, stunden",
+      minute: "min, minute, minuten",
+    },
+    preview: "= {value}",
+    invalid: "Keine Dauer – z. B. 1t 2h 30m, 2,5h, 1:30 oder 90 (Minuten)",
+    min: "Mindestens {value}",
+    max: "Höchstens {value}",
+    presets: "Schnellwahl",
+  },
   form: {
     next: "Weiter",
     submit: "Absenden",

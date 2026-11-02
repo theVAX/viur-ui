@@ -67,7 +67,7 @@ const emit = defineEmits([
    * @arg {string} value - Minutes as a string, `""` for no value
    * @arg {string|undefined} lang - Language key
    * @arg {number|undefined} index - Index in the multiple array
-   * @arg {boolean} [valid] - Validation status; missing on the init event
+   * @arg {boolean} [valid] - Validation status; missing on the init event of a valid value
    */
   "change",
 ])
@@ -88,16 +88,36 @@ const state = reactive({
   }),
 })
 
-/** A finite limit, or `undefined` for none (viur-core sends its int64 limits for "no limit"). */
+// viur-core's "no limit": its int64 bounds (sys.maxsize, -(sys.maxsize - 1)) arrive as +-2**63 in JS
+const NO_LIMIT = 2 ** 63
+
+/**
+ * The limit as sent, or `undefined` for none. Only the core's "no limit" values (and missing or
+ * infinite ones) are dropped; any other value, also an impossible one, goes to `DurationInput`,
+ * which reports it as a setup error.
+ */
 function limit(value) {
-  return typeof value === "number" && Math.abs(value) < Number.MAX_SAFE_INTEGER ? value : undefined
+  if (typeof value !== "number" || Number.isNaN(value)) return undefined
+  return Math.abs(value) === Infinity || Math.abs(value) === NO_LIMIT ? undefined : value
 }
 
+// DurationInput reports its validity once at setup, before this widget is mounted: keep it for the init emit
+let mounted = false
+let validAtMount = true
+
 function report(minutes, valid) {
+  if (!mounted) {
+    validAtMount = valid
+    return
+  }
   emit("change", props.name, minutes == null ? "" : String(minutes), props.lang, props.index, valid)
 }
 
 onMounted(() => {
-  emit("change", props.name, props.value == null ? "" : String(props.value), props.lang, props.index) //init
+  mounted = true
+  const value = props.value == null ? "" : String(props.value)
+  if (validAtMount)
+    emit("change", props.name, value, props.lang, props.index) //init
+  else emit("change", props.name, value, props.lang, props.index, false) // init, already invalid
 })
 </script>

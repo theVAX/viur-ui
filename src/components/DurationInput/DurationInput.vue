@@ -41,10 +41,13 @@
  * names are always understood. Shows the normalised value as hint while typing and normalises the
  * text when the field is left. Optional quick-pick buttons set a value directly.
  *
+ * Validity is one computed state (text or model value, options, limits, `required`, setup). Every
+ * change of it is reported, also the state at mount: `update:modelValue` when it is usable and
+ * differs from the model or was unusable before, `invalid(message)` when it turns unusable.
+ *
  * While the user edits (typed, not yet left), a new `modelValue` from outside does not replace the
- * text; leaving the field (change or blur) reports the typed value again, so the last edit wins. A
- * change of the options or the locale shows the model value anew, drops such a draft (it would now
- * mean something else) and reports the validity of the shown value again.
+ * text, and the draft's value is reported back, so the edit wins. A change of the options or the
+ * locale shows the model value anew and drops such a draft (it would now mean something else).
  *
  * A `modelValue` that is no duration (negative, fractional, NaN) shows as it is, with an error, and is
  * never rounded; only typed text is. Unusable unit options or limits (e.g. `hoursPerDay: 0`,
@@ -226,22 +229,26 @@ watch(
     if (!dirty.value) showModel()
   }
 )
-watch([options, locale], () => {
-  showModel()
-  report()
-})
+watch([options, locale], showModel)
 
-function report() {
-  if (error.value) emit("invalid", error.value)
-  else emit("update:modelValue", value.value)
-}
+// the one place that reports validity: any change of message, value or model, and the state at mount
+watch(
+  [error, value, () => props.modelValue],
+  ([message, minutes], before) => {
+    if (message) {
+      if (message !== before?.[0]) emit("invalid", message)
+    } else if (before?.[0] || minutes !== props.modelValue) {
+      emit("update:modelValue", minutes as number | null)
+    }
+  },
+  { immediate: true }
+)
 
 function onInput(event: Event) {
   text.value = (event.target as HTMLInputElement).value
   fromModel.value = false
   committed.value = false
   dirty.value = true
-  report()
 }
 
 /** Leaving the field: on change, and on blur when the text was edited back so no change came. Runs once. */
@@ -249,10 +256,7 @@ function commit() {
   if (!dirty.value) return
   dirty.value = false
   committed.value = true
-  if (error.value) return
-  text.value = display(value.value)
-  // an outside update during the edit was not shown; the value the user sees and left wins
-  if (value.value !== props.modelValue) emit("update:modelValue", value.value)
+  if (!error.value) text.value = display(value.value)
 }
 
 function pick(minutes: number) {
@@ -260,7 +264,6 @@ function pick(minutes: number) {
   fromModel.value = false
   committed.value = true
   dirty.value = false
-  report()
 }
 </script>
 

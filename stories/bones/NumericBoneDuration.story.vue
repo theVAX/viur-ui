@@ -7,7 +7,7 @@
       :init-state="
         () => ({
           boneName: 'estimate',
-          descr: 'Schätzung',
+          descr: 'Estimate',
           boneType: 'numeric.duration',
           readonly: false,
           required: false,

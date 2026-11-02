@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { createApp, nextTick } from "vue"
+import { createApp, h, nextTick, reactive } from "vue"
 import { createI18n } from "vue-i18n"
 import { createPinia, setActivePinia } from "pinia"
 import de from "../../../src/translations/de.js"
@@ -11,23 +11,28 @@ import NumericBoneDuration from "../../../src/forms/bones/widgets/numericBoneDur
 const NO_LIMIT = 9223372036854775807
 
 /**
- * Mounts the widget with a minimal boneState.
- * @returns {{ input: HTMLElement, changes: Array<Array> }} the wa-input and the arguments of every `change`
+ * Mounts the widget with a minimal boneState. `props.value` and `boneState.bonestructure` stay reactive.
+ * @returns the wa-input, the arguments of every `change`, the props, the boneState and the i18n instance
  */
 function mountWidget(value, bonestructure = {}) {
   const changes = []
-  const app = createApp(NumericBoneDuration, { name: "estimate", value, onChange: (...args) => changes.push(args) })
+  const props = reactive({ value })
+  const app = createApp({
+    render: () =>
+      h(NumericBoneDuration, { name: "estimate", value: props.value, onChange: (...args) => changes.push(args) }),
+  })
   const i18n = createI18n({ legacy: false, locale: "de", fallbackLocale: "en", messages: { de, en } })
   app.use(i18n)
-  app.provide("boneState", {
+  const boneState = reactive({
     readonly: false,
     errorMessages: [],
     bonestructure: { descr: "Estimate", min: -NO_LIMIT, max: NO_LIMIT, ...bonestructure },
     params: bonestructure.params ?? {},
   })
+  app.provide("boneState", boneState)
   const el = document.createElement("div")
   app.mount(el)
-  return { input: el.querySelector("wa-input"), changes, i18n }
+  return { input: el.querySelector("wa-input"), changes, props, boneState, i18n }
 }
 
 async function type(input, text) {
@@ -123,7 +128,58 @@ describe("numericBoneDuration", () => {
     const { input, changes } = mountWidget(30, { params: { hours_per_day: 0 } })
     expect(input.getAttribute("disabled")).toBe("true")
     expect(input.getAttribute("hint")).toBe(de.duration.misconfigured)
-    expect(changes[0]).toEqual(["estimate", "30", undefined, undefined])
+    // the init emit already says invalid, and nothing later turns it valid
+    expect(changes).toEqual([["estimate", "30", undefined, undefined, false]])
     logged.mockRestore()
+  })
+
+  it.each([
+    ["min: 1e20", { min: 1e20 }],
+    ["min: MAX_SAFE_INTEGER", { min: Number.MAX_SAFE_INTEGER }],
+    ["max: -1e20", { max: -1e20 }],
+  ])("passes %s on instead of dropping it, so 30 is not valid", async (_, limits) => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { input, changes } = mountWidget(null, limits)
+    await type(input, "30")
+    expect(changes.every((change) => change[4] !== true)).toBe(true)
+    expect(changes.at(-1).at(-1)).toBe(false)
+    logged.mockRestore()
+  })
+
+  it("reports valid again when an outside value replaces a left invalid text", async () => {
+    const { input, changes, props } = mountWidget(30)
+    await type(input, "bad")
+    input.dispatchEvent(new Event("blur"))
+    await nextTick()
+    expect(changes.at(-1).at(-1)).toBe(false)
+    props.value = 60
+    await nextTick()
+    expect(input.value).toBe("1 h")
+    expect(changes.at(-1)).toEqual(["estimate", "60", undefined, undefined, true])
+  })
+
+  it("follows a changed max and required in both directions", async () => {
+    const { input, changes, boneState } = mountWidget(null)
+    await type(input, "45")
+    expect(changes.at(-1).at(-1)).toBe(true)
+    boneState.bonestructure.max = 40
+    await nextTick()
+    expect(changes.at(-1).at(-1)).toBe(false)
+    boneState.bonestructure.max = 60
+    await nextTick()
+    expect(changes.at(-1)).toEqual(["estimate", "45", undefined, undefined, true])
+
+    await type(input, "")
+    boneState.bonestructure.required = true
+    await nextTick()
+    expect(changes.at(-1).at(-1)).toBe(false)
+    boneState.bonestructure.required = false
+    await nextTick()
+    expect(changes.at(-1)).toEqual(["estimate", "", undefined, undefined, true])
+  })
+
+  it("reports a required bone without value as invalid at init", () => {
+    const { changes } = mountWidget(null, { required: true })
+    expect(changes).toEqual([["estimate", "", undefined, undefined, false]])
   })
 })

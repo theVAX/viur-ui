@@ -25,11 +25,13 @@ export const ENGLISH_ALIASES: Record<DurationUnit, string[]> = {
 const SHORT: Record<DurationUnit, string> = { week: "w", day: "d", hour: "h", minute: "min" }
 
 /**
- * Minutes per unit for the given options.
- * @throws RangeError unless a day is at least an hour and a week at least a day, both in whole minutes
- *   (otherwise splitting into units would lose minutes or a unit would be worth nothing)
+ * Minutes per unit for the given options. Every helper here goes through this check first.
+ * @throws RangeError for an unknown `largestUnit`, or unless a day is at least an hour and a week at least a
+ *   day, both in whole minutes (otherwise splitting into units would lose minutes or a unit would be worth nothing)
  */
 export function unitMinutes(options: DurationOptions = {}): Record<DurationUnit, number> {
+  const largest = options.largestUnit ?? "week"
+  if (!DURATION_UNITS.includes(largest)) throw new RangeError(`unknown largestUnit: ${largest}`)
   const hoursPerDay = options.hoursPerDay ?? 24
   const daysPerWeek = options.daysPerWeek ?? 7
   const day = hoursPerDay * 60
@@ -48,19 +50,17 @@ export function isDurationValue(minutes: unknown): minutes is number {
   return Number.isSafeInteger(minutes) && (minutes as number) >= 0
 }
 
+/** Units from `largestUnit` down to minutes; call after `unitMinutes`, which checks `largestUnit`. */
 function allowedUnits(options: DurationOptions): DurationUnit[] {
-  const largest = options.largestUnit ?? "week"
-  if (!DURATION_UNITS.includes(largest)) throw new RangeError(`unknown largestUnit: ${largest}`)
-  return DURATION_UNITS.slice(DURATION_UNITS.indexOf(largest))
+  return DURATION_UNITS.slice(DURATION_UNITS.indexOf(options.largestUnit ?? "week"))
 }
 
 /**
- * Checks the unit options (`hoursPerDay`, `daysPerWeek`, `largestUnit`) the way parser and formatter use them.
+ * Checks the unit options (`hoursPerDay`, `daysPerWeek`, `largestUnit`); the helpers here run the same check.
  * @throws RangeError with the reason
  */
 export function checkDurationOptions(options: DurationOptions = {}): void {
   unitMinutes(options)
-  allowedUnits(options)
 }
 
 const NUMBER = String.raw`\d+(?:[.,]\d+)?`
@@ -69,8 +69,10 @@ const TOKEN = new RegExp(String.raw`(${NUMBER})\s*([\p{L}]+)\.?\s*`, "uy")
 /**
  * Parses a duration typed by a user.
  * @returns whole minutes (rounded), `null` for an empty text, `NaN` for a text that is not a duration
+ * @throws RangeError for unusable options (see `unitMinutes`), whatever the text
  */
 export function parseDuration(text: string | null | undefined, options: DurationOptions = {}): number | null {
+  const size = unitMinutes(options)
   const input = (text ?? "").trim().toLowerCase()
   if (input === "") return null
 
@@ -81,7 +83,6 @@ export function parseDuration(text: string | null | undefined, options: Duration
   if (clock) return whole(Number(clock[1]) * 60 + Number(clock[2]))
 
   const units = allowedUnits(options)
-  const size = unitMinutes(options)
   const byAlias = new Map<string, DurationUnit>()
   for (const unit of units) {
     for (const alias of [...ENGLISH_ALIASES[unit], ...(options.aliases?.[unit] ?? [])]) byAlias.set(alias, unit)
@@ -109,8 +110,8 @@ function whole(minutes: number): number {
  * @throws RangeError for anything but a whole, non-negative, safe number (see `isDurationValue`)
  */
 export function splitDuration(minutes: number, options: DurationOptions = {}): [DurationUnit, number][] {
-  if (!isDurationValue(minutes)) throw new RangeError(`not a duration in minutes: ${minutes}`)
   const size = unitMinutes(options)
+  if (!isDurationValue(minutes)) throw new RangeError(`not a duration in minutes: ${minutes}`)
   const parts: [DurationUnit, number][] = []
   let rest = minutes
   for (const unit of allowedUnits(options)) {
@@ -124,13 +125,14 @@ export function splitDuration(minutes: number, options: DurationOptions = {}): [
 /**
  * Formats minutes as "1 d 2 h 30 min" (`label` gives the unit text for a count).
  * `null` gives an empty string.
- * @throws RangeError like `splitDuration`
+ * @throws RangeError like `splitDuration` (options are checked also for `null`)
  */
 export function formatDuration(
   minutes: number | null | undefined,
   options: DurationOptions = {},
   label: (unit: DurationUnit, count: number) => string = (unit, count) => `${count} ${SHORT[unit]}`
 ): string {
+  checkDurationOptions(options)
   if (minutes == null) return ""
   return splitDuration(minutes, options)
     .map(([unit, count]) => label(unit, count))

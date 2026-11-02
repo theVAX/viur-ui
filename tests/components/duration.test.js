@@ -144,4 +144,13 @@ describe("checkDurationOptions", () => {
     expect(() => parseDuration("1h", { largestUnit: "month" })).toThrow(RangeError)
     expect(() => checkDurationOptions({ hoursPerDay: 8, daysPerWeek: 5, largestUnit: "day" })).not.toThrow()
   })
+
+  it.each([
+    ["parseDuration", () => parseDuration("30", { hoursPerDay: 0 })],
+    ["parseDuration", () => parseDuration("", { largestUnit: "month" })],
+    ["formatDuration", () => formatDuration(null, { hoursPerDay: 0 })],
+    ["unitMinutes", () => unitMinutes({ largestUnit: "month" })],
+  ])("%s checks the options whatever the input", (_, call) => {
+    expect(call).toThrow(RangeError)
+  })
 })

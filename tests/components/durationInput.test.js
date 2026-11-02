@@ -184,13 +184,14 @@ describe("DurationInput", () => {
     expect(input.getAttribute("hint")).toBe(message)
     await leave(input, { change: false })
     expect(input.getAttribute("hint")).toBe(message)
-    expect(events).toEqual([])
+    // reported once, at mount
+    expect(events).toEqual([["invalid", message]])
   })
 
   it("rounds typed text to whole minutes, after a model value that is no duration", async () => {
     const { input, events } = mount({ modelValue: 1.5 })
     await type(input, "1,5")
-    expect(events).toEqual([["update", 2]])
+    expect(events.slice(1)).toEqual([["update", 2]])
     expect(input.getAttribute("hint")).toBe("= 2 min")
   })
 
@@ -247,8 +248,8 @@ describe("DurationInput", () => {
     props.hoursPerDay = 24
     await nextTick()
     expect(shown(input)).toBe("8 h")
-    // validity of the new text is reported again; the value itself stays
-    expect(events).toEqual([["update", 480]])
+    // same value, still valid: nothing to report
+    expect(events).toEqual([])
   })
 
   it("shows the model value anew when the language changes", async () => {
@@ -257,7 +258,7 @@ describe("DurationInput", () => {
     await nextTick()
     expect(shown(input)).toBe("1 d")
     await leave(input)
-    expect(events).toEqual([["update", 480]])
+    expect(events).toEqual([])
   })
 
   it("reports a dropped invalid draft as valid again after a language change", async () => {
@@ -312,5 +313,48 @@ describe("DurationInput", () => {
     model.value = 240
     await nextTick()
     expect(shown(input)).toBe("4 h")
+  })
+
+  it("reports a setup error at mount", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { events } = mount({ modelValue: 30, hoursPerDay: 0 })
+    expect(events).toEqual([["invalid", de.duration.misconfigured]])
+    logged.mockRestore()
+  })
+
+  it("reports nothing at mount for a usable value", () => {
+    expect(mount({ modelValue: 30, max: 60, required: true }).events).toEqual([])
+  })
+
+  it("reports valid again when an outside value replaces a left invalid text", async () => {
+    const { input, model, events } = mount({ modelValue: 30 })
+    await type(input, "bad")
+    await leave(input)
+    model.value = 60
+    await nextTick()
+    expect(shown(input)).toBe("1 h")
+    expect(events).toEqual([
+      ["invalid", de.duration.invalid],
+      ["update", 60],
+    ])
+  })
+
+  it("follows changed limits and required without new input", async () => {
+    const { input, props, events } = mount({ max: 60 })
+    await type(input, "45")
+    props.max = 40
+    await nextTick()
+    props.max = 60
+    await nextTick()
+    await type(input, "")
+    props.required = true
+    await nextTick()
+    expect(events).toEqual([
+      ["update", 45],
+      ["invalid", "Höchstens 40 min"],
+      ["update", 45],
+      ["update", null],
+      ["invalid", de.duration.required],
+    ])
   })
 })

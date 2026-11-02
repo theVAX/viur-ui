@@ -35,10 +35,11 @@ the English ones in `ENGLISH_ALIASES`).
   must be used wherever the value is formatted, or `1 d` means two things.
 - Both must be at least 1 and give a whole number of minutes per day and per
   week (`7.5` hours is fine, `0.02` is not), and `largestUnit` must be one of
-  the four units; otherwise `checkDurationOptions`, `unitMinutes`,
-  `parseDuration` and `formatDuration` throw a `RangeError`. This keeps
-  splitting into units lossless: every formatted value parses back to the
-  same minutes.
+  the four units. Every helper (`checkDurationOptions`, `unitMinutes`,
+  `parseDuration`, `splitDuration`, `formatDuration`) checks this first and
+  throws a `RangeError` otherwise, whatever the input (also for `""`, a bare
+  number or `null`). This keeps splitting into units lossless: every
+  formatted value parses back to the same minutes.
 - The component does not throw for that: unusable options or limits (`min`
   above `max`, no whole minute between them, a `min` beyond the safe range, a
   negative `max`) disable the field and its quick picks, show
@@ -50,20 +51,24 @@ the English ones in `ENGLISH_ALIASES`).
   component shows such a model value as it is (`-1`, `1.5`, `NaN`) with
   `duration.invalidValue` at once and never rounds it; only typed text is
   rounded. Quick picks that are no duration are left out.
-- `update:modelValue` fires only for usable text (parsed, within `min`/`max`,
-  not empty when `required`). Unusable text fires `invalid(message)` and leaves
-  the value as it was; the message shows in the hint once the field is left and
-  is set as custom validity on the `wa-input`. A fractional `min`/`max` allows
-  the whole minutes inside it (`max: 60.5` allows 60, not 61); a non-finite one
-  is no limit.
+- Validity is one computed state: the message (setup error, model value that
+  is no duration, required, unparseable text, limits) and the value of the
+  text, together with the model. One watcher reports every change of it,
+  including the state at mount: `invalid(message)` when the message is new,
+  `update:modelValue` when the state is usable and the value differs from the
+  model or was unusable before. A usable state at mount is not reported (the
+  model already holds it). So a change of `min`/`max`/`required`, of the model
+  from outside, of the options or of the locale reports by itself; there is
+  no per-event reporting that could go stale.
+- Unusable text leaves the value as it was; the message shows in the hint once
+  the field is left (`change` or `blur`) and is set as custom validity on the
+  `wa-input`. A fractional `min`/`max` allows the whole minutes inside it
+  (`max: 60.5` allows 60, not 61); a non-finite one is no limit.
 - Draft against outside update: while the user edits (typed, field not yet
-  left), a new `modelValue` does not replace the text. Leaving the field
-  (`change`, or `blur` when the text was edited back and no `change` came;
-  whichever comes first, once) reports the shown value again if it differs
-  from the model, so the last edit wins. A change of the options or of the
-  locale shows the model value anew, drops a draft (the same text would now
-  mean something else) and reports the validity of the shown value again
-  (`update:modelValue` or `invalid`), so a host does not keep a stale state.
+  left), a new `modelValue` does not replace the text, and the draft's value
+  is reported back at once, so the edit wins. A change of the options or of the
+  locale shows the model value anew and drops a draft (the same text would now
+  mean something else).
 - Attributes that are not props (`label`, `placeholder`, `name`, `size`,
   listeners such as `@keydown`) go to the inner `wa-input`.
 

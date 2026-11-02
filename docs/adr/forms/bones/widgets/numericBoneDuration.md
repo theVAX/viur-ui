@@ -30,6 +30,10 @@ the bone's `params`: `hours_per_day`, `days_per_week`, `largest_unit`
   counts as `0`, a fractional limit stays a limit (`max: 60.5` refuses 61).
 - A required bone that is cleared emits `valid=false`, like the native
   `required` check of `numericBone`.
+- Wrong `params` (e.g. `hours_per_day: 0`) or impossible limits do not break
+  the form: the field is disabled and says it is set up wrongly (see
+  `duration-input.md`). After a change of the locale the widget emits `change`
+  with the validity of the value shown again.
 
 ## See also
 

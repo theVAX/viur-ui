@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
+  checkDurationOptions,
   formatDuration,
   isDurationValue,
   parseDuration,
@@ -134,5 +135,13 @@ describe("unit configuration", () => {
     for (const minutes of [0, 59, day - 1, day, day + 1, week + day + 61]) {
       expect(parseDuration(formatDuration(minutes, options), options)).toBe(minutes)
     }
+  })
+})
+
+describe("checkDurationOptions", () => {
+  it("refuses an unknown largest unit, which used to leave only minutes", () => {
+    expect(() => checkDurationOptions({ largestUnit: "month" })).toThrow(RangeError)
+    expect(() => parseDuration("1h", { largestUnit: "month" })).toThrow(RangeError)
+    expect(() => checkDurationOptions({ hoursPerDay: 8, daysPerWeek: 5, largestUnit: "day" })).not.toThrow()
   })
 })

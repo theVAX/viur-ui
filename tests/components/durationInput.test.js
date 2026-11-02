@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { createApp, h, nextTick, reactive, ref } from "vue"
 import { createI18n } from "vue-i18n"
 import de from "../../src/translations/de.js"
@@ -48,8 +48,9 @@ async function type(input, text) {
 }
 
 /** Leaves the field (the wa-input fires change, if the text changed, then blur). */
-async function leave(input) {
-  input.dispatchEvent(new Event("change"))
+async function leave(input, { change = true } = {}) {
+  // the browser fires change only if the text differs from the one at focus; blur always
+  if (change) input.dispatchEvent(new Event("change"))
   input.dispatchEvent(new Event("blur"))
   await nextTick()
 }
@@ -154,8 +155,8 @@ describe("DurationInput", () => {
   it("renders no quick picks without presets and disables them with the input", () => {
     expect(mount().el.querySelector("[role=group]")).toBeNull()
     const { el, input } = mount({ presets: [15], disabled: true })
-    expect(el.querySelector("wa-button").hasAttribute("disabled")).toBe(true)
-    expect(input.hasAttribute("disabled")).toBe(true)
+    expect(el.querySelector("wa-button").getAttribute("disabled")).toBe("true")
+    expect(input.getAttribute("disabled")).toBe("true")
   })
 
   it("passes other attributes to the wa-input", () => {
@@ -175,19 +176,22 @@ describe("DurationInput", () => {
     expect(input.getAttribute("hint")).toBe(de.duration.required)
   })
 
-  it.each([-1, NaN])("shows the model value %o as it is and as an error, not as a wrong duration", async (minutes) => {
+  // a model value is judged as it is: 1.5 is an error, not silently 2 (only typed text is rounded)
+  it.each([-1, 1.5, NaN])("shows the model value %o as it is, with an error at once", async (minutes) => {
     const { input, events } = mount({ modelValue: minutes })
+    const message = `Der gespeicherte Wert ${minutes} ist keine Dauer in ganzen Minuten`
     expect(shown(input)).toBe(String(minutes))
-    await leave(input)
-    expect(input.getAttribute("hint")).toBe(de.duration.invalid)
+    expect(input.getAttribute("hint")).toBe(message)
+    await leave(input, { change: false })
+    expect(input.getAttribute("hint")).toBe(message)
     expect(events).toEqual([])
   })
 
-  it("shows a fractional model value as it is, with the whole minutes it would become", () => {
+  it("rounds typed text to whole minutes, after a model value that is no duration", async () => {
     const { input, events } = mount({ modelValue: 1.5 })
-    expect(shown(input)).toBe("1.5")
+    await type(input, "1,5")
+    expect(events).toEqual([["update", 2]])
     expect(input.getAttribute("hint")).toBe("= 2 min")
-    expect(events).toEqual([])
   })
 
   it("leaves out quick picks that are no duration", () => {
@@ -210,10 +214,31 @@ describe("DurationInput", () => {
     expect(events).toEqual([event])
   })
 
-  it("refuses a day length that cannot hold whole minutes", () => {
-    expect(mount({ hoursPerDay: 0.02 }).errors[0]).toBeInstanceOf(RangeError)
-    expect(mount({ hoursPerDay: 0 }).errors[0]).toBeInstanceOf(RangeError)
-    expect(mount({ hoursPerDay: 8 }).errors).toEqual([])
+  it.each([
+    [{ hoursPerDay: 0 }],
+    [{ hoursPerDay: 0.02 }],
+    [{ daysPerWeek: 0 }],
+    [{ largestUnit: "month" }],
+    [{ modelValue: 30, max: -1 }],
+    [{ min: 1e20 }],
+    [{ min: 90, max: 60 }],
+    [{ min: 60.2, max: 60.8 }],
+  ])("disables the field and says it is set up wrongly for %o, instead of breaking", (props) => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { el, input, errors } = mount({ presets: [15], ...props })
+    expect(errors).toEqual([])
+    expect(input.getAttribute("disabled")).toBe("true")
+    expect(el.querySelector("wa-button").getAttribute("disabled")).toBe("true")
+    expect(input.getAttribute("hint")).toBe(de.duration.misconfigured)
+    expect(logged).toHaveBeenCalledWith(expect.stringMatching(/^DurationInput: /))
+    logged.mockRestore()
+  })
+
+  it("takes an unreachably high max as no limit", async () => {
+    const { input, events } = mount({ max: 1e20 })
+    expect(input.getAttribute("disabled")).toBe("false")
+    await type(input, "100w")
+    expect(events).toEqual([["update", 100 * 7 * 24 * 60]])
   })
 
   it("shows the model value anew when the day length changes, without changing the value", async () => {
@@ -222,7 +247,8 @@ describe("DurationInput", () => {
     props.hoursPerDay = 24
     await nextTick()
     expect(shown(input)).toBe("8 h")
-    expect(events).toEqual([])
+    // validity of the new text is reported again; the value itself stays
+    expect(events).toEqual([["update", 480]])
   })
 
   it("shows the model value anew when the language changes", async () => {
@@ -231,7 +257,40 @@ describe("DurationInput", () => {
     await nextTick()
     expect(shown(input)).toBe("1 d")
     await leave(input)
-    expect(events).toEqual([])
+    expect(events).toEqual([["update", 480]])
+  })
+
+  it("reports a dropped invalid draft as valid again after a language change", async () => {
+    const { input, i18n, events } = mount({ modelValue: 30 })
+    await type(input, "bad")
+    expect(events).toEqual([["invalid", de.duration.invalid]])
+    i18n.global.locale.value = "en"
+    await nextTick()
+    expect(shown(input)).toBe("30 min")
+    expect(events.at(-1)).toEqual(["update", 30])
+  })
+
+  it("commits on blur when the text was edited back and no change came", async () => {
+    const { input, model } = mount({ modelValue: 30 })
+    await type(input, "45")
+    await type(input, "30 min")
+    model.value = 120 // outside update during the edit: not shown
+    await nextTick()
+    await leave(input, { change: false })
+    expect(model.value).toBe(30)
+    expect(shown(input)).toBe("30 min")
+  })
+
+  it("commits once when change and blur both come", async () => {
+    const { input, model, events } = mount({ modelValue: 30 })
+    await type(input, "1h")
+    model.value = 120
+    await nextTick()
+    await leave(input)
+    expect(events).toEqual([
+      ["update", 60],
+      ["update", 60],
+    ])
   })
 
   it("keeps a draft against an outside update while editing; the left value wins", async () => {

@@ -5,12 +5,12 @@
       v-bind="$attrs"
       :value="text"
       :hint="hint"
-      :disabled="disabled"
+      :disabled="disabled || !!misconfigured"
       :required="required"
       autocomplete="off"
       @input="onInput"
-      @change="onChange"
-      @blur="dirty = false"
+      @change="commit"
+      @blur="commit"
     ></wa-input>
     <div
       v-if="shownPresets.length"
@@ -23,7 +23,7 @@
         :key="minutes"
         size="small"
         appearance="outlined"
-        :disabled="disabled"
+        :disabled="disabled || !!misconfigured"
         @click="pick(minutes)"
       >
         <!-- wa-button does not pass aria-label on to its inner button, so the spoken name is hidden text -->
@@ -42,9 +42,13 @@
  * text when the field is left. Optional quick-pick buttons set a value directly.
  *
  * While the user edits (typed, not yet left), a new `modelValue` from outside does not replace the
- * text; leaving the field reports the typed value again, so the last edit wins. A change of the
- * options or the locale shows the model value anew and drops such a draft, because the draft would
- * now mean something else.
+ * text; leaving the field (change or blur) reports the typed value again, so the last edit wins. A
+ * change of the options or the locale shows the model value anew, drops such a draft (it would now
+ * mean something else) and reports the validity of the shown value again.
+ *
+ * A `modelValue` that is no duration (negative, fractional, NaN) shows as it is, with an error, and is
+ * never rounded; only typed text is. Unusable unit options or limits (e.g. `hoursPerDay: 0`,
+ * `min` above `max`) disable the field and show a configuration error instead of breaking the page.
  *
  * Attributes that are not props (`label`, `placeholder`, `name`, `size`, `class`, ...) go to the
  * inner `wa-input`. Next to an own visible label, pass the label text as `label` together with
@@ -60,10 +64,10 @@ import { computed, ref, watch, watchEffect } from "vue"
 import { useI18n } from "vue-i18n"
 import {
   DURATION_UNITS,
+  checkDurationOptions,
   formatDuration,
   isDurationValue,
   parseDuration,
-  unitMinutes,
   type DurationOptions,
   type DurationUnit,
 } from "./duration.ts"
@@ -111,24 +115,53 @@ const emit = defineEmits<{
 
 const { t, te, locale } = useI18n()
 
-const options = computed<DurationOptions>(() => {
-  const options: DurationOptions = {
-    hoursPerDay: props.hoursPerDay,
-    daysPerWeek: props.daysPerWeek,
-    largestUnit: props.largestUnit,
-    aliases: Object.fromEntries(
-      DURATION_UNITS.filter((unit) => te(`duration.aliases.${unit}`)).map((unit) => [
-        unit,
-        t(`duration.aliases.${unit}`)
-          .split(",")
-          .map((alias) => alias.trim().toLowerCase())
-          .filter(Boolean),
-      ])
-    ),
-  }
-  unitMinutes(options) // throws RangeError for a day or week that cannot hold whole minutes
-  return options
+const aliases = computed(() =>
+  Object.fromEntries(
+    DURATION_UNITS.filter((unit) => te(`duration.aliases.${unit}`)).map((unit) => [
+      unit,
+      t(`duration.aliases.${unit}`)
+        .split(",")
+        .map((alias) => alias.trim().toLowerCase())
+        .filter(Boolean),
+    ])
+  )
+)
+const requested = computed<DurationOptions>(() => ({
+  hoursPerDay: props.hoursPerDay,
+  daysPerWeek: props.daysPerWeek,
+  largestUnit: props.largestUnit,
+}))
+
+// a fractional limit allows the whole minutes inside it; an infinite or unreachably high max is no limit
+const lowest = computed(() => Math.max(0, Number.isFinite(props.min) ? Math.ceil(props.min) : 0))
+const highest = computed(() => {
+  const max = Number.isFinite(props.max) ? Math.floor(props.max as number) : undefined
+  return max === undefined || max > Number.MAX_SAFE_INTEGER ? undefined : max
 })
+
+/** Why the options or limits cannot work, for developers; `""` when they can. */
+const problem = computed(() => {
+  try {
+    checkDurationOptions(requested.value)
+  } catch (error) {
+    return (error as Error).message
+  }
+  if (!Number.isSafeInteger(lowest.value)) return `min is too large: ${props.min}`
+  if (highest.value !== undefined && highest.value < lowest.value) {
+    return `no whole minute between min ${props.min} and max ${props.max}`
+  }
+  return ""
+})
+watchEffect(() => {
+  if (problem.value) console.error(`DurationInput: ${problem.value}`)
+})
+const misconfigured = computed(() => (problem.value ? t("duration.misconfigured") : ""))
+
+// with unusable options the field is disabled; the defaults keep formatting the value safe meanwhile
+const options = computed<DurationOptions>(() => ({
+  ...(problem.value ? {} : requested.value),
+  aliases: aliases.value,
+}))
 
 function format(minutes: number | null): string {
   return formatDuration(minutes, options.value, (unit, count) => `${count} ${t(`duration.units.${unit}`)}`)
@@ -144,19 +177,25 @@ function display(minutes: number | null): string {
 }
 
 const shownPresets = computed(() => props.presets.filter(isDurationValue))
-// a fractional limit allows the whole minutes inside it; an infinite one is no limit
-const lowest = computed(() => Math.max(0, Number.isFinite(props.min) ? Math.ceil(props.min) : 0))
-const highest = computed(() => (Number.isFinite(props.max) ? Math.floor(props.max as number) : undefined))
 
 const input = ref<HTMLElement & { setCustomValidity?: (message: string) => void }>()
 const text = ref(display(props.modelValue))
-// the error shows once the field was left (change), not on every half-typed keystroke ("1:3")
+// the text shows the model value (not typed or picked): it is judged as the model, not re-parsed
+const fromModel = ref(true)
+// the error shows once the field was left, not on every half-typed keystroke ("1:3")
 const committed = ref(false)
 // typed since the field was last left or set: a draft that an outside update must not replace
 const dirty = ref(false)
 
-const value = computed(() => parseDuration(text.value, options.value))
+const modelIsNoDuration = computed(
+  () => fromModel.value && props.modelValue != null && !isDurationValue(props.modelValue)
+)
+const value = computed(() =>
+  modelIsNoDuration.value ? NaN : fromModel.value ? props.modelValue : parseDuration(text.value, options.value)
+)
 const error = computed(() => {
+  if (misconfigured.value) return misconfigured.value
+  if (modelIsNoDuration.value) return t("duration.invalidValue", { value: String(props.modelValue) })
   const minutes = value.value
   if (minutes === null) return props.required ? t("duration.required") : ""
   if (Number.isNaN(minutes)) return t("duration.invalid")
@@ -167,7 +206,7 @@ const error = computed(() => {
   return ""
 })
 const hint = computed(() => {
-  if (error.value) return committed.value ? error.value : ""
+  if (error.value) return committed.value || misconfigured.value || modelIsNoDuration.value ? error.value : ""
   const normalised = display(value.value)
   return normalised === text.value.trim() ? "" : t("duration.preview", { value: normalised })
 })
@@ -175,15 +214,21 @@ const hint = computed(() => {
 // form validity of the wa-input (blocks submit, :user-invalid styling); undefined outside the browser
 watchEffect(() => input.value?.setCustomValidity?.(error.value))
 
+function showModel() {
+  text.value = display(props.modelValue)
+  fromModel.value = true
+  dirty.value = false
+}
+
 watch(
   () => props.modelValue,
-  (minutes) => {
-    if (!dirty.value && value.value !== minutes) text.value = display(minutes)
+  () => {
+    if (!dirty.value) showModel()
   }
 )
 watch([options, locale], () => {
-  text.value = display(props.modelValue)
-  dirty.value = false
+  showModel()
+  report()
 })
 
 function report() {
@@ -193,23 +238,26 @@ function report() {
 
 function onInput(event: Event) {
   text.value = (event.target as HTMLInputElement).value
+  fromModel.value = false
   committed.value = false
   dirty.value = true
   report()
 }
 
-function onChange() {
-  const edited = dirty.value
-  committed.value = true
+/** Leaving the field: on change, and on blur when the text was edited back so no change came. Runs once. */
+function commit() {
+  if (!dirty.value) return
   dirty.value = false
+  committed.value = true
   if (error.value) return
   text.value = display(value.value)
   // an outside update during the edit was not shown; the value the user sees and left wins
-  if (edited && value.value !== props.modelValue) emit("update:modelValue", value.value)
+  if (value.value !== props.modelValue) emit("update:modelValue", value.value)
 }
 
 function pick(minutes: number) {
   text.value = format(minutes)
+  fromModel.value = false
   committed.value = true
   dirty.value = false
   report()

@@ -49,7 +49,18 @@ export function isDurationValue(minutes: unknown): minutes is number {
 }
 
 function allowedUnits(options: DurationOptions): DurationUnit[] {
-  return DURATION_UNITS.slice(DURATION_UNITS.indexOf(options.largestUnit ?? "week"))
+  const largest = options.largestUnit ?? "week"
+  if (!DURATION_UNITS.includes(largest)) throw new RangeError(`unknown largestUnit: ${largest}`)
+  return DURATION_UNITS.slice(DURATION_UNITS.indexOf(largest))
+}
+
+/**
+ * Checks the unit options (`hoursPerDay`, `daysPerWeek`, `largestUnit`) the way parser and formatter use them.
+ * @throws RangeError with the reason
+ */
+export function checkDurationOptions(options: DurationOptions = {}): void {
+  unitMinutes(options)
+  allowedUnits(options)
 }
 
 const NUMBER = String.raw`\d+(?:[.,]\d+)?`

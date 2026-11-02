@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import { createApp, nextTick } from "vue"
 import { createI18n } from "vue-i18n"
 import { createPinia, setActivePinia } from "pinia"
@@ -17,7 +17,8 @@ const NO_LIMIT = 9223372036854775807
 function mountWidget(value, bonestructure = {}) {
   const changes = []
   const app = createApp(NumericBoneDuration, { name: "estimate", value, onChange: (...args) => changes.push(args) })
-  app.use(createI18n({ legacy: false, locale: "de", fallbackLocale: "en", messages: { de, en } }))
+  const i18n = createI18n({ legacy: false, locale: "de", fallbackLocale: "en", messages: { de, en } })
+  app.use(i18n)
   app.provide("boneState", {
     readonly: false,
     errorMessages: [],
@@ -26,7 +27,7 @@ function mountWidget(value, bonestructure = {}) {
   })
   const el = document.createElement("div")
   app.mount(el)
-  return { input: el.querySelector("wa-input"), changes }
+  return { input: el.querySelector("wa-input"), changes, i18n }
 }
 
 async function type(input, text) {
@@ -106,5 +107,23 @@ describe("numericBoneDuration", () => {
     expect(changes.at(-1).at(-1)).toBe(false)
     await type(input, "60")
     expect(changes.at(-1).at(-1)).toBe(true)
+  })
+
+  it("reports valid again when a language change drops an invalid draft", async () => {
+    const { input, changes, i18n } = mountWidget(30)
+    await type(input, "bad")
+    expect(changes.at(-1).at(-1)).toBe(false)
+    i18n.global.locale.value = "en"
+    await nextTick()
+    expect(changes.at(-1)).toEqual(["estimate", "30", undefined, undefined, true])
+  })
+
+  it("shows a wrong hours_per_day as a disabled field with a message", () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    const { input, changes } = mountWidget(30, { params: { hours_per_day: 0 } })
+    expect(input.getAttribute("disabled")).toBe("true")
+    expect(input.getAttribute("hint")).toBe(de.duration.misconfigured)
+    expect(changes[0]).toEqual(["estimate", "30", undefined, undefined])
+    logged.mockRestore()
   })
 })

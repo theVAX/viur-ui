@@ -134,6 +134,8 @@ export default {
     preview: "= {value}",
     invalid: "Not a duration – e.g. 1d 2h 30m, 2.5h, 1:30 or 90 (minutes)",
     required: "Please enter a duration",
+    invalidValue: "The stored value {value} is not a duration in whole minutes",
+    misconfigured: "This field is set up wrongly (units or limits) – please tell the developers",
     min: "At least {value}",
     max: "At most {value}",
     presets: "Quick picks",
